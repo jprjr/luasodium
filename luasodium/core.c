@@ -1,0 +1,387 @@
+#include <sodium.h>
+#include <lua.h>
+#include <lauxlib.h>
+
+#include <string.h>
+
+#if !defined(luaL_newlibtable) \
+  && (!defined LUA_VERSION_NUM || LUA_VERSION_NUM==501)
+static void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
+  luaL_checkstack(L, nup+1, "too many upvalues");
+  for (; l->name != NULL; l++) {  /* fill the table with given functions */
+    int i;
+    lua_pushstring(L, l->name);
+    for (i = 0; i < nup; i++)  /* copy upvalues to the top */
+      lua_pushvalue(L, -(nup+1));
+    lua_pushcclosure(L, l->func, nup);  /* closure with those upvalues */
+    lua_settable(L, -(nup + 3));
+  }
+  lua_pop(L, nup);  /* remove upvalues */
+}
+#endif
+
+
+static int
+luasodium_init(lua_State *L) {
+    lua_pushboolean(L,sodium_init() != -1);
+    return 1;
+}
+
+static int
+luasodium_memcmp(lua_State *L) {
+    const char *b1 = NULL;
+    const char *b2 = NULL;
+    size_t len = 0;
+
+    if(lua_isnoneornil(L,3)) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"memcmp requires 3 arguments");
+        return 2;
+    }
+
+    b1 = lua_tolstring(L,1,NULL);
+    b2 = lua_tolstring(L,2,NULL);
+    len = lua_tointeger(L,3);
+
+    lua_pushboolean(L,sodium_memcmp(
+      b1,
+      b2,
+      len) == 0);
+    return 1;
+}
+
+/* luasodium.bin2hex(bin, bin_len) */
+static int
+luasodium_bin2hex(lua_State *L) {
+    const char *bin = NULL;
+    char *hex = NULL;
+    size_t bin_len = 0;
+    size_t hex_len = 0;
+
+    if(lua_isnoneornil(L,2)) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"bin2hex requires 2 arguments");
+        return 2;
+    }
+
+    bin = lua_tolstring(L,1,NULL);
+    bin_len = (size_t)lua_tointeger(L,2);
+    hex_len = (bin_len * 2);
+    hex = lua_newuserdata(L,hex_len + 1);
+    if(hex == NULL) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"out of memory");
+        return 2;
+    }
+    lua_pop(L,1);
+    sodium_bin2hex(hex,hex_len+1,(const unsigned char *)bin,bin_len);
+    lua_pushstring(L,hex);
+    return 1;
+}
+
+/* luasodium.hex2bin(hex, hex_len, [ignore]) */
+static int
+luasodium_hex2bin(lua_State *L) {
+    const char *hex = NULL;
+    const char *hex_end = NULL;
+    const char *ignore = NULL;
+    unsigned char *bin = NULL;
+
+    size_t hex_len;
+    size_t bin_len;
+    size_t out_bin_len;
+
+    if(lua_isnoneornil(L,2)) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"hex2bin requires 2 arguments");
+    }
+
+    hex = lua_tolstring(L,1,NULL);
+    hex_len = lua_tointeger(L,2);
+
+    bin_len = hex_len / 2;
+    if(hex_len % 2 != 0) {
+        bin_len++;
+    }
+
+    if(lua_isstring(L,3)) {
+        ignore = lua_tostring(L,3);
+    }
+
+    bin = lua_newuserdata(L,bin_len);
+    if(bin == NULL) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"out of memory");
+        return 2;
+    }
+    lua_pop(L,1);
+
+    if(sodium_hex2bin(
+        bin,bin_len,
+        hex,hex_len,
+        ignore, &out_bin_len,
+        &hex_end) != 0) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"error in hex2bin");
+    }
+
+    lua_pushlstring(L,(const char *)bin,out_bin_len);
+    if(hex_end < hex + hex_len) {
+        lua_pushlstring(L,hex_end,(hex + hex_len) - hex_end);
+        return 2;
+    }
+    return 1;
+}
+
+/* luasodium.bin2base64(bin, bin_len, variant) */
+static int
+luasodium_bin2base64(lua_State *L) {
+    const char *bin = NULL;
+    char *b64 = NULL;
+    size_t bin_len = 0;
+    size_t b64_len = 0;
+    lua_Integer variant = 0;
+
+    if(lua_isnoneornil(L,3)) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"bin2base64 requires 3 arguments");
+    }
+
+    bin = lua_tolstring(L,1,NULL);
+    bin_len = (size_t)lua_tointeger(L,2);
+    variant = lua_tointeger(L,3);
+
+    switch(variant) {
+        case sodium_base64_VARIANT_ORIGINAL: break;
+        case sodium_base64_VARIANT_ORIGINAL_NO_PADDING: break;
+        case sodium_base64_VARIANT_URLSAFE: break;
+        case sodium_base64_VARIANT_URLSAFE_NO_PADDING: break;
+        default: {
+            lua_pushboolean(L,0);
+            lua_pushstring(L,"unknown base64 variant");
+            return 2;
+        }
+    }
+
+    b64_len = sodium_base64_encoded_len(bin_len,variant);
+    b64 = lua_newuserdata(L,b64_len);
+    if(b64 == NULL) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"out of memory");
+        return 2;
+    }
+    lua_pop(L,1);
+
+    sodium_bin2base64(b64,b64_len,
+      (const unsigned char *)bin, bin_len,
+      variant);
+    lua_pushstring(L,b64);
+    return 1;
+}
+
+/* luasodium.base642bin(base64, base64_len, variant, [ignore]) */
+static int
+luasodium_base642bin(lua_State *L) {
+    const char *base64 = NULL;
+    const char *base64_end = NULL;
+    const char *ignore = NULL;
+    unsigned char *bin = NULL;
+    lua_Integer variant = 0;
+
+    size_t base64_len;
+    size_t bin_len;
+    size_t out_bin_len;
+
+    if(lua_isnoneornil(L,3)) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"base642bin requires 3 arguments");
+    }
+
+    base64 = lua_tolstring(L,1,NULL);
+    base64_len = lua_tointeger(L,2);
+    variant = lua_tointeger(L,3);
+
+    switch(variant) {
+        case sodium_base64_VARIANT_ORIGINAL: break;
+        case sodium_base64_VARIANT_ORIGINAL_NO_PADDING: break;
+        case sodium_base64_VARIANT_URLSAFE: break;
+        case sodium_base64_VARIANT_URLSAFE_NO_PADDING: break;
+        default: {
+            lua_pushboolean(L,0);
+            lua_pushstring(L,"unknown base64 variant");
+            return 2;
+        }
+    }
+
+    /* this is technicallly too many bytes but whatever */
+    bin_len = base64_len;
+
+    if(lua_isstring(L,4)) {
+        ignore = lua_tostring(L,4);
+    }
+
+    bin = lua_newuserdata(L,bin_len);
+    if(bin == NULL) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"out of memory");
+        return 2;
+    }
+    lua_pop(L,1);
+
+    if(sodium_base642bin(
+        bin,bin_len,
+        base64,base64_len,
+        ignore, &out_bin_len,
+        &base64_end,variant) != 0) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"error in base642bin");
+    }
+
+    lua_pushlstring(L,(const char *)bin,out_bin_len);
+    if(base64_end < base64 + base64_len) {
+        lua_pushlstring(L,base64_end,(base64 + base64_len) - base64_end);
+        return 2;
+    }
+    return 1;
+}
+
+static int
+luasodium_increment(lua_State *L) {
+    const char *n = NULL;
+    char *r = NULL;
+    size_t nlen = 0;
+
+    n = lua_tolstring(L,1,&nlen);
+    r = lua_newuserdata(L,nlen);
+    if(r == NULL) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"out of memory");
+    }
+    lua_pop(L,1);
+
+    memcpy(r,n,nlen);
+
+    sodium_increment((unsigned char *)r,nlen);
+    lua_pushlstring(L,r,nlen);
+    return 1;
+}
+
+static int
+luasodium_add(lua_State *L) {
+    const char *a = NULL;
+    const char *b = NULL;
+    char *r = NULL;
+    size_t alen = 0;
+    size_t blen = 0;
+
+    a = lua_tolstring(L,1,&alen);
+    b = lua_tolstring(L,2,&blen);
+    if(alen != blen) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"add requires same-size numbers");
+        return 2;
+    }
+
+    r = lua_newuserdata(L,alen);
+    if(r == NULL) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"out of memory");
+    }
+    lua_pop(L,1);
+
+    memcpy(r,a,alen);
+    sodium_add((unsigned char *)r,(const unsigned char *)b,alen);
+    lua_pushlstring(L,r,alen);
+    return 1;
+}
+
+static int
+luasodium_sub(lua_State *L) {
+    const char *a = NULL;
+    const char *b = NULL;
+    char *r = NULL;
+    size_t alen = 0;
+    size_t blen = 0;
+
+    a = lua_tolstring(L,1,&alen);
+    b = lua_tolstring(L,2,&blen);
+    if(alen != blen) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"add requires same-size numbers");
+        return 2;
+    }
+
+    r = lua_newuserdata(L,alen);
+    if(r == NULL) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"out of memory");
+    }
+    lua_pop(L,1);
+
+    memcpy(r,a,alen);
+    sodium_sub((unsigned char *)r,(const unsigned char *)b,alen);
+    lua_pushlstring(L,r,alen);
+    return 1;
+}
+
+static int
+luasodium_compare(lua_State *L) {
+    const char *a = NULL;
+    const char *b = NULL;
+    size_t alen = 0;
+    size_t blen = 0;
+
+    a = lua_tolstring(L,1,&alen);
+    b = lua_tolstring(L,2,&blen);
+    if(alen != blen) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"add requires same-size numbers");
+        return 2;
+    }
+
+    lua_pushinteger(L,sodium_compare((const void *)a,(const void *)b,alen));
+    return 1;
+}
+
+static int
+luasodium_is_zero(lua_State *L) {
+    const char *n = NULL;
+    size_t nlen = 0;
+
+    n = lua_tolstring(L,1,&nlen);
+    lua_pushboolean(L,sodium_is_zero((const unsigned char *)n,nlen) == 1);
+    return 1;
+}
+
+static const struct luaL_Reg luasodium_methods[] = {
+    { "init", luasodium_init },
+    { "memcmp", luasodium_memcmp },
+    { "bin2hex", luasodium_bin2hex },
+    { "hex2bin", luasodium_hex2bin },
+    { "bin2base64", luasodium_bin2base64 },
+    { "base642bin", luasodium_base642bin },
+    { "increment", luasodium_increment },
+    { "add", luasodium_add },
+    { "sub", luasodium_sub },
+    { "compare", luasodium_compare },
+    { "is_zero", luasodium_is_zero },
+    { NULL, NULL },
+};
+
+int
+luaopen_luasodium_core(lua_State *L) {
+    lua_newtable(L);
+
+    luaL_setfuncs(L,luasodium_methods,0);
+
+    lua_pushinteger(L,sodium_base64_VARIANT_ORIGINAL);
+    lua_setfield(L,-2,"base64_VARIANT_ORIGINAL");
+    lua_pushinteger(L,sodium_base64_VARIANT_ORIGINAL_NO_PADDING);
+    lua_setfield(L,-2,"base64_VARIANT_ORIGINAL_NO_PADDING");
+    lua_pushinteger(L,sodium_base64_VARIANT_URLSAFE);
+    lua_setfield(L,-2,"base64_VARIANT_URLSAFE");
+    lua_pushinteger(L,sodium_base64_VARIANT_URLSAFE_NO_PADDING);
+    lua_setfield(L,-2,"base64_VARIANT_URLSAFE_NO_PADDING");
+
+    return 1;
+}
