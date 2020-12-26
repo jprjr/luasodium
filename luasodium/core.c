@@ -407,7 +407,6 @@ luasodium_unpad(lua_State *L) {
     return 1;
 }
 
-
 static const struct luaL_Reg luasodium_methods[] = {
     { "init", luasodium_init },
     { "memcmp", luasodium_memcmp },

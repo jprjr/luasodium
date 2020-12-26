@@ -3,8 +3,13 @@
 PKGCONFIG = pkg-config
 LUA = lua5.1
 
-CORE_OBJS = \
-  luasodium/core.o
+LUASODIUM_OBJS = \
+  luasodium/core.o \
+  luasodium/randombytes/core.o
+
+LUASODIUM_DLLS = \
+  luasodium/core.so \
+  luasodium/randombytes/core.so
 
 CFLAGS=$(shell $(PKGCONFIG) --cflags libsodium)
 LDFLAGS=$(shell $(PKGCONFIG) --libs libsodium)
@@ -12,10 +17,10 @@ LDFLAGS=$(shell $(PKGCONFIG) --libs libsodium)
 CFLAGS += -Wall -Wextra -g -O0
 CFLAGS += $(shell $(PKGCONFIG) --cflags $(LUA))
 
-all: luasodium/core.so
+all: $(LUASODIUM_DLLS)
 
-luasodium/core.so: $(CORE_OBJS)
+%.so: %.o
 	$(CC) -shared -o $@ $^ $(LDFLAGS)
 
 clean:
-	rm -f $(CORE_OBJS) core.so
+	rm -f $(LUASODIUM_DLLS) $(LUASODIUM_OBJS)

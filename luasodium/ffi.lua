@@ -1,6 +1,5 @@
 local ffi = require'ffi'
-local len = string.len
-local sub = string.sub
+local string_len = string.len
 local sodium_lib
 
 -- https://libsodium.gitbook.io/doc/usage
@@ -42,14 +41,21 @@ int sodium_unpad(size_t *unpadded_buflen_p, const unsigned char *buf,
                  size_t padded_buflen, size_t blocksize);
 ]]
 
-pcall(function()
-  if ffi.C.sodium_init then
-    sodium_lib = ffi.C
-  end
-end)
+-- skipping https://libsodium.gitbook.io/doc/memory_management for now
 
-if not sodium_lib then
-  sodium_lib = ffi.load('sodium')
+local function test_cspace()
+  if ffi.C.randombytes_random then
+    return ffi.C
+  end
+end
+
+do
+  local ok, lib = pcall(test_cspace)
+  if ok then
+    sodium_lib = lib
+  else
+    sodium_lib = ffi.load('sodium')
+  end
 end
 
 local function luasodium_init()
@@ -123,15 +129,15 @@ local function luasodium_base642bin(base64,base64_len,variant,ignore)
 end
 
 local function luasodium_increment(n)
-  local nlen = len(n)
+  local nlen = string_len(n)
   local tmp_n = ffi.new('char[?]',nlen,n)
   sodium_lib.sodium_increment(tmp_n,nlen)
   return ffi.string(tmp_n,nlen)
 end
 
 local function luasodium_add(a,b)
-  local alen = len(a)
-  local blen = len(b)
+  local alen = string_len(a)
+  local blen = string_len(b)
   if alen ~= blen then
     return nil, 'mismatched datatypes'
   end
@@ -142,8 +148,8 @@ local function luasodium_add(a,b)
 end
 
 local function luasodium_sub(a,b)
-  local alen = len(a)
-  local blen = len(b)
+  local alen = string_len(a)
+  local blen = string_len(b)
   if alen ~= blen then
     return nil, 'mismatched datatypes'
   end
@@ -154,8 +160,8 @@ local function luasodium_sub(a,b)
 end
 
 local function luasodium_compare(a,b)
-  local alen = len(a)
-  local blen = len(b)
+  local alen = string_len(a)
+  local blen = string_len(b)
   if alen ~= blen then
     return nil, 'mismatched datatypes'
   end
@@ -164,11 +170,11 @@ local function luasodium_compare(a,b)
 end
 
 local function luasodium_is_zero(n)
-  return sodium_lib.sodium_is_zero(n,len(n)) == 1
+  return sodium_lib.sodium_is_zero(n,string_len(n)) == 1
 end
 
 local function luasodium_pad(n,blocksize)
-  local nlen = len(n)
+  local nlen = string_len(n)
   local rem = nlen % blocksize
   local rounded = nlen + (blocksize - rem)
 
@@ -184,7 +190,7 @@ local function luasodium_pad(n,blocksize)
 end
 
 local function luasodium_unpad(n,blocksize)
-  local nlen = len(n)
+  local nlen = string_len(n)
   local outlen = ffi.new('size_t[1]')
 
   if sodium_lib.sodium_unpad(outlen,n,
