@@ -1,5 +1,6 @@
 local ffi = require'ffi'
 local len = string.len
+local sub = string.sub
 local sodium_lib
 
 -- https://libsodium.gitbook.io/doc/usage
@@ -31,9 +32,15 @@ int sodium_is_zero(const unsigned char *n, const size_t nlen);
 void sodium_stackzero(const size_t len);
 
 size_t sodium_base64_encoded_len(size_t bin_len, int variant);
-
 ]]
 
+-- https://libsodium.gitbook.io/doc/padding
+ffi.cdef[[
+int sodium_pad(size_t *padded_buflen_p, unsigned char *buf,
+               size_t unpadded_buflen, size_t blocksize, size_t max_buflen);
+int sodium_unpad(size_t *unpadded_buflen_p, const unsigned char *buf,
+                 size_t padded_buflen, size_t blocksize);
+]]
 
 pcall(function()
   if ffi.C.sodium_init then
@@ -160,6 +167,34 @@ local function luasodium_is_zero(n)
   return sodium_lib.sodium_is_zero(n,len(n)) == 1
 end
 
+local function luasodium_pad(n,blocksize)
+  local nlen = len(n)
+  local rem = nlen % blocksize
+  local rounded = nlen + (blocksize - rem)
+
+  local r = ffi.new('char[?]',rounded,n)
+  local outlen = ffi.new('size_t[1]')
+
+  if sodium_lib.sodium_pad(outlen,r,
+    nlen,blocksize,rounded) ~= 0 then
+    return nil, 'sodium_pad error'
+  end
+
+  return ffi.string(r,outlen[0])
+end
+
+local function luasodium_unpad(n,blocksize)
+  local nlen = len(n)
+  local outlen = ffi.new('size_t[1]')
+
+  if sodium_lib.sodium_unpad(outlen,n,
+    nlen,blocksize) ~= 0 then
+    return nil, 'sodium_unpad error'
+  end
+
+  return ffi.string(n,outlen[0])
+end
+
 local M = {
   init = luasodium_init,
   memcmp = luasodium_memcmp,
@@ -172,6 +207,8 @@ local M = {
   sub = luasodium_sub,
   is_zero = luasodium_is_zero,
   compare = luasodium_compare,
+  pad = luasodium_pad,
+  unpad = luasodium_unpad,
   base64_VARIANT_ORIGINAL = 1,
   base64_VARIANT_ORIGINAL_NO_PADDING = 3,
   base64_VARIANT_URLSAFE = 5,

@@ -353,6 +353,61 @@ luasodium_is_zero(lua_State *L) {
     return 1;
 }
 
+static int
+luasodium_pad(lua_State *L) {
+    const char *n = NULL;
+    char *r = NULL;
+    size_t nlen = 0;
+    size_t blocksize = 0;
+    size_t rounded = 0;
+    size_t outlen = 0;
+    size_t rem = 0;
+
+    n = lua_tolstring(L,1,&nlen);
+    blocksize = lua_tointeger(L,2);
+
+    rem = nlen % blocksize;
+    rounded = nlen + (blocksize - rem);
+
+    r = lua_newuserdata(L,rounded);
+    if(r == NULL) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"out of memory");
+    }
+    lua_pop(L,1);
+    memcpy(r,n,nlen);
+
+    if(sodium_pad(&outlen,(unsigned char *)r,
+        nlen,blocksize,rounded) != 0) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"sodium_pad error");
+        return 2;
+    }
+    lua_pushlstring(L,r,outlen);
+    return 1;
+}
+
+static int
+luasodium_unpad(lua_State *L) {
+    const char *n = NULL;
+    size_t nlen = 0;
+    size_t blocksize = 0;
+    size_t outlen = 0;
+
+    n = lua_tolstring(L,1,&nlen);
+    blocksize = lua_tointeger(L,2);
+
+    if(sodium_unpad(&outlen,(const unsigned char *)n,
+        nlen,blocksize) != 0) {
+        lua_pushboolean(L,0);
+        lua_pushstring(L,"sodium_unpad error");
+        return 2;
+    }
+    lua_pushlstring(L,n,outlen);
+    return 1;
+}
+
+
 static const struct luaL_Reg luasodium_methods[] = {
     { "init", luasodium_init },
     { "memcmp", luasodium_memcmp },
@@ -365,6 +420,8 @@ static const struct luaL_Reg luasodium_methods[] = {
     { "sub", luasodium_sub },
     { "compare", luasodium_compare },
     { "is_zero", luasodium_is_zero },
+    { "pad", luasodium_pad },
+    { "unpad", luasodium_unpad },
     { NULL, NULL },
 };
 
