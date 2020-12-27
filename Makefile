@@ -23,6 +23,7 @@ VERSION = $(shell $(LUA) aux/version.lua)
 
 release: $(LUASODIUM_DLLS) $(LUASODIUM_FFIS)
 	rm -f luasodium-$(VERSION).tar.gz
+	rm -f luasodium-$(VERSION).tar.xz
 	mkdir -p luasodium-$(VERSION)
 	mkdir -p luasodium-$(VERSION)/luasodium
 	cp luasodium.c luasodium-$(VERSION)/luasodium.c

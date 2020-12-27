@@ -14,10 +14,25 @@ description = {
 build = {
   type = "builtin",
   modules = {
-    ["luasodium"] = "luasodium.c",
-    ["luasodium.randombytes"] = "luasodium/randombytes.c",
-    ["luasodium.crypto_secretbox"] = "luasodium/crypto_secretbox.c",
-  }
+    ["luasodium"] = {
+      sources = { "luasodium.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
+    },
+    ["luasodium.randombytes"] = {
+      sources = { "luasodium/randombytes.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
+    },
+    ["luasodium.crypto_secretbox"] = {
+      sources = { "luasodium/crypto_secretbox.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
+    },
+  },
 }
 
 dependencies = {
@@ -26,6 +41,7 @@ dependencies = {
 
 external_dependencies = {
   SODIUM = {
-    library = 'sodium'
+    header = 'sodium.h',
+    library = 'sodium',
   }
 }

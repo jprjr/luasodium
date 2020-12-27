@@ -5,7 +5,7 @@
 #include <string.h>
 #include <assert.h>
 
-static const char *luasodium_version = "0.0.1";
+static const char *luasodium_version = "0.0.2";
 
 #include "luasodium.luah"
 
