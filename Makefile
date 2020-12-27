@@ -36,6 +36,9 @@ release: $(LUASODIUM_DLLS) $(LUASODIUM_FFIS)
 	cp luasodium/crypto_secretbox.luah luasodium-$(VERSION)/luasodium/crypto_secretbox.luah
 	cp README.md luasodium-$(VERSION)/README.md
 	cp LICENSE luasodium-$(VERSION)/LICENSE
-	tar cvzf luasodium-$(VERSION).tar.gz luasodium-$(VERSION)
 	cp Makefile.dist luasodium-$(VERSION)/Makefile
 	sed 's/@VERSION@/$(VERSION)/g' < specs/luasodium-release-template.rockspec > luasodium-$(VERSION)/luasodium-$(VERSION)-1.rockspec
+	tar cvf luasodium-$(VERSION).tar luasodium-$(VERSION)
+	gzip -k luasodium-$(VERSION).tar
+	xz luasodium-$(VERSION).tar
+	rm -rf luasodium-$(VERSION)

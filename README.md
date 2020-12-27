@@ -34,7 +34,9 @@ Available on luarocks:
 luarocks install luasodium
 ```
 
-Alternatively, if you'd like to build from source:
+Alternatively, if you'd like to build from source, grab
+one of the release tarballs (not the automatically-generated .tar.gz files).
+This will have pre-compiled Lua includes for the FFI portion of the library.
 
 ```bash
 tar xf luasodium-0.0.1.tar.gz
