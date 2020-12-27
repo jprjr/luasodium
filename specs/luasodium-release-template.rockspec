@@ -1,5 +1,5 @@
 package = "luasodium"
-version = "@VERSION@"
+version = "@VERSION@-1"
 
 source = {
   url = "https://github.com/jprjr/luasodium/releases/download/v@VERSION@/luasodium-@VERSION@.tar.gz"

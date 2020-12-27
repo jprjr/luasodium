@@ -10,7 +10,7 @@ be linked to `libsodium` and have references to the needed functions).
 
 ## Caveats
 
-`libsodium` includes function for secure programming, like allocating
+`libsodium` includes functions for secure programming, like allocating
 memory that avoids swapping, securely zeroing out memory, clearing
 the stack, and so on.
 
@@ -18,9 +18,32 @@ I'm not sure how possible it is to implement these kinds of functions
 in Lua. In Lua, I allocate memory using `lua_newuserdata` or LuaJIT's
 `ffi.new()`, so that Lua can keep track of it and garbage collect it.
 
+I could write wrappers around these methods that use metatables to
+free memory, but then you get into how to access/use the memory -
+should it be like an array, and you get/set single bytes?
+
 If you're concerned with making absolutely sure memory is cleared
-out, you should likely code your secure portions in C and use the
+out, you should likely code your secure portions in C and use
 `libsodium`'s secure memory functions.
+
+## Installation
+
+Available on luarocks:
+
+```bash
+luarocks install luasodium
+```
+
+Alternatively, if you'd like to build from source:
+
+```bash
+tar xf luasodium-0.0.1.tar.gz
+cd luasodium-0.0.1
+make
+```
+
+I still need to write a `make install` target, and
+update the Makefile for supporting Windows.
 
 ## Licensing
 
