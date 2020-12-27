@@ -5,6 +5,8 @@
 #include <string.h>
 #include <assert.h>
 
+static const char *luasodium_version = "0.0.1";
+
 #include "luasodium.luah"
 
 typedef void * ffi_pointer_t;
@@ -468,6 +470,8 @@ luaopen_luasodium(lua_State *L) {
         lua_pushinteger(L,sodium_base64_VARIANT_URLSAFE_NO_PADDING);
         i += 4;
         if(lua_pcall(L,i,1,0) == 0) {
+            lua_pushstring(L,luasodium_version);
+            lua_setfield(L,-2,"_VERSION");
             return 1;
         }
     }
@@ -486,6 +490,9 @@ luaopen_luasodium(lua_State *L) {
     lua_setfield(L,-2,"base64_VARIANT_URLSAFE");
     lua_pushinteger(L,sodium_base64_VARIANT_URLSAFE_NO_PADDING);
     lua_setfield(L,-2,"base64_VARIANT_URLSAFE_NO_PADDING");
+
+    lua_pushstring(L,luasodium_version);
+    lua_setfield(L,-2,"_VERSION");
 
     return 1;
 }

@@ -1,43 +1,13 @@
-.PHONY: all clean
+.PHONY: release
 
 HOST_CC = cc
-PKGCONFIG = pkg-config
-LUA = lua5.1
 
-LUASODIUM_OBJS = \
-  luasodium.o \
-  luasodium/crypto_secretbox.o \
-  luasodium/randombytes.o
-
-LUASODIUM_DLLS = \
-  luasodium.so \
-  luasodium/crypto_secretbox.so \
-  luasodium/randombytes.so
+include Makefile.dist
 
 LUASODIUM_FFIS = \
   luasodium.luah \
   luasodium/crypto_secretbox.luah \
   luasodium/randombytes.luah
-
-CFLAGS=$(shell $(PKGCONFIG) --cflags libsodium)
-LDFLAGS=$(shell $(PKGCONFIG) --libs libsodium)
-
-CFLAGS += -fPIC -Wall -Wextra -g -O0 -DDEBUG=1
-CFLAGS += $(shell $(PKGCONFIG) --cflags $(LUA))
-
-all: $(LUASODIUM_DLLS)
-
-%.so: %.o
-	$(CC) -shared -o $@ $^ $(LDFLAGS)
-
-luasodium.o: luasodium.c luasodium.luah
-	$(CC) $(CFLAGS) -o $@ -c $<
-
-luasodium/randombytes.o: luasodium/randombytes.c luasodium/randombytes.luah
-	$(CC) $(CFLAGS) -o $@ -c $<
-
-luasodium/crypto_secretbox.o: luasodium/crypto_secretbox.c luasodium/crypto_secretbox.luah
-	$(CC) $(CFLAGS) -o $@ -c $<
 
 %.luah: %-ffi.lua aux/bin2c
 	./aux/bin2c $< $@ $(patsubst %.luah,%_ffi,$(notdir $@))
@@ -46,4 +16,26 @@ aux/bin2c: aux/bin2c.c
 	$(HOST_CC) -o $@ $^
 
 clean:
-	rm -f aux/bin2c $(LUASODIUM_DLLS) $(LUASODIUM_OBJS) $(LUASODIUM_FFIS)
+	$(MAKE) -f Makefile.dist clean
+	rm -f aux/bin2c $(LUASODIUM_FFIS)
+
+VERSION = $(shell $(LUA) aux/version.lua)
+
+release: $(LUASODIUM_DLLS) $(LUASODIUM_FFIS)
+	rm -f luasodium-$(VERSION).tar.gz
+	mkdir -p luasodium-$(VERSION)
+	mkdir -p luasodium-$(VERSION)/luasodium
+	cp luasodium.c luasodium-$(VERSION)/luasodium.c
+	cp luasodium/randombytes.c luasodium-$(VERSION)/luasodium/randombytes.c
+	cp luasodium/crypto_secretbox.c luasodium-$(VERSION)/luasodium/crypto_secretbox.c
+	cp luasodium-ffi.lua luasodium-$(VERSION)/luasodium-ffi.lua
+	cp luasodium/randombytes-ffi.lua luasodium-$(VERSION)/luasodium/randombytes-ffi.lua
+	cp luasodium/crypto_secretbox-ffi.lua luasodium-$(VERSION)/luasodium/crypto_secretbox-ffi.lua
+	cp luasodium.luah luasodium-$(VERSION)/luasodium.luah
+	cp luasodium/randombytes.luah luasodium-$(VERSION)/luasodium/randombytes.luah
+	cp luasodium/crypto_secretbox.luah luasodium-$(VERSION)/luasodium/crypto_secretbox.luah
+	cp README.md luasodium-$(VERSION)/README.md
+	cp LICENSE luasodium-$(VERSION)/LICENSE
+	tar cvzf luasodium-$(VERSION).tar.gz luasodium-$(VERSION)
+	cp Makefile.dist luasodium-$(VERSION)/Makefile
+	sed 's/@VERSION@/$(VERSION)/g' < specs/luasodium-release-template.rockspec > luasodium-$(VERSION)/luasodium-$(VERSION)-1.rockspec

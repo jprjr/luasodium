@@ -22,6 +22,10 @@ If you're concerned with making absolutely sure memory is cleared
 out, you should likely code your secure portions in C and use the
 `libsodium`'s secure memory functions.
 
+## Licensing
+
+MIT License (see file `LICENSE`).
+
 ## Idioms
 
 This is meant to follow the Libsodium API closely, with a few Lua idioms.
