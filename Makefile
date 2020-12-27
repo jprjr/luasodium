@@ -6,14 +6,17 @@ LUA = lua5.1
 
 LUASODIUM_OBJS = \
   luasodium.o \
+  luasodium/crypto_secretbox.o \
   luasodium/randombytes.o
 
 LUASODIUM_DLLS = \
   luasodium.so \
+  luasodium/crypto_secretbox.so \
   luasodium/randombytes.so
 
 LUASODIUM_FFIS = \
   luasodium.luah \
+  luasodium/crypto_secretbox.luah \
   luasodium/randombytes.luah
 
 CFLAGS=$(shell $(PKGCONFIG) --cflags libsodium)
@@ -31,6 +34,9 @@ luasodium.o: luasodium.c luasodium.luah
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 luasodium/randombytes.o: luasodium/randombytes.c luasodium/randombytes.luah
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+luasodium/crypto_secretbox.o: luasodium/crypto_secretbox.c luasodium/crypto_secretbox.luah
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 %.luah: %-ffi.lua aux/bin2c
