@@ -7,10 +7,6 @@
 
 #include "luasodium.luah"
 
-#ifdef DEBUG
-#include <stdio.h>
-#endif
-
 typedef void * ffi_pointer_t;
 
 #if !defined(luaL_newlibtable) \
@@ -474,12 +470,6 @@ luaopen_luasodium(lua_State *L) {
         if(lua_pcall(L,i,1,0) == 0) {
             return 1;
         }
-#ifdef DEBUG
-        else {
-            fprintf(stderr,"sodium_ffi error: %s\n",lua_tostring(L,-1));
-            fflush(stderr);
-        }
-#endif
     }
 
     /* load traditional C API */
