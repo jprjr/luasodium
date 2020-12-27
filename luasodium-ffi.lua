@@ -129,7 +129,10 @@ local base64_variants = {
 }
 
 local function luasodium_init()
-  return sodium_init() ~= -1
+  if sodium_init() == -1 then
+    return error('sodium_init error')
+  end
+  return true
 end
 
 local function luasodium_memcmp(p1,p2,len)
@@ -139,10 +142,11 @@ local function luasodium_memcmp(p1,p2,len)
   return sodium_memcmp(p1,p2,len) == 0
 end
 
-local function luasodium_bin2hex(bin,bin_len)
-  if not bin_len then
-    return error('requires 2 arguments')
+local function luasodium_bin2hex(bin)
+  if not bin then
+    return error('requires 1 argument')
   end
+  local bin_len = string_len(bin)
 
   local hex_len = bin_len * 2
   local hex = char_array(hex_len + 1)
@@ -150,10 +154,11 @@ local function luasodium_bin2hex(bin,bin_len)
   return ffi_string(hex)
 end
 
-local function luasodium_hex2bin(hex,hex_len,ignore)
-  if not hex_len then
-    return error('requires 2 arguments')
+local function luasodium_hex2bin(hex,ignore)
+  if not hex then
+    return error('requires 1 argument')
   end
+  local hex_len = string_len(hex)
 
   local bin_len = math_ceil(hex_len / 2)
   local tmp_hex = char_array(hex_len)
@@ -169,7 +174,7 @@ local function luasodium_hex2bin(hex,hex_len,ignore)
     tmp_hex,hex_len,
     ignore,out_bin_len,
     hex_end) ~= 0 then
-    return nil,'error in hex2bin'
+    return error('error in hex2bin')
   end
 
   if hex_end[0] < tmp_hex + hex_len then
@@ -178,15 +183,16 @@ local function luasodium_hex2bin(hex,hex_len,ignore)
   return ffi_string(bin,out_bin_len[0]), rem
 end
 
-local function luasodium_bin2base64(bin,bin_len,variant)
+local function luasodium_bin2base64(bin,variant)
   if not variant then
-    return error('requires 3 arguments')
+    return error('requires 2 arguments')
   end
 
   if not base64_variants[variant] then
     return error('unknown base64 variant')
   end
 
+  local bin_len = string_len(bin)
   local b64_len = tonumber(sodium_base64_encoded_len(bin_len,variant))
 
   local b64 = char_array(b64_len)
@@ -198,14 +204,16 @@ local function luasodium_bin2base64(bin,bin_len,variant)
   return ffi_string(b64,b64_len-1)
 end
 
-local function luasodium_base642bin(base64,base64_len,variant,ignore)
+local function luasodium_base642bin(base64,variant,ignore)
   if not variant then
-    return error('requires 3 arguments')
+    return error('requires 2 arguments')
   end
 
   if not base64_variants[variant] then
     return error('unknown base64 variant')
   end
+
+  local base64_len = string_len(base64)
 
   local bin_len = base64_len
   local tmp_base64 = char_array(base64_len)
@@ -221,7 +229,7 @@ local function luasodium_base642bin(base64,base64_len,variant,ignore)
     tmp_base64,base64_len,
     ignore,out_bin_len,
     base64_end,variant) ~= 0 then
-    return nil,'error in base642bin'
+    return error('error in base642bin')
   end
 
   if base64_end[0] < tmp_base64 + base64_len then
@@ -297,7 +305,7 @@ local function luasodium_pad(n,blocksize)
 
   if sodium_pad(outlen,r,
     nlen,blocksize,rounded) ~= 0 then
-    return nil, 'sodium_pad error'
+    return error('sodium_pad error')
   end
 
   return ffi_string(r,outlen[0])
@@ -309,7 +317,7 @@ local function luasodium_unpad(n,blocksize)
 
   if sodium_unpad(outlen,n,
     nlen,blocksize) ~= 0 then
-    return nil, 'sodium_unpad error'
+    return error('sodium_unpad error')
   end
 
   return ffi_string(n,outlen[0])
