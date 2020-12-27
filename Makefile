@@ -42,4 +42,3 @@ release: $(LUASODIUM_DLLS) $(LUASODIUM_FFIS)
 	tar cvf luasodium-$(VERSION).tar luasodium-$(VERSION)
 	gzip -k luasodium-$(VERSION).tar
 	xz luasodium-$(VERSION).tar
-	rm -rf luasodium-$(VERSION)
