@@ -3,6 +3,11 @@
 Bindings to [Libsodium](https://libsodium.gitbook.io/doc/), with support
 for the Lua C API as well as LuaJIT's FFI API.
 
+The FFI API is loaded from within the C module via function pointers,
+this allows the FFI API to work in static binaries, and remove the need
+to search for a library with `ffi.load` (since the C module will already
+be linked to `libsodium` and have references to the needed functions).
+
 ## Idioms
 
 This is meant to follow the Libsodium API closely, with a few Lua idioms.
@@ -23,7 +28,7 @@ If a `libsodium` function changes a buffer, this
 library will instead make a copy, make changes
 in that, and return the copy.
 
-### Use input string length instead of provided string length.
+### Use input string length
 
 If a `libsodium` function accepts a buffer and a buffer
 length, the Lua version will just accept a Lua string, you
@@ -90,6 +95,10 @@ So far this covers:
 ### `luasodium`
 
 #### Synopsis:
+
+The base `luasodium` module provides an `init` function, and helper
+functions for padding strings, encoding/decoding base64, handling
+large integers, etc.
 
 ```lua
 local luasodium = require'luasodium'
