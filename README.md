@@ -351,3 +351,8 @@ assert(
 
 * Decrypts `cipher` with `mac`, `nonce`, and `key`.
 * Returns the plain-text message.
+
+##### `string key = crypto_secretbox.keygen()`
+
+* Returns a random string that can be used as a key.
+
