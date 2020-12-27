@@ -2,6 +2,12 @@
 #include <lua.h>
 #include <lauxlib.h>
 
+#include <assert.h>
+
+#include "randombytes.luah"
+
+typedef void * ffi_pointer_t;
+
 #if !defined(luaL_newlibtable) \
   && (!defined LUA_VERSION_NUM || LUA_VERSION_NUM==501)
 static void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
@@ -26,6 +32,11 @@ luasodium_randombytes_random(lua_State *L) {
 
 static int
 luasodium_randombytes_uniform(lua_State *L) {
+    if(!lua_isnumber(L,1)) {
+        lua_pushliteral(L,"missing number argument");
+        return lua_error(L);
+    }
+
     lua_pushinteger(L,randombytes_uniform(lua_tointeger(L,1)));
     return 1;
 }
@@ -33,13 +44,20 @@ luasodium_randombytes_uniform(lua_State *L) {
 static int
 luasodium_randombytes_buf(lua_State *L) {
     char *buf = NULL;
-    size_t s = lua_tointeger(L,1);
+    size_t s = 0;
+
+    if(!lua_isnumber(L,1)) {
+        lua_pushliteral(L,"missing number argument");
+        return lua_error(L);
+    }
+
+    s = lua_tointeger(L,1);
     buf = lua_newuserdata(L,s);
     if(buf == NULL) {
-        lua_pushboolean(L,1);
-        lua_pushstring(L,"out of memory");
-        return 2;
+        lua_pushliteral(L,"out of memory");
+        return lua_error(L);
     }
+
     lua_pop(L,1);
     randombytes_buf(buf,s);
     lua_pushlstring(L,buf,s);
@@ -57,22 +75,28 @@ luasodium_randombytes_buf_deterministic(lua_State *L) {
     const char *seed = NULL;
     size_t seed_len;
     char *buf = NULL;
-    size_t s = lua_tointeger(L,1);
+    size_t s = 0;
+
+    if(lua_isnoneornil(L,2)) {
+        lua_pushliteral(L,"requires 2 arguments");
+        return lua_error(L);
+    }
+
+    s = lua_tointeger(L,1);
     seed = lua_tolstring(L,2,&seed_len);
 
     if(seed_len != randombytes_SEEDBYTES) {
-        lua_pushnil(L),
-        lua_pushstring(L,"wrong seed length");
-        return 2;
+        lua_pushliteral(L,"wrong seed length");
+        return lua_error(L);
     }
 
     buf = lua_newuserdata(L,s);
     if(buf == NULL) {
-        lua_pushboolean(L,1);
-        lua_pushstring(L,"out of memory");
-        return 2;
+        lua_pushliteral(L,"out of memory");
+        return lua_error(L);
     }
     lua_pop(L,1);
+
     randombytes_buf_deterministic(buf,s,(const unsigned char *)seed);
     lua_pushlstring(L,buf,s);
     return 1;
@@ -102,12 +126,43 @@ static const struct luaL_Reg luasodium_randombytes[] = {
     { NULL, NULL },
 };
 
+static const ffi_pointer_t ffi_pointers[] = {
+    randombytes_random,
+    randombytes_uniform,
+    randombytes_buf,
+    randombytes_seedbytes,
+    randombytes_close,
+    randombytes_stir,
+    randombytes_buf_deterministic,
+    NULL
+};
+
 int
-luaopen_luasodium_randombytes_core(lua_State *L) {
+luaopen_luasodium_randombytes(lua_State *L) {
+    unsigned int i = 0;
+    const ffi_pointer_t *p = ffi_pointers;
+    int top = lua_gettop(L);
+
+    if(luaL_loadbuffer(L,randombytes_ffi,randombytes_ffi_length - 1,"randombytes-ffi.lua") == 0) {
+        lua_pushinteger(L,randombytes_SEEDBYTES);
+        i++;
+
+        while(*p != NULL) {
+            lua_pushlightuserdata(L,*p);
+            p++;
+            i++;
+        }
+        assert(i == 8);
+        if(lua_pcall(L,i,1,0) == 0) {
+            return 1;
+        }
+    }
+
+    lua_settop(L,top);
     lua_newtable(L);
     luaL_setfuncs(L,luasodium_randombytes,0);
 
-    lua_pushinteger(L,randombytes_seedbytes());
+    lua_pushinteger(L,randombytes_SEEDBYTES);
     lua_setfield(L,-2,"SEEDBYTES");
 
     return 1;
