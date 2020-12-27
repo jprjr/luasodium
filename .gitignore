@@ -4,3 +4,5 @@
 *.luah
 *.tar.gz
 *.tar.xz
+*.src.rock
+/dist

@@ -5,9 +5,8 @@
 #include <string.h>
 #include <assert.h>
 
-static const char *luasodium_version = "0.0.2";
-
 #include "luasodium.luah"
+#include "luasodium/version.luah"
 
 typedef void * ffi_pointer_t;
 
@@ -457,7 +456,7 @@ luaopen_luasodium(lua_State *L) {
     int top = lua_gettop(L);
 
     /* try loading ffi version */
-    if(luaL_loadbuffer(L,luasodium_ffi,luasodium_ffi_length - 1,"luasodium-ffi.lua") == 0) {
+    if(luaL_loadbuffer(L,luasodium_lua,luasodium_lua_length - 1,"luasodium.lua") == 0) {
         while(*p != NULL) {
           lua_pushlightuserdata(L,*p);
           p++;
@@ -470,8 +469,6 @@ luaopen_luasodium(lua_State *L) {
         lua_pushinteger(L,sodium_base64_VARIANT_URLSAFE_NO_PADDING);
         i += 4;
         if(lua_pcall(L,i,1,0) == 0) {
-            lua_pushstring(L,luasodium_version);
-            lua_setfield(L,-2,"_VERSION");
             return 1;
         }
     }
@@ -491,7 +488,15 @@ luaopen_luasodium(lua_State *L) {
     lua_pushinteger(L,sodium_base64_VARIANT_URLSAFE_NO_PADDING);
     lua_setfield(L,-2,"base64_VARIANT_URLSAFE_NO_PADDING");
 
-    lua_pushstring(L,luasodium_version);
+    if(luaL_loadbuffer(L,version_lua,version_lua_length - 1, "version.lua")) {
+        lua_settop(L,top);
+        return 0;
+    }
+    if(lua_pcall(L,0,1,0)) {
+        lua_settop(L,top);
+        return 0;
+    }
+
     lua_setfield(L,-2,"_VERSION");
 
     return 1;

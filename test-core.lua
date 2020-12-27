@@ -1,4 +1,5 @@
-local luasodium   = require'luasodium'
+local luasodium   = require('luasodium','test')
+print(luasodium._VERSION)
 
 assert(luasodium.init())
 

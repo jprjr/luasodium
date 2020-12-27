@@ -143,7 +143,7 @@ luaopen_luasodium_randombytes(lua_State *L) {
     const ffi_pointer_t *p = ffi_pointers;
     int top = lua_gettop(L);
 
-    if(luaL_loadbuffer(L,randombytes_ffi,randombytes_ffi_length - 1,"randombytes-ffi.lua") == 0) {
+    if(luaL_loadbuffer(L,randombytes_lua,randombytes_lua_length - 1,"randombytes.lua") == 0) {
         lua_pushinteger(L,randombytes_SEEDBYTES);
         i++;
 

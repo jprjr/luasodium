@@ -276,7 +276,7 @@ luaopen_luasodium_crypto_secretbox(lua_State *L) {
     const ffi_pointer_t *p = ffi_pointers;
     int top = lua_gettop(L);
 
-    if(luaL_loadbuffer(L,crypto_secretbox_ffi,crypto_secretbox_ffi_length - 1,"crypto_secretbox-ffi.lua") == 0) {
+    if(luaL_loadbuffer(L,crypto_secretbox_lua,crypto_secretbox_lua_length - 1,"crypto_secretbox.lua") == 0) {
         lua_pushinteger(L,crypto_secretbox_KEYBYTES);
         lua_pushinteger(L,crypto_secretbox_NONCEBYTES);
         lua_pushinteger(L,crypto_secretbox_MACBYTES);

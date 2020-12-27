@@ -8,6 +8,11 @@ this allows the FFI API to work in static binaries, and remove the need
 to search for a library with `ffi.load` (since the C module will already
 be linked to `libsodium` and have references to the needed functions).
 
+If you're in an environment where building a C module is difficult,
+but using the FFI API is fine, you can just use the modules under
+the `lua/` folder directly. They detect if they're being loaded
+from the C module, or if they're being loaded as regular modules.
+
 ## Caveats
 
 `libsodium` includes functions for secure programming, like allocating
