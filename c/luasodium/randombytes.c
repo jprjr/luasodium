@@ -1,28 +1,5 @@
-#include <sodium.h>
-#include <lua.h>
-#include <lauxlib.h>
-
-#include <assert.h>
-
+#include "../luasodium.h"
 #include "randombytes.luah"
-
-typedef void * ffi_pointer_t;
-
-#if !defined(luaL_newlibtable) \
-  && (!defined LUA_VERSION_NUM || LUA_VERSION_NUM==501)
-static void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
-  luaL_checkstack(L, nup+1, "too many upvalues");
-  for (; l->name != NULL; l++) {  /* fill the table with given functions */
-    int i;
-    lua_pushstring(L, l->name);
-    for (i = 0; i < nup; i++)  /* copy upvalues to the top */
-      lua_pushvalue(L, -(nup+1));
-    lua_pushcclosure(L, l->func, nup);  /* closure with those upvalues */
-    lua_settable(L, -(nup + 3));
-  }
-  lua_pop(L, nup);  /* remove upvalues */
-}
-#endif
 
 static int
 luasodium_randombytes_random(lua_State *L) {
@@ -137,6 +114,11 @@ static const ffi_pointer_t ffi_pointers[] = {
     NULL
 };
 
+static const luasodium_constant_t luasodium_constants[] = {
+    { "SEEDBYTES",  randombytes_SEEDBYTES },
+    { NULL, 0 },
+};
+
 int
 luaopen_luasodium_randombytes(lua_State *L) {
     unsigned int i = 0;
@@ -144,8 +126,8 @@ luaopen_luasodium_randombytes(lua_State *L) {
     int top = lua_gettop(L);
 
     if(luaL_loadbuffer(L,randombytes_lua,randombytes_lua_length - 1,"randombytes.lua") == 0) {
-        lua_pushinteger(L,randombytes_SEEDBYTES);
-        i++;
+        i = luasodium_push_constants(L,luasodium_constants);
+        assert(i == 1);
 
         while(*p != NULL) {
             lua_pushlightuserdata(L,*p);
@@ -161,9 +143,7 @@ luaopen_luasodium_randombytes(lua_State *L) {
     lua_settop(L,top);
     lua_newtable(L);
     luaL_setfuncs(L,luasodium_randombytes,0);
-
-    lua_pushinteger(L,randombytes_SEEDBYTES);
-    lua_setfield(L,-2,"SEEDBYTES");
+    luasodium_set_constants(L,luasodium_constants);
 
     return 1;
 }

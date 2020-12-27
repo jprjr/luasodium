@@ -1,28 +1,5 @@
-#include <sodium.h>
-#include <lua.h>
-#include <lauxlib.h>
-
-#include <assert.h>
-
+#include "../luasodium.h"
 #include "crypto_secretbox.luah"
-
-typedef void * ffi_pointer_t;
-
-#if !defined(luaL_newlibtable) \
-  && (!defined LUA_VERSION_NUM || LUA_VERSION_NUM==501)
-static void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
-  luaL_checkstack(L, nup+1, "too many upvalues");
-  for (; l->name != NULL; l++) {  /* fill the table with given functions */
-    int i;
-    lua_pushstring(L, l->name);
-    for (i = 0; i < nup; i++)  /* copy upvalues to the top */
-      lua_pushvalue(L, -(nup+1));
-    lua_pushcclosure(L, l->func, nup);  /* closure with those upvalues */
-    lua_settable(L, -(nup + 3));
-  }
-  lua_pop(L, nup);  /* remove upvalues */
-}
-#endif
 
 /* crypto_secretbox_easy(message, nonce, key) */
 static int
@@ -270,6 +247,13 @@ static const ffi_pointer_t ffi_pointers[] = {
     NULL,
 };
 
+static const luasodium_constant_t luasodium_constants[] = {
+    { "KEYBYTES",   crypto_secretbox_KEYBYTES },
+    { "MACBYTES",   crypto_secretbox_MACBYTES       },
+    { "NONCEBYTES", crypto_secretbox_NONCEBYTES     },
+    { NULL, 0 },
+};
+
 int
 luaopen_luasodium_crypto_secretbox(lua_State *L) {
     unsigned int i = 0;
@@ -277,10 +261,8 @@ luaopen_luasodium_crypto_secretbox(lua_State *L) {
     int top = lua_gettop(L);
 
     if(luaL_loadbuffer(L,crypto_secretbox_lua,crypto_secretbox_lua_length - 1,"crypto_secretbox.lua") == 0) {
-        lua_pushinteger(L,crypto_secretbox_KEYBYTES);
-        lua_pushinteger(L,crypto_secretbox_NONCEBYTES);
-        lua_pushinteger(L,crypto_secretbox_MACBYTES);
-        i += 3;
+        i = luasodium_push_constants(L,luasodium_constants);
+        assert(i == 3);
         while(*p != NULL) {
             lua_pushlightuserdata(L,*p);
             p++;
@@ -297,13 +279,7 @@ luaopen_luasodium_crypto_secretbox(lua_State *L) {
     lua_newtable(L);
 
     luaL_setfuncs(L,luasodium_secretbox,0);
-
-    lua_pushinteger(L,crypto_secretbox_KEYBYTES);
-    lua_setfield(L,-2,"KEYBYTES");
-    lua_pushinteger(L,crypto_secretbox_NONCEBYTES);
-    lua_setfield(L,-2,"NONCEBYTES");
-    lua_pushinteger(L,crypto_secretbox_MACBYTES);
-    lua_setfield(L,-2,"MACBYTES");
+    luasodium_set_constants(L,luasodium_constants);
 
     return 1;
 }

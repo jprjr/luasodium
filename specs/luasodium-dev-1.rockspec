@@ -32,6 +32,12 @@ build = {
       incdirs = "$(SODIUM_INCDIR)",
       libraries = "sodium",
     },
+    ["luasodium.crypto_box"] = {
+      sources = { "c/luasodium/crypto_box.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
+    },
   },
 }
 

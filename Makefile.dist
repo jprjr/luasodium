@@ -8,11 +8,13 @@ $(shell mkdir -p luasodium)
 LUASODIUM_OBJS = \
   c/luasodium.o \
   c/luasodium/crypto_secretbox.o \
+  c/luasodium/crypto_box.o \
   c/luasodium/randombytes.o
 
 LUASODIUM_DLLS = \
   luasodium.so \
   luasodium/crypto_secretbox.so \
+  luasodium/crypto_box.so \
   luasodium/randombytes.so
 
 CFLAGS  += $(shell $(PKGCONFIG) --cflags libsodium)
@@ -36,6 +38,9 @@ c/luasodium/randombytes.o: c/luasodium/randombytes.c c/luasodium/randombytes.lua
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 c/luasodium/crypto_secretbox.o: c/luasodium/crypto_secretbox.c c/luasodium/crypto_secretbox.luah
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+c/luasodium/crypto_box.o: c/luasodium/crypto_box.c c/luasodium/crypto_box.luah
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 clean:

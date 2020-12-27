@@ -5,10 +5,10 @@ local ffi_string = ffi.string
 
 local char_array = ffi.typeof('char[?]')
 
-local crypto_secretbox_KEYBYTES
-local crypto_secretbox_NONCEBYTES
-local crypto_secretbox_MACBYTES
 local sodium_lib
+local crypto_secretbox_KEYBYTES
+local crypto_secretbox_MACBYTES
+local crypto_secretbox_NONCEBYTES
 
 local function test_cspace()
   if ffi.C.crypto_secretbox_keybytes then
@@ -22,8 +22,8 @@ local c_pointers = { ... }
 if #c_pointers > 1 then
   sodium_lib = {}
   crypto_secretbox_KEYBYTES = c_pointers[1]
-  crypto_secretbox_NONCEBYTES = c_pointers[2]
-  crypto_secretbox_MACBYTES = c_pointers[3]
+  crypto_secretbox_MACBYTES = c_pointers[2]
+  crypto_secretbox_NONCEBYTES = c_pointers[3]
 
   sodium_lib.crypto_secretbox_easy = ffi.cast([[
   int (*)(unsigned char *, const unsigned char *,
@@ -74,8 +74,8 @@ else
   end
 
   crypto_secretbox_KEYBYTES   = tonumber(sodium_lib.crypto_secretbox_keybytes())
-  crypto_secretbox_NONCEBYTES = tonumber(sodium_lib.crypto_secretbox_noncebytes())
   crypto_secretbox_MACBYTES   = tonumber(sodium_lib.crypto_secretbox_macbytes())
+  crypto_secretbox_NONCEBYTES = tonumber(sodium_lib.crypto_secretbox_noncebytes())
 
   ffi.cdef([[
   int crypto_secretbox_easy(unsigned char *c, const unsigned char *m,

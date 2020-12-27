@@ -1,31 +1,8 @@
-#include <sodium.h>
-#include <lua.h>
-#include <lauxlib.h>
+#include "luasodium.h"
 
 #include <string.h>
-#include <assert.h>
-
 #include "luasodium.luah"
 #include "luasodium/version.luah"
-
-typedef void * ffi_pointer_t;
-
-#if !defined(luaL_newlibtable) \
-  && (!defined LUA_VERSION_NUM || LUA_VERSION_NUM==501)
-static void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
-  luaL_checkstack(L, nup+1, "too many upvalues");
-  for (; l->name != NULL; l++) {  /* fill the table with given functions */
-    int i;
-    lua_pushstring(L, l->name);
-    for (i = 0; i < nup; i++)  /* copy upvalues to the top */
-      lua_pushvalue(L, -(nup+1));
-    lua_pushcclosure(L, l->func, nup);  /* closure with those upvalues */
-    lua_settable(L, -(nup + 3));
-  }
-  lua_pop(L, nup);  /* remove upvalues */
-}
-#endif
-
 
 static int
 luasodium_init(lua_State *L) {
@@ -448,6 +425,13 @@ static const ffi_pointer_t ffi_pointers[] = {
     NULL
 };
 
+static const luasodium_constant_t luasodium_constants[] = {
+    { "base64_VARIANT_ORIGINAL", sodium_base64_VARIANT_ORIGINAL },
+    { "base64_VARIANT_ORIGINAL_NO_PADDING", sodium_base64_VARIANT_ORIGINAL_NO_PADDING },
+    { "base64_VARIANT_URLSAFE", sodium_base64_VARIANT_URLSAFE },
+    { "base64_VARIANT_URLSAFE_NO_PADDING", sodium_base64_VARIANT_URLSAFE_NO_PADDING },
+    { NULL, 0 },
+};
 
 int
 luaopen_luasodium(lua_State *L) {
@@ -463,11 +447,8 @@ luaopen_luasodium(lua_State *L) {
           i++;
         }
         assert(i == 14);
-        lua_pushinteger(L,sodium_base64_VARIANT_ORIGINAL);
-        lua_pushinteger(L,sodium_base64_VARIANT_ORIGINAL_NO_PADDING);
-        lua_pushinteger(L,sodium_base64_VARIANT_URLSAFE);
-        lua_pushinteger(L,sodium_base64_VARIANT_URLSAFE_NO_PADDING);
-        i += 4;
+        i += luasodium_push_constants(L,luasodium_constants);
+        assert(i == 18);
         if(lua_pcall(L,i,1,0) == 0) {
             return 1;
         }
@@ -478,15 +459,7 @@ luaopen_luasodium(lua_State *L) {
     lua_newtable(L);
 
     luaL_setfuncs(L,luasodium_methods,0);
-
-    lua_pushinteger(L,sodium_base64_VARIANT_ORIGINAL);
-    lua_setfield(L,-2,"base64_VARIANT_ORIGINAL");
-    lua_pushinteger(L,sodium_base64_VARIANT_ORIGINAL_NO_PADDING);
-    lua_setfield(L,-2,"base64_VARIANT_ORIGINAL_NO_PADDING");
-    lua_pushinteger(L,sodium_base64_VARIANT_URLSAFE);
-    lua_setfield(L,-2,"base64_VARIANT_URLSAFE");
-    lua_pushinteger(L,sodium_base64_VARIANT_URLSAFE_NO_PADDING);
-    lua_setfield(L,-2,"base64_VARIANT_URLSAFE_NO_PADDING");
+    luasodium_set_constants(L,luasodium_constants);
 
     if(luaL_loadbuffer(L,version_lua,version_lua_length - 1, "version.lua")) {
         lua_settop(L,top);
