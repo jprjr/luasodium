@@ -61,11 +61,13 @@ If a function is missing a parameter, has a wrong parameter type,
 or a call into `libsodium` returns an error value, a Lua error
 is thrown.
 
-### Idiom: Auto-allocate strings/buffers, strings are immutable.
+### Idiom: Auto-allocate strings/buffers
 
 If a `libsodium` function writes data into a buffer,
 this library will automatically allocate and return
 a string.
+
+### Idiom: strings are immutable.
 
 If a `libsodium` function changes a buffer, this
 library will instead make a copy, make changes
