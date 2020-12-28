@@ -14,30 +14,59 @@ description = {
 build = {
   type = "builtin",
   modules = {
-    ["luasodium"] = {
-      sources = { "c/luasodium.c" },
+    ["luasodium.core"] = {
+      sources = { "c/luasodium/core.c" },
       libdirs = "$(SODIUM_LIBDIR)",
       incdirs = "$(SODIUM_INCDIR)",
       libraries = "sodium",
     },
-    ["luasodium.randombytes"] = {
-      sources = { "c/luasodium/randombytes.c" },
+    ["luasodium.ffi"] = {
+      sources = { "c/luasodium/ffi.c" },
       libdirs = "$(SODIUM_LIBDIR)",
       incdirs = "$(SODIUM_INCDIR)",
       libraries = "sodium",
     },
-    ["luasodium.crypto_secretbox"] = {
-      sources = { "c/luasodium/crypto_secretbox.c" },
+    ["luasodium.randombytes.core"] = {
+      sources = { "c/luasodium/randombytes/core.c" },
       libdirs = "$(SODIUM_LIBDIR)",
       incdirs = "$(SODIUM_INCDIR)",
       libraries = "sodium",
     },
-    ["luasodium.crypto_box"] = {
-      sources = { "c/luasodium/crypto_box.c" },
+    ["luasodium.randombytes.ffi"] = {
+      sources = { "c/luasodium/randombytes/ffi.c" },
       libdirs = "$(SODIUM_LIBDIR)",
       incdirs = "$(SODIUM_INCDIR)",
       libraries = "sodium",
     },
+    ["luasodium.crypto_secretbox.core"] = {
+      sources = { "c/luasodium/crypto_secretbox/core.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
+    },
+    ["luasodium.crypto_secretbox.ffi"] = {
+      sources = { "c/luasodium/crypto_secretbox/ffi.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
+    },
+    ["luasodium.crypto_box.core"] = {
+      sources = { "c/luasodium/crypto_box/core.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
+    },
+    ["luasodium.crypto_box.ffi"] = {
+      sources = { "c/luasodium/crypto_box/ffi.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
+    },
+    ["luasodium"] = "lua/luasodium.lua",
+    ["luasodium.randombytes"] = "lua/luasodium/randombytes.lua",
+    ["luasodium.crypto_secretbox"] = "lua/luasodium/crypto_secretbox.lua",
+    ["luasodium.crypto_box"] = "lua/luasodium/crypto_box.lua",
+    ["luasodium.version"] = "ffi/luasodium/version.lua",
   },
 }
 

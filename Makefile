@@ -9,8 +9,7 @@ LUASODIUM_FFIS = \
   c/luasodium/version.luah \
   c/luasodium/crypto_secretbox/core.luah \
   c/luasodium/crypto_box/core.luah \
-  c/luasodium/randombytes/core.luah \
-  c/luasodium/version/core.luah
+  c/luasodium/randombytes/core.luah
 
 c/luasodium/version.luah: ffi/luasodium/version.lua aux/bin2c
 	./aux/bin2c $< $@ $(patsubst %.lua,%_lua,$(notdir $<))
