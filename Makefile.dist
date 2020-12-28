@@ -38,7 +38,7 @@ LUASODIUM_LUAS = \
 CFLAGS  += $(shell $(PKGCONFIG) --cflags libsodium)
 LDFLAGS += $(shell $(PKGCONFIG) --libs libsodium)
 
-CFLAGS += -fPIC -Wall -Wextra -g -O0 -DDEBUG=1
+CFLAGS += -fPIC -Wall -Wextra -g -O2
 CFLAGS += $(shell $(PKGCONFIG) --cflags $(LUA))
 
 all: $(LUASODIUM_DLLS) $(LUASODIUM_LUAS)
