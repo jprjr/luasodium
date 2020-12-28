@@ -153,16 +153,18 @@ based on where/when they appear in the `libsodium` documentation.
 
 Here's the completed modules:
 
-* `luasodium`: covers
+* [`luasodium`](#luasodium-1): covers
     * ["Usage"](https://libsodium.gitbook.io/doc/usage)
     * ["Helpers"](https://libsodium.gitbook.io/doc/helpers)
     * ["Padding"](https://libsodium.gitbook.io/doc/padding)
-* `luasodium.randombytes`: covers
+* [`luasodium.randombytes`](#luasodiumrandombytes): covers
     * ["Generating Random Data"](https://libsodium.gitbook.io/doc/generating_random_data)
-* `luasodium.crypto_secretbox`: covers
+* [`luasodium.crypto_secretbox`](#luasodiumcrypto_secretbox): covers
     * ["Secret-key cryptography: Authenticated encryption"](https://libsodium.gitbook.io/doc/secret-key_cryptography/secretbox)
-* `luasodium.crypto_box`: covers
+* [`luasodium.crypto_box`](#luasodiumcrypto_box): covers
     * ["Public-key cryptography: Authenticated encryption"](https://libsodium.gitbook.io/doc/public-key_cryptography/authenticated_encryption)
+* [`luasodium.crypto_scalarmult`](#luasodiumcrypto_scalarmult): covers
+    * ["Advanced: Point*scalar multiplication"](https://libsodium.gitbook.io/doc/advanced/scalar_multiplication)
 
 
 ## Module Documentation
