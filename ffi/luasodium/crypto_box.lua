@@ -30,29 +30,10 @@ if #c_pointers > 1 then
   crypto_box_SEEDBYTES      = c_pointers[5]
   crypto_box_BEFORENMBYTES  = c_pointers[6]
 
-  sodium_lib.crypto_box_publickeybytes = ffi.cast([[
-    size_t (*)(void)
+  sodium_lib.crypto_box_keypair = ffi.cast([[
+    int (*)(unsigned char *, unsigned char *)
   ]],c_pointers[7])
 
-  sodium_lib.crypto_box_secretkeybytes = ffi.cast([[
-    size_t (*)(void)
-  ]],c_pointers[8])
-
-  sodium_lib.crypto_box_macbytes = ffi.cast([[
-    size_t (*)(void)
-  ]],c_pointers[9])
-
-  sodium_lib.crypto_box_noncebytes = ffi.cast([[
-    size_t (*)(void)
-  ]],c_pointers[10])
-
-  sodium_lib.crypto_box_seedbytes = ffi.cast([[
-    size_t (*)(void)
-  ]],c_pointers[11])
-
-  sodium_lib.crypto_box_beforenmbytes = ffi.cast([[
-    size_t (*)(void)
-  ]],c_pointers[12])
 else
   ffi.cdef([[
     size_t crypto_box_publickeybytes(void);
@@ -78,7 +59,22 @@ else
   crypto_box_SEEDBYTES      = tonumber(sodium_lib.crypto_box_seedbytes())
   crypto_box_BEFORENMBYTES  = tonumber(sodium_lib.crypto_box_beforenmbytes())
 
+  ffi.cdef([[
+    int crypto_box_keypair(unsigned char *pk, unsigned char *sk);
+  ]])
+
 end
+
+local function lua_crypto_box_keypair()
+  local pk = char_array(crypto_box_PUBLICKEYBYTES)
+  local sk = char_array(crypto_box_SECRETKEYBYTES)
+  if tonumber(sodium_lib.crypto_box_keypair(pk,sk)) == -1 then
+    return error('crypto_box_keypair error')
+  end
+  return ffi_string(pk,crypto_box_PUBLICKEYBYTES),
+         ffi_string(sk,crypto_box_SECRETKEYBYTES)
+end
+
 
 local M = {
   PUBLICKEYBYTES = crypto_box_PUBLICKEYBYTES,
@@ -87,6 +83,7 @@ local M = {
   NONCEBYTES     = crypto_box_NONCEBYTES,
   SEEDBYTES      = crypto_box_SEEDBYTES,
   BEFORENMBYTES  = crypto_box_BEFORENMBYTES,
+  keypair = lua_crypto_box_keypair,
 }
 
 return M
