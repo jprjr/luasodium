@@ -3,6 +3,10 @@ print(luasodium._VERSION)
 
 assert(luasodium.init())
 
+if jit then
+  assert(crypto_box == require'luasodium.ffi')
+end
+
 for i=1,100 do
 do
   local data1 = 'abcdef'

@@ -161,6 +161,9 @@ Here's the completed modules:
     * ["Generating Random Data"](https://libsodium.gitbook.io/doc/generating_random_data)
 * `luasodium.crypto_secretbox`: covers
     * ["Secret-key cryptography: Authenticated encryption"](https://libsodium.gitbook.io/doc/secret-key_cryptography/secretbox)
+* `luasodium.crypto_box`: covers
+    * ["Public-key cryptography: Authenticated encryption"](https://libsodium.gitbook.io/doc/public-key_cryptography/authenticated_encryption)
+
 
 ## Module Documentation
 
@@ -203,7 +206,7 @@ luasodium.init()
 
 ##### `string bin, string remain = luasodium.hex2bin(string hex [,string ignore])`
 
-* Converts a lua string (`hex`) up to (`hex_len`) bytes into a binary string.
+* Converts a lua string (`hex`) into a binary string.
 * Accepts an optional parameter (`ignore`) with characters to ignore during conversions.
 * Returns the binary string, and the remainder of the hex input, if any.
 
@@ -372,3 +375,109 @@ assert(
 
 * Returns a random string that can be used as a key.
 
+
+### `luasodium.crypto_box`
+
+Wrapper for the `crypto_box_` functions.
+
+#### Synopsis
+
+```lua
+require('luasodium').init()
+local crypto_box = require'luasodium.crypto_box'
+
+local message = 'my message to encrypt'
+local a_public_key, a_private_key = crypto_box.keypair()
+local b_public_key, b_private_key = crypto_box.keypair()
+local nonce = string.rep('\0', crypto_secretbox.NONCEBYTES)
+
+assert(
+  crypto_box.open_easy(
+    crypto_box.easy(message,nonce,b_public_key,a_private_key),
+    nonce,
+    a_public_key,b_private_key
+  ) == message
+)
+```
+
+#### Constants
+
+* `crypto_box.PUBLICKEYBYTES` - valid public key length
+* `crypto_box.SECRETKEYBYTES` - valid secret key length
+* `crypto_box.MACBYTES` - valid MAC length
+* `crypto_box.NONCEBYTES` - valid nonce length
+* `crypto_box.SEEDBYTES` - valid seed length
+* `crypto_box.BEFORENMBYTES`
+
+#### Functions
+
+##### `string public, string secret = crypto_box.keypair()`
+
+* Returns a new public and secret pair of keys.
+
+##### `string public, string secret = crypto_box.seed_keypair(string seed)`
+
+* Returns a new public and secret pair of keys from a seed.
+
+##### `string cipher = crypto_box.easy(string message, string nonce, string public_key, string private_key)`
+
+* Encrypts `message` using the recipient's `public_key` and the signed with sender's `private_key`.
+* Returns the encrypted message
+
+##### `string message = crypto_box.open_easy(string cipher, string nonce, string public_key, string private_key)`
+
+* Decrypts `cipher` using the sender's `public_key` and the  recipient's `private_key`.
+* Returns the decrypted message
+
+##### `string cipher, string mac = crypto_box.detached(string message, string nonce, string public_key, string private_key)`
+
+* Encrypts `message` using the recipient's `public_key` and the signed with sender's `private_key`.
+* Returns the encrypted message and the MAC.
+
+##### `string message = crypto_box.open_detached(string cipher, string mac, string nonce, string public_key, string private_key)`
+
+* Decrypts `cipher` using MAC, the sender's `public_key` and the with recipient's `private_key`.
+* Returns the decrypted message
+
+##### `string key = crypto_box.beforenm(string public_key, string private_key)`
+
+* Returns a pre-computed key for encrypting messages in the following `_afternm` functions.
+
+##### `string cipher = crypto_box.easy_afternm(string message, string nonce, string key)`
+
+* Encrypts `message` using the pre-generated `key`.
+* Returns the encrypted message
+
+##### `string message = crypto_box.open_easy_afternm(string cipher, string nonce, string key)`
+
+* Decrypts `cipher` using the pre-generated `key`.
+* Returns the decrypted message
+
+##### `string cipher, string mac = crypto_box.detached_afternm(string message, string nonce, string key)`
+
+* Encrypts `message` using the pre-generated `key`.
+* Returns the encrypted message and the MAC.
+
+##### `string message = crypto_box.open_detached_afternm(string cipher, string mac, string nonce, string key)`
+
+* Decrypts `cipher` using `mac` the pre-generated `key`.
+* Returns the decrypted message
+
+### `luasodium.crypto_scalarmult`
+
+Wrapper for the `crypto_scalarmult` functions.
+
+#### Constants
+
+* `crypto_scalarmult.BYTES`
+* `crypto_scalarmult.SCALARBYTES`
+
+#### Functions
+
+##### `string q = crypto_scalarmult.base(n)`
+
+* Given a secret key `n`, returns the public key `q`
+
+##### `string q = crypto_scalarmult.scalarmult(n,p)`
+
+* Given a secret key `n` and public key `p`, returns the shared secret `q`.

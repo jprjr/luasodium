@@ -4,6 +4,10 @@ end
 
 local randombytes = require'luasodium.randombytes'
 
+if jit then
+  assert(randombytes == require'luasodium.randombytes.ffi')
+end
+
 for i=1,100 do
 
 do

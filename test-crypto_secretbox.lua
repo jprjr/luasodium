@@ -4,6 +4,10 @@ end
 
 local crypto_secretbox = require'luasodium.crypto_secretbox'
 
+if jit then
+  assert(crypto_secretbox == require'luasodium.crypto_secretbox.ffi')
+end
+
 local nonce = string.rep('\0',crypto_secretbox.NONCEBYTES)
 local key = string.rep('\0',crypto_secretbox.KEYBYTES)
 
