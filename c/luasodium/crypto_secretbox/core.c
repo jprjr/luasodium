@@ -1,5 +1,5 @@
-#include "../luasodium.h"
-#include "crypto_secretbox.luah"
+#include "../luasodium-c.h"
+#include "constants.h"
 
 /* crypto_secretbox_easy(message, nonce, key) */
 static int
@@ -238,48 +238,12 @@ static const struct luaL_Reg luasodium_secretbox[] = {
     { NULL, NULL },
 };
 
-static const ffi_pointer_t ffi_pointers[] = {
-    crypto_secretbox_easy,
-    crypto_secretbox_open_easy,
-    crypto_secretbox_detached,
-    crypto_secretbox_open_detached,
-    crypto_secretbox_keygen,
-    NULL,
-};
-
-static const luasodium_constant_t luasodium_constants[] = {
-    { "KEYBYTES",   crypto_secretbox_KEYBYTES },
-    { "MACBYTES",   crypto_secretbox_MACBYTES       },
-    { "NONCEBYTES", crypto_secretbox_NONCEBYTES     },
-    { NULL, 0 },
-};
-
 int
-luaopen_luasodium_crypto_secretbox(lua_State *L) {
-    unsigned int i = 0;
-    const ffi_pointer_t *p = ffi_pointers;
-    int top = lua_gettop(L);
-
-    if(luaL_loadbuffer(L,crypto_secretbox_lua,crypto_secretbox_lua_length - 1,"crypto_secretbox.lua") == 0) {
-        i = luasodium_push_constants(L,luasodium_constants);
-        assert(i == 3);
-        while(*p != NULL) {
-            lua_pushlightuserdata(L,*p);
-            p++;
-            i++;
-        }
-        assert(i == 8);
-        if(lua_pcall(L,i,1,0) == 0) {
-            return 1;
-        }
-    }
-
-    lua_settop(L,top);
-
+luaopen_luasodium_crypto_secretbox_core(lua_State *L) {
     lua_newtable(L);
 
     luaL_setfuncs(L,luasodium_secretbox,0);
-    luasodium_set_constants(L,luasodium_constants);
+    luasodium_set_constants(L,luasodium_secretbox_constants);
 
     return 1;
 }

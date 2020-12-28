@@ -1,17 +1,8 @@
-#ifndef LUASODIUM_H
-#define LUASODIUM_H
+#ifndef LUASODIUM_C_H
+#define LUASODIUM_C_H
 
-#include <sodium.h>
-#include <lua.h>
-#include <lauxlib.h>
-#include <assert.h>
+#include "luasodium.h"
 
-typedef void * ffi_pointer_t;
-
-typedef struct luasodium_constant_s {
-    const char *name;
-    size_t value;
-} luasodium_constant_t;
 
 #if !defined(luaL_newlibtable) \
   && (!defined LUA_VERSION_NUM || LUA_VERSION_NUM==501)
@@ -36,15 +27,6 @@ luasodium_set_constants(lua_State *L, const luasodium_constant_t *c) {
         lua_pushinteger(L,c->value);
         lua_settable(L,-3);
     }
-}
-
-static int
-luasodium_push_constants(lua_State *L, const luasodium_constant_t *c) {
-    int i = 0;
-    for(; c->name != NULL; i++, c++) {
-        lua_pushinteger(L,c->value);
-    }
-    return i;
 }
 
 #endif

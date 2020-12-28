@@ -3,19 +3,37 @@
 PKGCONFIG = pkg-config
 LUA = lua
 
-$(shell mkdir -p luasodium)
+$(shell mkdir -p luasodium/crypto_secretbox)
+$(shell mkdir -p luasodium/crypto_box)
+$(shell mkdir -p luasodium/randombytes)
 
 LUASODIUM_OBJS = \
-  c/luasodium.o \
-  c/luasodium/crypto_secretbox.o \
-  c/luasodium/crypto_box.o \
-  c/luasodium/randombytes.o
+  c/luasodium/core.o \
+  c/luasodium/ffi.o \
+  c/luasodium/crypto_secretbox/core.o \
+  c/luasodium/crypto_secretbox/ffi.o \
+  c/luasodium/crypto_box/core.o \
+  c/luasodium/crypto_box/ffi.o \
+  c/luasodium/randombytes/core.o \
+  c/luasodium/randombytes/ffi.o
 
 LUASODIUM_DLLS = \
-  luasodium.so \
-  luasodium/crypto_secretbox.so \
-  luasodium/crypto_box.so \
-  luasodium/randombytes.so
+  luasodium/core.so \
+  luasodium/ffi.so \
+  luasodium/crypto_secretbox/core.so \
+  luasodium/crypto_secretbox/ffi.so \
+  luasodium/crypto_box/core.so \
+  luasodium/crypto_box/ffi.so \
+  luasodium/randombytes/core.so \
+  luasodium/randombytes/ffi.so
+
+LUASODIUM_LUAS = \
+  luasodium.lua \
+  luasodium/version.lua \
+  luasodium/crypto_secretbox.lua \
+  luasodium/crypto_box.lua \
+  luasodium/randombytes.lua
+
 
 CFLAGS  += $(shell $(PKGCONFIG) --cflags libsodium)
 LDFLAGS += $(shell $(PKGCONFIG) --libs libsodium)
@@ -23,26 +41,50 @@ LDFLAGS += $(shell $(PKGCONFIG) --libs libsodium)
 CFLAGS += -fPIC -Wall -Wextra -g -O0 -DDEBUG=1
 CFLAGS += $(shell $(PKGCONFIG) --cflags $(LUA))
 
-all: $(LUASODIUM_DLLS)
+all: $(LUASODIUM_DLLS) $(LUASODIUM_LUAS)
 
-%.so: c/%.o
-	$(CC) -shared -o $@ $^ $(LDFLAGS)
+luasodium.lua: lua/luasodium.lua
+	cp $^ $@
+
+luasodium/version.lua: ffi/luasodium/version.lua
+	cp $^ $@
+
+luasodium/crypto_secretbox.lua: lua/luasodium/crypto_secretbox.lua
+	cp $^ $@
+
+luasodium/crypto_box.lua: lua/luasodium/crypto_box.lua
+	cp $^ $@
+
+luasodium/randombytes.lua: lua/luasodium/randombytes.lua
+	cp $^ $@
 
 luasodium/%.so: c/luasodium/%.o
 	$(CC) -shared -o $@ $^ $(LDFLAGS)
 
-c/luasodium.o: c/luasodium.c c/luasodium.luah c/luasodium/version.luah
+c/luasodium/core.o: c/luasodium/core.c c/luasodium/version.luah
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-c/luasodium/randombytes.o: c/luasodium/randombytes.c c/luasodium/randombytes.luah
+c/luasodium/ffi.o: c/luasodium/ffi.c c/luasodium/core.luah
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-c/luasodium/crypto_secretbox.o: c/luasodium/crypto_secretbox.c c/luasodium/crypto_secretbox.luah
+c/luasodium/randombytes/core.o: c/luasodium/randombytes/core.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-c/luasodium/crypto_box.o: c/luasodium/crypto_box.c c/luasodium/crypto_box.luah
+c/luasodium/randombytes/ffi.o: c/luasodium/randombytes/ffi.c c/luasodium/randombytes/core.luah
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+c/luasodium/crypto_secretbox/core.o: c/luasodium/crypto_secretbox/core.c
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+c/luasodium/crypto_secretbox/ffi.o: c/luasodium/crypto_secretbox/ffi.c c/luasodium/crypto_secretbox/core.luah
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+c/luasodium/crypto_box/core.o: c/luasodium/crypto_box/core.c
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+c/luasodium/crypto_box/ffi.o: c/luasodium/crypto_box/ffi.c c/luasodium/crypto_box/core.luah
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 clean:
-	rm -f $(LUASODIUM_DLLS) $(LUASODIUM_OBJS)
+	rm -f $(LUASODIUM_DLLS) $(LUASODIUM_OBJS) $(LUASODIUM_LUAS)
 

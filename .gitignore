@@ -6,3 +6,5 @@
 *.tar.xz
 *.src.rock
 /dist
+/luasodium.lua
+/luasodium

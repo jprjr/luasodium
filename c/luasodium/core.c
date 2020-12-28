@@ -1,8 +1,8 @@
-#include "luasodium.h"
+#include "luasodium-c.h"
+#include "constants.h"
 
 #include <string.h>
-#include "luasodium.luah"
-#include "luasodium/version.luah"
+#include "version.luah"
 
 static int
 luasodium_init(lua_State *L) {
@@ -407,70 +407,20 @@ static const struct luaL_Reg luasodium_methods[] = {
     { NULL, NULL },
 };
 
-static const ffi_pointer_t ffi_pointers[] = {
-    sodium_init,
-    sodium_memcmp,
-    sodium_bin2hex,
-    sodium_hex2bin,
-    sodium_bin2base64,
-    sodium_base642bin,
-    sodium_increment,
-    sodium_add,
-    sodium_sub,
-    sodium_compare,
-    sodium_is_zero,
-    sodium_pad,
-    sodium_unpad,
-    sodium_base64_encoded_len,
-    NULL
-};
-
-static const luasodium_constant_t luasodium_constants[] = {
-    { "base64_VARIANT_ORIGINAL", sodium_base64_VARIANT_ORIGINAL },
-    { "base64_VARIANT_ORIGINAL_NO_PADDING", sodium_base64_VARIANT_ORIGINAL_NO_PADDING },
-    { "base64_VARIANT_URLSAFE", sodium_base64_VARIANT_URLSAFE },
-    { "base64_VARIANT_URLSAFE_NO_PADDING", sodium_base64_VARIANT_URLSAFE_NO_PADDING },
-    { NULL, 0 },
-};
-
 int
-luaopen_luasodium(lua_State *L) {
-    unsigned int i = 0;
-    const ffi_pointer_t *p = ffi_pointers;
-    int top = lua_gettop(L);
-
-    /* try loading ffi version */
-    if(luaL_loadbuffer(L,luasodium_lua,luasodium_lua_length - 1,"luasodium.lua") == 0) {
-        while(*p != NULL) {
-          lua_pushlightuserdata(L,*p);
-          p++;
-          i++;
-        }
-        assert(i == 14);
-        i += luasodium_push_constants(L,luasodium_constants);
-        assert(i == 18);
-        if(lua_pcall(L,i,1,0) == 0) {
-            return 1;
-        }
-    }
-
-    /* load traditional C API */
-    lua_settop(L,top);
+luaopen_luasodium_core(lua_State *L) {
     lua_newtable(L);
 
     luaL_setfuncs(L,luasodium_methods,0);
     luasodium_set_constants(L,luasodium_constants);
 
     if(luaL_loadbuffer(L,version_lua,version_lua_length - 1, "version.lua")) {
-        lua_settop(L,top);
-        return 0;
+        return lua_error(L);
     }
     if(lua_pcall(L,0,1,0)) {
-        lua_settop(L,top);
-        return 0;
+        return lua_error(L);
     }
 
     lua_setfield(L,-2,"_VERSION");
-
     return 1;
 }

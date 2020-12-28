@@ -1,5 +1,5 @@
-#include "../luasodium.h"
-#include "randombytes.luah"
+#include "../luasodium-c.h"
+#include "constants.h"
 
 static int
 luasodium_randombytes_random(lua_State *L) {
@@ -103,47 +103,11 @@ static const struct luaL_Reg luasodium_randombytes[] = {
     { NULL, NULL },
 };
 
-static const ffi_pointer_t ffi_pointers[] = {
-    randombytes_random,
-    randombytes_uniform,
-    randombytes_buf,
-    randombytes_seedbytes,
-    randombytes_close,
-    randombytes_stir,
-    randombytes_buf_deterministic,
-    NULL
-};
-
-static const luasodium_constant_t luasodium_constants[] = {
-    { "SEEDBYTES",  randombytes_SEEDBYTES },
-    { NULL, 0 },
-};
-
 int
-luaopen_luasodium_randombytes(lua_State *L) {
-    unsigned int i = 0;
-    const ffi_pointer_t *p = ffi_pointers;
-    int top = lua_gettop(L);
-
-    if(luaL_loadbuffer(L,randombytes_lua,randombytes_lua_length - 1,"randombytes.lua") == 0) {
-        i = luasodium_push_constants(L,luasodium_constants);
-        assert(i == 1);
-
-        while(*p != NULL) {
-            lua_pushlightuserdata(L,*p);
-            p++;
-            i++;
-        }
-        assert(i == 8);
-        if(lua_pcall(L,i,1,0) == 0) {
-            return 1;
-        }
-    }
-
-    lua_settop(L,top);
+luaopen_luasodium_randombytes_core(lua_State *L) {
     lua_newtable(L);
     luaL_setfuncs(L,luasodium_randombytes,0);
-    luasodium_set_constants(L,luasodium_constants);
+    luasodium_set_constants(L,luasodium_randombytes_constants);
 
     return 1;
 }
