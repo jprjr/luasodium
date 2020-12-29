@@ -37,6 +37,12 @@ do
     assert(string.byte(encrypted,i) == result[i])
   end
   assert(lib.crypto_secretbox_open_easy(encrypted,nonce,key) == 'yay')
+
+  local non_easy = lib.crypto_secretbox('yay',nonce,key)
+  assert(string.len(non_easy) == 19)
+  for i=1,#non_easy do
+    assert(string.byte(non_easy,i) == result[i])
+  end
 end
 
 do
