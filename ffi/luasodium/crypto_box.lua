@@ -14,7 +14,7 @@ local crypto_box_SEEDBYTES
 local crypto_box_BEFORENMBYTES
 
 local function test_cspace()
-  if ffi.C.crypto_box_publickeybytes then
+  if ffi.C.sodium_init then
     return ffi.C
   end
 end
@@ -23,32 +23,37 @@ local c_pointers = { ... }
 
 if #c_pointers > 1 then
   sodium_lib = {}
-  crypto_box_PUBLICKEYBYTES = c_pointers[1]
-  crypto_box_SECRETKEYBYTES = c_pointers[2]
-  crypto_box_MACBYTES       = c_pointers[3]
-  crypto_box_NONCEBYTES     = c_pointers[4]
-  crypto_box_SEEDBYTES      = c_pointers[5]
-  crypto_box_BEFORENMBYTES  = c_pointers[6]
+
+  sodium_lib.sodium_init = ffi.cast([[
+    int (*)(void)
+  ]],c_pointers[1])
+
+  crypto_box_PUBLICKEYBYTES = c_pointers[2]
+  crypto_box_SECRETKEYBYTES = c_pointers[3]
+  crypto_box_MACBYTES       = c_pointers[4]
+  crypto_box_NONCEBYTES     = c_pointers[5]
+  crypto_box_SEEDBYTES      = c_pointers[6]
+  crypto_box_BEFORENMBYTES  = c_pointers[7]
 
   sodium_lib.crypto_box_keypair = ffi.cast([[
     int (*)(unsigned char *, unsigned char *)
-  ]],c_pointers[7])
+  ]],c_pointers[8])
 
   sodium_lib.crypto_box_seed_keypair = ffi.cast([[
     int (*)(unsigned char *, unsigned char *, const unsigned char *)
-  ]],c_pointers[8])
+  ]],c_pointers[9])
 
   sodium_lib.crypto_box_easy = ffi.cast([[
     int (*)(unsigned char *, const unsigned char *,
             unsigned long long, const unsigned char *,
             const unsigned char *, const unsigned char *)
-  ]],c_pointers[9])
+  ]],c_pointers[10])
 
   sodium_lib.crypto_box_open_easy = ffi.cast([[
     int (*)(unsigned char *, const unsigned char *,
             unsigned long long, const unsigned char *,
             const unsigned char *, const unsigned char *)
-  ]],c_pointers[10])
+  ]],c_pointers[11])
 
   sodium_lib.crypto_box_detached = ffi.cast([[
     int (*)(unsigned char *, unsigned char *,
@@ -57,7 +62,7 @@ if #c_pointers > 1 then
             const unsigned char *,
             const unsigned char *,
             const unsigned char *)
-  ]],c_pointers[11])
+  ]],c_pointers[12])
 
   sodium_lib.crypto_box_open_detached = ffi.cast([[
     int (*)(unsigned char *,
@@ -67,39 +72,40 @@ if #c_pointers > 1 then
             const unsigned char *,
             const unsigned char *,
             const unsigned char *)
-  ]],c_pointers[12])
+  ]],c_pointers[13])
 
   sodium_lib.crypto_box_beforenm = ffi.cast([[
     int (*)(unsigned char *, const unsigned char *,
             const unsigned char *)
-  ]],c_pointers[13])
+  ]],c_pointers[14])
 
   sodium_lib.crypto_box_easy_afternm = ffi.cast([[
     int (*)(unsigned char *, const unsigned char *,
             unsigned long long, const unsigned char *,
             const unsigned char *)
-  ]],c_pointers[14])
+  ]],c_pointers[15])
 
   sodium_lib.crypto_box_open_easy_afternm = ffi.cast([[
     int (*)(unsigned char *, const unsigned char *,
             unsigned long long, const unsigned char *,
             const unsigned char *)
-  ]],c_pointers[15])
+  ]],c_pointers[16])
 
   sodium_lib.crypto_box_detached_afternm = ffi.cast([[
     int (*)(unsigned char *, unsigned char *,
             const unsigned char *, unsigned long long,
             const unsigned char *, const unsigned char *)
-  ]],c_pointers[16])
+  ]],c_pointers[17])
 
   sodium_lib.crypto_box_open_detached_afternm = ffi.cast([[
     int (*)(unsigned char *, const unsigned char *,
             const unsigned char *, unsigned long long,
             const unsigned char *, const unsigned char *)
-  ]],c_pointers[17])
+  ]],c_pointers[18])
 
 else
   ffi.cdef([[
+    int sodium_init(void);
     size_t crypto_box_publickeybytes(void);
     size_t crypto_box_secretkeybytes(void);
     size_t crypto_box_macbytes(void);
@@ -509,24 +515,29 @@ local function lua_crypto_box_open_detached_afternm(c,mac,n,k)
   return ffi_string(m,clen)
 end
 
+if sodium_lib.sodium_init() == -1 then
+  return error('sodium_init error')
+end
+
+
 local M = {
-  PUBLICKEYBYTES = crypto_box_PUBLICKEYBYTES,
-  SECRETKEYBYTES = crypto_box_SECRETKEYBYTES,
-  MACBYTES       = crypto_box_MACBYTES,
-  NONCEBYTES     = crypto_box_NONCEBYTES,
-  SEEDBYTES      = crypto_box_SEEDBYTES,
-  BEFORENMBYTES  = crypto_box_BEFORENMBYTES,
-  keypair = lua_crypto_box_keypair,
-  seed_keypair = lua_crypto_box_seed_keypair,
-  easy = lua_crypto_box_easy,
-  open_easy = lua_crypto_box_open_easy,
-  detached = lua_crypto_box_detached,
-  open_detached = lua_crypto_box_open_detached,
-  beforenm = lua_crypto_box_beforenm,
-  easy_afternm = lua_crypto_box_easy_afternm,
-  open_easy_afternm = lua_crypto_box_open_easy_afternm,
-  detached_afternm = lua_crypto_box_detached_afternm,
-  open_detached_afternm = lua_crypto_box_open_detached_afternm,
+  crypto_box_PUBLICKEYBYTES = crypto_box_PUBLICKEYBYTES,
+  crypto_box_SECRETKEYBYTES = crypto_box_SECRETKEYBYTES,
+  crypto_box_MACBYTES       = crypto_box_MACBYTES,
+  crypto_box_NONCEBYTES     = crypto_box_NONCEBYTES,
+  crypto_box_SEEDBYTES      = crypto_box_SEEDBYTES,
+  crypto_box_BEFORENMBYTES  = crypto_box_BEFORENMBYTES,
+  crypto_box_keypair = lua_crypto_box_keypair,
+  crypto_box_seed_keypair = lua_crypto_box_seed_keypair,
+  crypto_box_easy = lua_crypto_box_easy,
+  crypto_box_open_easy = lua_crypto_box_open_easy,
+  crypto_box_detached = lua_crypto_box_detached,
+  crypto_box_open_detached = lua_crypto_box_open_detached,
+  crypto_box_beforenm = lua_crypto_box_beforenm,
+  crypto_box_easy_afternm = lua_crypto_box_easy_afternm,
+  crypto_box_open_easy_afternm = lua_crypto_box_open_easy_afternm,
+  crypto_box_detached_afternm = lua_crypto_box_detached_afternm,
+  crypto_box_open_detached_afternm = lua_crypto_box_open_detached_afternm,
 }
 
 return M

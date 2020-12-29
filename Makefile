@@ -5,17 +5,17 @@ HOST_CC = cc
 include Makefile.dist
 
 LUASODIUM_FFIS = \
-  c/luasodium/core.luah \
-  c/luasodium/version.luah \
+  c/luasodium/utils/core.luah \
+  c/luasodium/version/core.luah \
   c/luasodium/crypto_secretbox/core.luah \
   c/luasodium/crypto_box/core.luah \
   c/luasodium/crypto_scalarmult/core.luah \
   c/luasodium/randombytes/core.luah
 
-c/luasodium/version.luah: ffi/luasodium/version.lua aux/bin2c
+c/luasodium/version/core.luah: ffi/luasodium/version.lua aux/bin2c
 	./aux/bin2c $< $@ $(patsubst %.lua,%_lua,$(notdir $<))
 
-c/luasodium/core.luah: ffi/luasodium.lua aux/bin2c
+c/luasodium/utils/core.luah: ffi/luasodium/utils.lua aux/bin2c
 	./aux/bin2c $< $@ $(patsubst %.lua,%_lua,$(notdir $<))
 
 c/luasodium/crypto_secretbox/core.luah: ffi/luasodium/crypto_secretbox.lua aux/bin2c

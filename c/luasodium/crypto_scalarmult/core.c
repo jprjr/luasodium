@@ -76,12 +76,13 @@ lua_crypto_scalarmult(lua_State *L) {
 }
 
 static const struct luaL_Reg luasodium_crypto_scalarmult[] = {
-    { "base", lua_crypto_scalarmult_base },
-    { "scalarmult", lua_crypto_scalarmult }, /* TODO ?? */
+    { "crypto_scalarmult_base", lua_crypto_scalarmult_base },
+    { "crypto_scalarmult",      lua_crypto_scalarmult },
     { NULL, NULL },
 };
 
 int luaopen_luasodium_crypto_scalarmult_core(lua_State *L) {
+    LUASODIUM_INIT(L)
     lua_newtable(L);
 
     luaL_setfuncs(L,luasodium_crypto_scalarmult,0);

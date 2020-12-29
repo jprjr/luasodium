@@ -25,4 +25,10 @@ luasodium_push_functions(lua_State *L, const ffi_pointer_t *p) {
     return i;
 }
 
+static unsigned int
+luasodium_push_init(lua_State *L) {
+    lua_pushlightuserdata(L,sodium_init);
+    return 1;
+}
+
 #endif

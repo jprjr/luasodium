@@ -23,9 +23,10 @@ int luaopen_luasodium_crypto_box_ffi(lua_State *L) {
     if(luaL_loadbuffer(L,crypto_box_lua,crypto_box_lua_length - 1,"crypto_box.lua") ) {
         return lua_error(L);
     }
+    i += luasodium_push_init(L);
     i += luasodium_push_constants(L,luasodium_box_constants);
     i += luasodium_push_functions(L,ffi_pointers);
-    assert(i == 17);
+    assert(i == 18);
     if(lua_pcall(L,i,1,0)) {
         return lua_error(L);
     }

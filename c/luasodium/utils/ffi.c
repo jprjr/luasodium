@@ -1,9 +1,8 @@
-#include "luasodium-ffi.h"
+#include "../luasodium-ffi.h"
 #include "constants.h"
 #include "core.luah"
 
 static const ffi_pointer_t ffi_pointers[] = {
-    sodium_init,
     sodium_memcmp,
     sodium_bin2hex,
     sodium_hex2bin,
@@ -21,13 +20,13 @@ static const ffi_pointer_t ffi_pointers[] = {
 };
 
 int
-luaopen_luasodium_ffi(lua_State *L) {
+luaopen_luasodium_utils_ffi(lua_State *L) {
     unsigned int i = 0;
-    if(luaL_loadbuffer(L,luasodium_lua,luasodium_lua_length - 1,"luasodium.lua")) {
+    if(luaL_loadbuffer(L,utils_lua,utils_lua_length - 1,"utils.lua")) {
         return lua_error(L);
     }
-    i = luasodium_push_functions(L,ffi_pointers);
-    assert(i == 14);
+    i += luasodium_push_init(L);
+    i += luasodium_push_functions(L,ffi_pointers);
     i += luasodium_push_constants(L,luasodium_constants);
     assert(i == 18);
     if(lua_pcall(L,i,1,0)) {

@@ -1,2 +1,2 @@
 local version = require'ffi.luasodium.version'
-print(version)
+print(version._VERSION)

@@ -570,21 +570,22 @@ lua_crypto_box_open_detached_afternm(lua_State *L) {
 }
 
 static const struct luaL_Reg luasodium_box[] = {
-    { "keypair", lua_crypto_box_keypair },
-    { "seed_keypair", lua_crypto_box_seed_keypair },
-    { "easy", lua_crypto_box_easy },
-    { "open_easy", lua_crypto_box_open_easy },
-    { "detached", lua_crypto_box_detached },
-    { "open_detached", lua_crypto_box_open_detached },
-    { "beforenm", lua_crypto_box_beforenm },
-    { "easy_afternm", lua_crypto_box_easy_afternm },
-    { "open_easy_afternm", lua_crypto_box_open_easy_afternm },
-    { "detached_afternm", lua_crypto_box_detached_afternm },
-    { "open_detached_afternm", lua_crypto_box_open_detached_afternm },
+    { "crypto_box_keypair", lua_crypto_box_keypair },
+    { "crypto_box_seed_keypair", lua_crypto_box_seed_keypair },
+    { "crypto_box_easy", lua_crypto_box_easy },
+    { "crypto_box_open_easy", lua_crypto_box_open_easy },
+    { "crypto_box_detached", lua_crypto_box_detached },
+    { "crypto_box_open_detached", lua_crypto_box_open_detached },
+    { "crypto_box_beforenm", lua_crypto_box_beforenm },
+    { "crypto_box_easy_afternm", lua_crypto_box_easy_afternm },
+    { "crypto_box_open_easy_afternm", lua_crypto_box_open_easy_afternm },
+    { "crypto_box_detached_afternm", lua_crypto_box_detached_afternm },
+    { "crypto_box_open_detached_afternm", lua_crypto_box_open_detached_afternm },
     { NULL, NULL },
 };
 
 int luaopen_luasodium_crypto_box_core(lua_State *L) {
+    LUASODIUM_INIT(L)
     lua_newtable(L);
 
     luaL_setfuncs(L,luasodium_box,0);

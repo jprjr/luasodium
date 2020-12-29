@@ -1,20 +1,16 @@
-do
-    require('luasodium').init()
-end
-
-local crypto_secretbox = require'luasodium.crypto_secretbox'
+local lib = require'luasodium.crypto_secretbox'
 
 if jit then
-  assert(crypto_secretbox == require'luasodium.crypto_secretbox.ffi')
+  assert(lib == require'luasodium.crypto_secretbox.ffi')
 end
 
-local nonce = string.rep('\0',crypto_secretbox.NONCEBYTES)
-local key = string.rep('\0',crypto_secretbox.KEYBYTES)
+local nonce = string.rep('\0',lib.crypto_secretbox_NONCEBYTES)
+local key = string.rep('\0',lib.crypto_secretbox_KEYBYTES)
 
 for i=1,10000 do
 
 do
-  local encrypted = crypto_secretbox.easy('yay',nonce,key)
+  local encrypted = lib.crypto_secretbox_easy('yay',nonce,key)
   assert(string.len(encrypted) == 19)
   local result = {
     84,
@@ -40,11 +36,11 @@ do
   for i=1,#encrypted do
     assert(string.byte(encrypted,i) == result[i])
   end
-  assert(crypto_secretbox.open_easy(encrypted,nonce,key) == 'yay')
+  assert(lib.crypto_secretbox_open_easy(encrypted,nonce,key) == 'yay')
 end
 
 do
-  local encrypted, mac = crypto_secretbox.detached('yay',nonce,key)
+  local encrypted, mac = lib.crypto_secretbox_detached('yay',nonce,key)
   assert(string.len(encrypted) == 3)
   local mac_result = {
     84,
@@ -76,11 +72,11 @@ do
     assert(string.byte(encrypted,i) == enc_result[i])
   end
 
-  assert(crypto_secretbox.open_detached(encrypted,mac,nonce,key) == 'yay')
+  assert(lib.crypto_secretbox_open_detached(encrypted,mac,nonce,key) == 'yay')
 end
 
 do
-  assert(string.len(crypto_secretbox.keygen()) == crypto_secretbox.KEYBYTES)
+  assert(string.len(lib.crypto_secretbox_keygen()) == lib.crypto_secretbox_KEYBYTES)
 end
 
 end

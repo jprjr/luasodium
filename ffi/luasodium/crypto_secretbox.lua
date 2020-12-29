@@ -11,7 +11,7 @@ local crypto_secretbox_MACBYTES
 local crypto_secretbox_NONCEBYTES
 
 local function test_cspace()
-  if ffi.C.crypto_secretbox_keybytes then
+  if ffi.C.sodium_init then
     return ffi.C
   end
 end
@@ -21,21 +21,26 @@ local c_pointers = { ... }
 
 if #c_pointers > 1 then
   sodium_lib = {}
-  crypto_secretbox_KEYBYTES = c_pointers[1]
-  crypto_secretbox_MACBYTES = c_pointers[2]
-  crypto_secretbox_NONCEBYTES = c_pointers[3]
+
+  sodium_lib.sodium_init = ffi.cast([[
+    int (*)(void)
+  ]],c_pointers[1])
+
+  crypto_secretbox_KEYBYTES = c_pointers[2]
+  crypto_secretbox_MACBYTES = c_pointers[3]
+  crypto_secretbox_NONCEBYTES = c_pointers[4]
 
   sodium_lib.crypto_secretbox_easy = ffi.cast([[
   int (*)(unsigned char *, const unsigned char *,
           unsigned long long, const unsigned char *,
           const unsigned char *)
-  ]],c_pointers[4])
+  ]],c_pointers[5])
 
   sodium_lib.crypto_secretbox_open_easy = ffi.cast([[
   int (*)(unsigned char *, const unsigned char *,
           unsigned long long clen, const unsigned char *,
           const unsigned char *)
-  ]],c_pointers[5])
+  ]],c_pointers[6])
 
   sodium_lib.crypto_secretbox_detached = ffi.cast([[
   int (*)(unsigned char *,
@@ -44,7 +49,7 @@ if #c_pointers > 1 then
           unsigned long long,
           const unsigned char *,
           const unsigned char *)
-  ]],c_pointers[6])
+  ]],c_pointers[7])
 
   sodium_lib.crypto_secretbox_open_detached = ffi.cast([[
   int (*)(unsigned char *,
@@ -53,13 +58,14 @@ if #c_pointers > 1 then
           unsigned long long,
           const unsigned char *,
           const unsigned char *)
-  ]],c_pointers[7])
+  ]],c_pointers[8])
 
   sodium_lib.crypto_secretbox_keygen = ffi.cast([[
   void (*)(unsigned char[]] .. crypto_secretbox_KEYBYTES .. [[])
-  ]],c_pointers[8])
+  ]],c_pointers[9])
 else
   ffi.cdef([[
+    int sodium_init(void);
     size_t crypto_secretbox_keybytes(void);
     size_t crypto_secretbox_noncebytes(void);
     size_t crypto_secretbox_macbytes(void);
@@ -78,27 +84,26 @@ else
   crypto_secretbox_NONCEBYTES = tonumber(sodium_lib.crypto_secretbox_noncebytes())
 
   ffi.cdef([[
-  int crypto_secretbox_easy(unsigned char *c, const unsigned char *m,
-                          unsigned long long mlen, const unsigned char *n,
-                          const unsigned char *k);
-  int crypto_secretbox_open_easy(unsigned char *m, const unsigned char *c,
-                               unsigned long long clen, const unsigned char *n,
-                               const unsigned char *k);
-  int crypto_secretbox_detached(unsigned char *c, unsigned char *mac,
-                              const unsigned char *m,
-                              unsigned long long mlen,
-                              const unsigned char *n,
-                              const unsigned char *k);
-  int crypto_secretbox_open_detached(unsigned char *m,
-                                   const unsigned char *c,
-                                   const unsigned char *mac,
-                                   unsigned long long clen,
-                                   const unsigned char *n,
-                                   const unsigned char *k);
-  void crypto_secretbox_keygen(unsigned char k[]] .. crypto_secretbox_KEYBYTES .. [[]);
+    int crypto_secretbox_easy(unsigned char *c, const unsigned char *m,
+                            unsigned long long mlen, const unsigned char *n,
+                            const unsigned char *k);
+    int crypto_secretbox_open_easy(unsigned char *m, const unsigned char *c,
+                                 unsigned long long clen, const unsigned char *n,
+                                 const unsigned char *k);
+    int crypto_secretbox_detached(unsigned char *c, unsigned char *mac,
+                                const unsigned char *m,
+                                unsigned long long mlen,
+                                const unsigned char *n,
+                                const unsigned char *k);
+    int crypto_secretbox_open_detached(unsigned char *m,
+                                     const unsigned char *c,
+                                     const unsigned char *mac,
+                                     unsigned long long clen,
+                                     const unsigned char *n,
+                                     const unsigned char *k);
+    void crypto_secretbox_keygen(unsigned char k[]] .. crypto_secretbox_KEYBYTES .. [[]);
 ]])
 end
-
 
 local function lua_crypto_secretbox_easy(message,nonce,key)
   if not key then
@@ -231,16 +236,19 @@ local function lua_crypto_secretbox_keygen()
   return ffi_string(k,crypto_secretbox_KEYBYTES)
 end
 
+if sodium_lib.sodium_init() == -1 then
+  return error('sodium_init error')
+end
 
 local M = {
-  easy = lua_crypto_secretbox_easy,
-  open_easy = lua_crypto_secretbox_open_easy,
-  detached = lua_crypto_secretbox_detached,
-  open_detached = lua_crypto_secretbox_open_detached,
-  keygen = lua_crypto_secretbox_keygen,
-  KEYBYTES = crypto_secretbox_KEYBYTES,
-  NONCEBYTES = crypto_secretbox_NONCEBYTES,
-  MACBYTES = crypto_secretbox_MACBYTES,
+  crypto_secretbox_easy = lua_crypto_secretbox_easy,
+  crypto_secretbox_open_easy = lua_crypto_secretbox_open_easy,
+  crypto_secretbox_detached = lua_crypto_secretbox_detached,
+  crypto_secretbox_open_detached = lua_crypto_secretbox_open_detached,
+  crypto_secretbox_keygen = lua_crypto_secretbox_keygen,
+  crypto_secretbox_KEYBYTES = crypto_secretbox_KEYBYTES,
+  crypto_secretbox_NONCEBYTES = crypto_secretbox_NONCEBYTES,
+  crypto_secretbox_MACBYTES = crypto_secretbox_MACBYTES,
 }
 
 return M

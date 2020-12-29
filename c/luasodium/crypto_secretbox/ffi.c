@@ -18,10 +18,10 @@ luaopen_luasodium_crypto_secretbox_ffi(lua_State *L) {
         return lua_error(L);
     }
 
+    i += luasodium_push_init(L);
     i += luasodium_push_constants(L,luasodium_secretbox_constants);
-    assert(i==3);
     i += luasodium_push_functions(L,ffi_pointers);
-    assert(i==8);
+    assert(i==9);
     if(lua_pcall(L,i,1,0)) {
         return lua_error(L);
     }

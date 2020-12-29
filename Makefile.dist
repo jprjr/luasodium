@@ -3,14 +3,18 @@
 PKGCONFIG = pkg-config
 LUA = lua
 
+$(shell mkdir -p luasodium/version)
+$(shell mkdir -p luasodium/utils)
 $(shell mkdir -p luasodium/crypto_secretbox)
 $(shell mkdir -p luasodium/crypto_box)
 $(shell mkdir -p luasodium/crypto_scalarmult)
 $(shell mkdir -p luasodium/randombytes)
 
 LUASODIUM_OBJS = \
-  c/luasodium/core.o \
-  c/luasodium/ffi.o \
+  c/luasodium/version/core.o \
+  c/luasodium/version/ffi.o \
+  c/luasodium/utils/core.o \
+  c/luasodium/utils/ffi.o \
   c/luasodium/crypto_secretbox/core.o \
   c/luasodium/crypto_secretbox/ffi.o \
   c/luasodium/crypto_box/core.o \
@@ -21,8 +25,10 @@ LUASODIUM_OBJS = \
   c/luasodium/randombytes/ffi.o
 
 LUASODIUM_DLLS = \
-  luasodium/core.so \
-  luasodium/ffi.so \
+  luasodium/version/core.so \
+  luasodium/version/ffi.so \
+  luasodium/utils/core.so \
+  luasodium/utils/ffi.so \
   luasodium/crypto_secretbox/core.so \
   luasodium/crypto_secretbox/ffi.so \
   luasodium/crypto_box/core.so \
@@ -34,6 +40,9 @@ LUASODIUM_DLLS = \
 
 LUASODIUM_LUAS = \
   luasodium.lua \
+  luasodium/core.lua \
+  luasodium/ffi.lua \
+  luasodium/utils.lua \
   luasodium/version.lua \
   luasodium/crypto_secretbox.lua \
   luasodium/crypto_box.lua \
@@ -49,10 +58,7 @@ CFLAGS += $(shell $(PKGCONFIG) --cflags $(LUA))
 
 all: $(LUASODIUM_DLLS) $(LUASODIUM_LUAS)
 
-luasodium.lua: lua/luasodium.lua
-	cp $^ $@
-
-luasodium/version.lua: ffi/luasodium/version.lua
+luasodium.lua: ffi/luasodium.lua
 	cp $^ $@
 
 luasodium/%.lua: lua/luasodium/%.lua
@@ -61,10 +67,16 @@ luasodium/%.lua: lua/luasodium/%.lua
 luasodium/%.so: c/luasodium/%.o
 	$(CC) -shared -o $@ $^ $(LDFLAGS)
 
-c/luasodium/core.o: c/luasodium/core.c c/luasodium/version.luah
+c/luasodium/utils/core.o: c/luasodium/utils/core.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-c/luasodium/ffi.o: c/luasodium/ffi.c c/luasodium/core.luah
+c/luasodium/utils/ffi.o: c/luasodium/utils/ffi.c c/luasodium/utils/core.luah
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+c/luasodium/version/core.o: c/luasodium/version/core.c c/luasodium/version/core.luah
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+c/luasodium/version/ffi.o: c/luasodium/version/ffi.c c/luasodium/version/core.luah
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 c/luasodium/randombytes/core.o: c/luasodium/randombytes/core.c

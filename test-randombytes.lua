@@ -1,22 +1,18 @@
-do
-    require('luasodium').init()
-end
-
-local randombytes = require'luasodium.randombytes'
+local lib = require'luasodium.randombytes'
 
 if jit then
-  assert(randombytes == require'luasodium.randombytes.ffi')
+  assert(lib == require'luasodium.randombytes.ffi')
 end
 
 for i=1,100 do
 
 do
-  local r = randombytes.random()
-  local seed = string.rep('\0',randombytes.SEEDBYTES)
+  local r = lib.randombytes_random()
+  local seed = string.rep('\0',lib.randombytes_SEEDBYTES)
   assert(type(r) == 'number')
-  assert(randombytes.uniform(1) == 0)
-  assert(string.len(randombytes.buf(10)) == 10)
-  local result = randombytes.buf_deterministic(10,seed)
+  assert(lib.randombytes_uniform(1) == 0)
+  assert(string.len(lib.randombytes_buf(10)) == 10)
+  local result = lib.randombytes_buf_deterministic(10,seed)
   local result_vals = {
     161,
     31,
@@ -33,11 +29,11 @@ do
   for i=1,10 do
     assert(string.byte(result,i) == result_vals[i])
   end
-  randombytes.stir()
+  lib.randombytes_stir()
 end
 
 end
 
-randombytes.close()
+lib.randombytes_close()
 
 print('success')

@@ -1,8 +1,7 @@
-#include "luasodium-c.h"
+#include "../luasodium-c.h"
 #include "constants.h"
 
 #include <string.h>
-#include "version.luah"
 
 static int
 luasodium_init(lua_State *L) {
@@ -391,36 +390,29 @@ luasodium_unpad(lua_State *L) {
 }
 
 static const struct luaL_Reg luasodium_methods[] = {
-    { "init", luasodium_init },
-    { "memcmp", luasodium_memcmp },
-    { "bin2hex", luasodium_bin2hex },
-    { "hex2bin", luasodium_hex2bin },
-    { "bin2base64", luasodium_bin2base64 },
-    { "base642bin", luasodium_base642bin },
-    { "increment", luasodium_increment },
-    { "add", luasodium_add },
-    { "sub", luasodium_sub },
-    { "compare", luasodium_compare },
-    { "is_zero", luasodium_is_zero },
-    { "pad", luasodium_pad },
-    { "unpad", luasodium_unpad },
+    { "sodium_init", luasodium_init },
+    { "sodium_memcmp", luasodium_memcmp },
+    { "sodium_bin2hex", luasodium_bin2hex },
+    { "sodium_hex2bin", luasodium_hex2bin },
+    { "sodium_bin2base64", luasodium_bin2base64 },
+    { "sodium_base642bin", luasodium_base642bin },
+    { "sodium_increment", luasodium_increment },
+    { "sodium_add", luasodium_add },
+    { "sodium_sub", luasodium_sub },
+    { "sodium_compare", luasodium_compare },
+    { "sodium_is_zero", luasodium_is_zero },
+    { "sodium_pad", luasodium_pad },
+    { "sodium_unpad", luasodium_unpad },
     { NULL, NULL },
 };
 
 int
-luaopen_luasodium_core(lua_State *L) {
+luaopen_luasodium_utils_core(lua_State *L) {
+    LUASODIUM_INIT(L)
     lua_newtable(L);
 
     luaL_setfuncs(L,luasodium_methods,0);
     luasodium_set_constants(L,luasodium_constants);
 
-    if(luaL_loadbuffer(L,version_lua,version_lua_length - 1, "version.lua")) {
-        return lua_error(L);
-    }
-    if(lua_pcall(L,0,1,0)) {
-        return lua_error(L);
-    }
-
-    lua_setfield(L,-2,"_VERSION");
     return 1;
 }

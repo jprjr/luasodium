@@ -19,10 +19,10 @@ luaopen_luasodium_randombytes_ffi(lua_State *L) {
     if(luaL_loadbuffer(L,randombytes_lua,randombytes_lua_length - 1,"randombytes.lua")) {
         return lua_error(L);
     }
+    i += luasodium_push_init(L);
     i += luasodium_push_constants(L,luasodium_randombytes_constants);
-    assert(i == 1);
     i += luasodium_push_functions(L,ffi_pointers);
-    assert(i == 8);
+    assert(i == 9);
     if(lua_pcall(L,i,1,0)) {
         return lua_error(L);
     }

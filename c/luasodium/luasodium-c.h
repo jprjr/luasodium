@@ -20,6 +20,12 @@ static void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
 }
 #endif
 
+#define LUASODIUM_INIT(L) \
+if(sodium_init() == -1) { \
+    lua_pushliteral(L,"sodium_init error"); \
+    return lua_error(L); \
+}
+
 static void
 luasodium_set_constants(lua_State *L, const luasodium_constant_t *c) {
     for(; c->name != NULL; c++) {

@@ -10,7 +10,7 @@ local crypto_scalarmult_BYTES
 local crypto_scalarmult_SCALARBYTES
 
 local function test_cspace()
-  if ffi.C.crypto_scalarmult_base then
+  if ffi.C.sodium_init then
     return ffi.C
   end
 end
@@ -19,18 +19,23 @@ local c_pointers = { ... }
 if #c_pointers > 1 then
   sodium_lib = {}
 
-  crypto_scalarmult_BYTES       = c_pointers[1]
-  crypto_scalarmult_SCALARBYTES = c_pointers[2]
+  sodium_lib.sodium_init = ffi.cast([[
+    int (*)(void)
+  ]],c_pointers[1])
+
+  crypto_scalarmult_BYTES       = c_pointers[2]
+  crypto_scalarmult_SCALARBYTES = c_pointers[3]
 
   sodium_lib.crypto_scalarmult_base = ffi.cast([[
     int (*)(unsigned char *, const unsigned char *)
-  ]], c_pointers[3])
+  ]], c_pointers[4])
 
   sodium_lib.crypto_scalarmult = ffi.cast([[
     int (*)(unsigned char *, const unsigned char *, const unsigned char *)
-  ]], c_pointers[4])
+  ]], c_pointers[5])
 else
   ffi.cdef([[
+    int sodium_init(void);
     size_t crypto_scalarmult_bytes(void);
     size_t crypto_scalarmult_scalarbytes(void);
     int crypto_scalarmult_base(unsigned char *q, const unsigned char *n);
@@ -95,11 +100,16 @@ local function lua_crypto_scalarmult(n,p)
   return ffi_string(q,crypto_scalarmult_BYTES)
 end
 
+if sodium_lib.sodium_init() == -1 then
+  return error('sodium_init error')
+end
+
+
 local M = {
-  BYTES = crypto_scalarmult_BYTES,
-  SCALARBYTES = crypto_scalarmult_SCALARBYTES,
-  base = lua_crypto_scalarmult_base,
-  scalarmult = lua_crypto_scalarmult,
+  crypto_scalarmult_BYTES = crypto_scalarmult_BYTES,
+  crypto_scalarmult_SCALARBYTES = crypto_scalarmult_SCALARBYTES,
+  crypto_scalarmult_base = lua_crypto_scalarmult_base,
+  crypto_scalarmult = lua_crypto_scalarmult,
 }
 
 return M

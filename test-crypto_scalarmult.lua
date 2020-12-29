@@ -1,17 +1,13 @@
-do
-    require('luasodium').init()
-end
-
-local crypto_scalarmult = require'luasodium.crypto_scalarmult'
+local lib = require'luasodium.crypto_scalarmult'
 
 if jit then
-  assert(crypto_scalarmult == require'luasodium.crypto_scalarmult.ffi')
+  assert(lib == require'luasodium.crypto_scalarmult.ffi')
 end
 
 do
-  local n = string.rep('\0',crypto_scalarmult.SCALARBYTES)
-  local q = crypto_scalarmult.base(n)
-  assert(string.len(q) == crypto_scalarmult.BYTES)
+  local n = string.rep('\0',lib.crypto_scalarmult_SCALARBYTES)
+  local q = lib.crypto_scalarmult_base(n)
+  assert(string.len(q) == lib.crypto_scalarmult_BYTES)
 end
 
 print('success')

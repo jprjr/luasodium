@@ -5,12 +5,11 @@ local ffi_string = ffi.string
 
 local char_array = ffi.typeof('char[?]')
 
+local sodium_lib
 local randombytes_SEEDBYTES
 
-local sodium_lib
-
 local function test_cspace()
-  if ffi.C.randombytes_random then
+  if ffi.C.sodium_init then
     return ffi.C
   end
 end
@@ -18,50 +17,53 @@ end
 -- function pointers are passed in from c module
 local c_pointers = {...}
 
--- https://libsodium.gitbook.io/doc/generating_random_data
-ffi.cdef([[
-uint32_t randombytes_random(void);
-uint32_t randombytes_uniform(const uint32_t upper_bound);
-void randombytes_buf(void * const buf, const size_t size);
-size_t randombytes_seedbytes(void);
-int randombytes_close(void);
-void randombytes_stir(void);
-]])
-
 if #c_pointers > 1 then
-
-  randombytes_SEEDBYTES = c_pointers[1]
-
   sodium_lib = {}
+
+  sodium_lib.sodium_init = ffi.cast([[
+    int (*)(void)
+  ]],c_pointers[1])
+
+  randombytes_SEEDBYTES = c_pointers[2]
 
   sodium_lib.randombytes_random = ffi.cast([[
   uint32_t (*)(void)
-  ]],c_pointers[2])
+  ]],c_pointers[3])
 
   sodium_lib.randombytes_uniform = ffi.cast([[
   uint32_t (*)(const uint32_t)
-  ]],c_pointers[3])
+  ]],c_pointers[4])
 
   sodium_lib.randombytes_buf = ffi.cast([[
-  void (*)(const * const, const size_t)
-  ]],c_pointers[4])
+  void (*)(void * const, const size_t)
+  ]],c_pointers[5])
 
   sodium_lib.randombytes_seedbytes = ffi.cast([[
   size_t (*)(void)
-  ]],c_pointers[5])
+  ]],c_pointers[6])
 
   sodium_lib.randombytes_close = ffi.cast([[
   int (*)(void)
-  ]],c_pointers[6])
+  ]],c_pointers[7])
 
   sodium_lib.randombytes_stir = ffi.cast([[
   void (*)(void)
-  ]],c_pointers[7])
+  ]],c_pointers[8])
 
   sodium_lib.randombytes_buf_deterministic = ffi.cast([[
   void (*)(void * const, const size_t, const unsigned char[ ]]
-  .. randombytes_SEEDBYTES .. [[ ])]],c_pointers[8])
+  .. randombytes_SEEDBYTES .. [[ ])]],c_pointers[9])
 else
+  ffi.cdef([[
+    int sodium_init(void);
+    uint32_t randombytes_random(void);
+    uint32_t randombytes_uniform(const uint32_t upper_bound);
+    void randombytes_buf(void * const buf, const size_t size);
+    size_t randombytes_seedbytes(void);
+    int randombytes_close(void);
+    void randombytes_stir(void);
+  ]])
+
   do
     local ok, lib = pcall(test_cspace)
     if ok then
@@ -121,15 +123,19 @@ local function lua_randombytes_stir()
   sodium_lib.randombytes_stir()
 end
 
+if sodium_lib.sodium_init() == -1 then
+  return error('sodium_init error')
+end
+
 local M = {
-  random = lua_randombytes_random,
-  uniform = lua_randombytes_uniform,
-  buf = lua_randombytes_buf,
-  buf_deterministic = lua_randombytes_buf_deterministic,
-  close = lua_randombytes_close,
-  stir = lua_randombytes_stir,
-  seedbytes = lua_randombytes_seedbytes,
-  SEEDBYTES = randombytes_SEEDBYTES,
+  randombytes_random = lua_randombytes_random,
+  randombytes_uniform = lua_randombytes_uniform,
+  randombytes_buf = lua_randombytes_buf,
+  randombytes_buf_deterministic = lua_randombytes_buf_deterministic,
+  randombytes_close = lua_randombytes_close,
+  randombytes_stir = lua_randombytes_stir,
+  randombytes_seedbytes = lua_randombytes_seedbytes,
+  randombytes_SEEDBYTES = randombytes_SEEDBYTES,
 }
 
 return M

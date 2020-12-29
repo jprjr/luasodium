@@ -230,16 +230,17 @@ luasodium_secretbox_keygen(lua_State *L) {
 }
 
 static const struct luaL_Reg luasodium_secretbox[] = {
-    { "easy", luasodium_secretbox_easy },
-    { "open_easy", luasodium_secretbox_open_easy },
-    { "detached", luasodium_secretbox_detached },
-    { "open_detached", luasodium_secretbox_open_detached },
-    { "keygen", luasodium_secretbox_keygen },
+    { "crypto_secretbox_easy", luasodium_secretbox_easy },
+    { "crypto_secretbox_open_easy", luasodium_secretbox_open_easy },
+    { "crypto_secretbox_detached", luasodium_secretbox_detached },
+    { "crypto_secretbox_open_detached", luasodium_secretbox_open_detached },
+    { "crypto_secretbox_keygen", luasodium_secretbox_keygen },
     { NULL, NULL },
 };
 
 int
 luaopen_luasodium_crypto_secretbox_core(lua_State *L) {
+    LUASODIUM_INIT(L)
     lua_newtable(L);
 
     luaL_setfuncs(L,luasodium_secretbox,0);

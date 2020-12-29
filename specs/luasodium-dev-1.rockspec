@@ -14,14 +14,20 @@ description = {
 build = {
   type = "builtin",
   modules = {
-    ["luasodium.core"] = {
-      sources = { "c/luasodium/core.c" },
+    ["luasodium.version.core"] = {
+      sources = { "c/luasodium/version/core.c" },
+    },
+    ["luasodium.version.ffi"] = {
+      sources = { "c/luasodium/version/ffi.c" },
+    },
+    ["luasodium.utils.core"] = {
+      sources = { "c/luasodium/utils/core.c" },
       libdirs = "$(SODIUM_LIBDIR)",
       incdirs = "$(SODIUM_INCDIR)",
       libraries = "sodium",
     },
-    ["luasodium.ffi"] = {
-      sources = { "c/luasodium/ffi.c" },
+    ["luasodium.utils.ffi"] = {
+      sources = { "c/luasodium/utils/ffi.c" },
       libdirs = "$(SODIUM_LIBDIR)",
       incdirs = "$(SODIUM_INCDIR)",
       libraries = "sodium",
@@ -62,11 +68,14 @@ build = {
       incdirs = "$(SODIUM_INCDIR)",
       libraries = "sodium",
     },
-    ["luasodium"] = "lua/luasodium.lua",
+    ["luasodium"] = "ffi/luasodium.lua",
+    ["luasodium.core"] = "lua/luasodium/core.lua",
+    ["luasodium.ffi"] = "lua/luasodium/ffi.lua",
+    ["luasodium.utils"] = "lua/luasodium/utils.lua",
     ["luasodium.randombytes"] = "lua/luasodium/randombytes.lua",
     ["luasodium.crypto_secretbox"] = "lua/luasodium/crypto_secretbox.lua",
     ["luasodium.crypto_box"] = "lua/luasodium/crypto_box.lua",
-    ["luasodium.version"] = "ffi/luasodium/version.lua",
+    ["luasodium.crypto_scalarmult"] = "lua/luasodium/crypto_scalarmult.lua",
   },
 }
 

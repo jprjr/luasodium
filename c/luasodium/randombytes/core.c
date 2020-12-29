@@ -93,18 +93,19 @@ luasodium_randombytes_stir(lua_State *L) {
 }
 
 static const struct luaL_Reg luasodium_randombytes[] = {
-    { "random", luasodium_randombytes_random },
-    { "uniform", luasodium_randombytes_uniform },
-    { "buf", luasodium_randombytes_buf },
-    { "seedbytes", luasodium_randombytes_seedbytes },
-    { "buf_deterministic", luasodium_randombytes_buf_deterministic },
-    { "close", luasodium_randombytes_close },
-    { "stir", luasodium_randombytes_stir },
+    { "randombytes_random", luasodium_randombytes_random },
+    { "randombytes_uniform", luasodium_randombytes_uniform },
+    { "randombytes_buf", luasodium_randombytes_buf },
+    { "randombytes_seedbytes", luasodium_randombytes_seedbytes },
+    { "randombytes_buf_deterministic", luasodium_randombytes_buf_deterministic },
+    { "randombytes_close", luasodium_randombytes_close },
+    { "randombytes_stir", luasodium_randombytes_stir },
     { NULL, NULL },
 };
 
 int
 luaopen_luasodium_randombytes_core(lua_State *L) {
+    LUASODIUM_INIT(L)
     lua_newtable(L);
     luaL_setfuncs(L,luasodium_randombytes,0);
     luasodium_set_constants(L,luasodium_randombytes_constants);
