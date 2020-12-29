@@ -316,8 +316,8 @@ push_secretbox_closures(lua_State *L) {
         lua_pushlightuserdata(L,f->secretbox);
         lua_pushinteger(L,f->noncebytes);
         lua_pushinteger(L,f->keybytes);
-        lua_pushinteger(L,f->boxzerobytes);
         lua_pushinteger(L,f->zerobytes);
+        lua_pushinteger(L,f->boxzerobytes);
         lua_pushinteger(L,f->macbytes);
         lua_pushcclosure(L, luasodium_secretbox_closure, 7);
         lua_setfield(L,-2,f->secretbox_name);
@@ -326,8 +326,8 @@ push_secretbox_closures(lua_State *L) {
         lua_pushlightuserdata(L,f->open);
         lua_pushinteger(L,f->noncebytes);
         lua_pushinteger(L,f->keybytes);
-        lua_pushinteger(L,f->zerobytes);
         lua_pushinteger(L,f->boxzerobytes);
+        lua_pushinteger(L,f->zerobytes);
         lua_pushinteger(L,((int)f->macbytes) * -1);
         lua_pushcclosure(L, luasodium_secretbox_closure, 7);
         lua_setfield(L,-2,f->open_name);

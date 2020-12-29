@@ -11,4 +11,6 @@ typedef struct luasodium_constant_s {
     size_t value;
 } luasodium_constant_t;
 
+#define LS_CONST(x) { #x, x }
+
 #endif

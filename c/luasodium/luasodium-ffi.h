@@ -5,6 +5,17 @@
 
 typedef void * ffi_pointer_t;
 
+struct luasodium_ffi_func_s {
+    ffi_pointer_t func;
+    const char *name;
+    const char *signature;
+};
+
+typedef struct luasodium_ffi_func_s luasodium_ffi_func;
+
+#define LS_FFI_FUNC(x, sig) { x, #x, sig }
+#define LS_FFI_END { NULL, NULL, NULL }
+
 static unsigned int
 luasodium_push_constants(lua_State *L, const luasodium_constant_t *c) {
     int i = 0;
@@ -29,6 +40,26 @@ static unsigned int
 luasodium_push_init(lua_State *L) {
     lua_pushlightuserdata(L,sodium_init);
     return 1;
+}
+
+static void
+luasodium_push_ffi_funcs(lua_State *L, const luasodium_ffi_func *f) {
+    unsigned int i = 0;
+    lua_newtable(L);
+    for(; f->func != NULL; f++) {
+        lua_newtable(L);
+
+        lua_pushstring(L,f->name);
+        lua_setfield(L,-2,"name");
+
+        lua_pushlightuserdata(L,f->func);
+        lua_setfield(L,-2,"func");
+
+        lua_pushstring(L,f->signature);
+        lua_setfield(L,-2,"signature");
+
+        lua_rawseti(L,-2,++i);
+    }
 }
 
 #endif

@@ -81,9 +81,9 @@ static const secretbox_func_def secretbox_funcs[] = {
       str(crypto_secretbox_open),
       crypto_secretbox_NONCEBYTES,
       crypto_secretbox_KEYBYTES,
-      crypto_secretbox_MACBYTES,
       crypto_secretbox_ZEROBYTES,
       crypto_secretbox_BOXZEROBYTES,
+      crypto_secretbox_MACBYTES,
     },
     { crypto_secretbox_xsalsa20poly1305,
       str(crypto_secretbox_xsalsa20poly1305),
@@ -91,9 +91,9 @@ static const secretbox_func_def secretbox_funcs[] = {
       str(crypto_secretbox_xsalsa20poly1305_open),
       crypto_secretbox_xsalsa20poly1305_NONCEBYTES,
       crypto_secretbox_xsalsa20poly1305_KEYBYTES,
-      crypto_secretbox_xsalsa20poly1305_MACBYTES,
       crypto_secretbox_xsalsa20poly1305_ZEROBYTES,
       crypto_secretbox_xsalsa20poly1305_BOXZEROBYTES,
+      crypto_secretbox_xsalsa20poly1305_MACBYTES,
     },
     { NULL }
 };
