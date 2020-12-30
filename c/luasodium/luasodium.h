@@ -13,6 +13,17 @@ typedef struct luasodium_constant_s {
 
 #define LS_CONST(x) { #x, x }
 
+typedef void (*ls_func_ptr)(void);
+
+/* base type for function definitions */
+typedef struct luasodium_function_s {
+    const char *name;
+    ls_func_ptr func;
+    const char *signature;
+} luasodium_function_t;
+
+#define LS_FUNC(x,sig) #x, x, sig
+
 static void
 luasodium_set_constants(lua_State *L, const luasodium_constant_t *c) {
     for(; c->name != NULL; c++) {

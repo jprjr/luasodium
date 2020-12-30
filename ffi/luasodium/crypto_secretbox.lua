@@ -39,7 +39,7 @@ local c_pointers = { ... }
 
 
 if #c_pointers == 3 and
-  type(c_pointers[1]) == 'userdata' then
+  type(c_pointers[1]) == 'table' then
   sodium_lib = {}
 
   sodium_lib.sodium_init = ffi.cast([[
@@ -55,6 +55,7 @@ if #c_pointers == 3 and
 else
   ffi.cdef([[
     int sodium_init(void);
+    void sodium_memzero(void * const pnt, const size_t len);
   ]])
 
   do
