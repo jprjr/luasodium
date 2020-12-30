@@ -43,6 +43,7 @@ do
   for i=1,#non_easy do
     assert(string.byte(non_easy,i) == result[i])
   end
+  assert(lib.crypto_secretbox_open(encrypted,nonce,key) == 'yay')
 end
 
 do

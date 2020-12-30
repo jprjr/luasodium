@@ -1,171 +1,34 @@
 #include "../luasodium-c.h"
 #include "constants.h"
+#include "functions.h"
 
 #include <stdlib.h>
 #include <string.h>
 
-#define str(s) #s
+/* crypto_secretbox_keygen() */
+static int
+lua_crypto_secretbox_keygen(lua_State *L) {
+    unsigned char *k = NULL;
 
-typedef int (*secretbox_func)(unsigned char *c,
-                              const unsigned char *m,
-                              unsigned long long mlen,
-                              const unsigned char *n,
-                              const unsigned char *k);
+    const ls_crypto_secretbox_keygen_func_def *def = NULL;
+    def = (const ls_crypto_secretbox_keygen_func_def *) lua_touserdata(L,lua_upvalueindex(1));
 
-typedef int (*secretbox_easy_func)(unsigned char *c,
-                              const unsigned char *m,
-                              unsigned long long mlen,
-                              const unsigned char *n,
-                              const unsigned char *k);
-
-typedef int (*secretbox_detached_func)(unsigned char *c,
-                                       unsigned char *mac,
-                                       const unsigned char *m,
-                                       unsigned long long mlen,
-                                       const unsigned char *n,
-                                       const unsigned char *k);
-
-typedef int (*secretbox_open_detached_func)(unsigned char *m,
-                                            const unsigned char *c,
-                                            const unsigned char *mac,
-                                            unsigned long long clen,
-                                            const unsigned char *n,
-                                            const unsigned char *k);
-
-
-typedef void (*secretbox_keygen_func)(unsigned char *k);
-
-struct secretbox_func_def_s {
-    secretbox_func secretbox;
-    const char *secretbox_name;
-    secretbox_func open;
-    const char *open_name;
-    size_t noncebytes;
-    size_t keybytes;
-    size_t zerobytes;
-    size_t boxzerobytes;
-    size_t macbytes;
-};
-
-struct secretbox_easy_func_def_s {
-    secretbox_easy_func secretbox;
-    const char *secretbox_name;
-    secretbox_easy_func open;
-    const char *open_name;
-    size_t noncebytes;
-    size_t keybytes;
-    size_t macbytes;
-};
-
-struct secretbox_detached_func_def_s {
-    secretbox_detached_func secretbox;
-    const char *secretbox_name;
-    secretbox_open_detached_func open;
-    const char *open_name;
-    size_t noncebytes;
-    size_t keybytes;
-    size_t macbytes;
-};
-
-struct secretbox_keygen_func_def_s {
-    secretbox_keygen_func keygen;
-    const char *name;
-    size_t size;
-};
-
-typedef struct secretbox_func_def_s secretbox_func_def;
-typedef struct secretbox_easy_func_def_s secretbox_easy_func_def;
-typedef struct secretbox_detached_func_def_s secretbox_detached_func_def;
-typedef struct secretbox_keygen_func_def_s secretbox_keygen_func_def;
-
-static const secretbox_func_def secretbox_funcs[] = {
-    {
-      crypto_secretbox,
-      str(crypto_secretbox),
-      crypto_secretbox_open,
-      str(crypto_secretbox_open),
-      crypto_secretbox_NONCEBYTES,
-      crypto_secretbox_KEYBYTES,
-      crypto_secretbox_ZEROBYTES,
-      crypto_secretbox_BOXZEROBYTES,
-      crypto_secretbox_MACBYTES,
-    },
-    { crypto_secretbox_xsalsa20poly1305,
-      str(crypto_secretbox_xsalsa20poly1305),
-      crypto_secretbox_xsalsa20poly1305_open,
-      str(crypto_secretbox_xsalsa20poly1305_open),
-      crypto_secretbox_xsalsa20poly1305_NONCEBYTES,
-      crypto_secretbox_xsalsa20poly1305_KEYBYTES,
-      crypto_secretbox_xsalsa20poly1305_ZEROBYTES,
-      crypto_secretbox_xsalsa20poly1305_BOXZEROBYTES,
-      crypto_secretbox_xsalsa20poly1305_MACBYTES,
-    },
-    { NULL }
-};
-
-
-static const secretbox_easy_func_def secretbox_easy_funcs[] = {
-    {
-      crypto_secretbox_easy,
-      str(crypto_secretbox_easy),
-      crypto_secretbox_open_easy,
-      str(crypto_secretbox_open_easy),
-      crypto_secretbox_NONCEBYTES,
-      crypto_secretbox_KEYBYTES,
-      crypto_secretbox_MACBYTES,
-    },
-    {
-      crypto_secretbox_xchacha20poly1305_easy,
-      str(crypto_secretbox_xchacha20poly1305_easy),
-      crypto_secretbox_xchacha20poly1305_open_easy,
-      str(crypto_secretbox_xchacha20poly1305_open_easy),
-      crypto_secretbox_xchacha20poly1305_NONCEBYTES,
-      crypto_secretbox_xchacha20poly1305_KEYBYTES,
-      crypto_secretbox_xchacha20poly1305_MACBYTES,
-    },
-    { NULL }
-};
-
-static const secretbox_detached_func_def secretbox_detached_funcs[] = {
-    {
-      crypto_secretbox_detached,
-      str(crypto_secretbox_detached),
-      crypto_secretbox_open_detached,
-      str(crypto_secretbox_open_detached),
-      crypto_secretbox_NONCEBYTES,
-      crypto_secretbox_KEYBYTES,
-      crypto_secretbox_MACBYTES,
-    },
-    {
-      crypto_secretbox_xchacha20poly1305_detached,
-      str(crypto_secretbox_xchacha20poly1305_detached),
-      crypto_secretbox_xchacha20poly1305_open_detached,
-      str(crypto_secretbox_xchacha20poly1305_open_detached),
-      crypto_secretbox_xchacha20poly1305_NONCEBYTES,
-      crypto_secretbox_xchacha20poly1305_KEYBYTES,
-      crypto_secretbox_xchacha20poly1305_MACBYTES,
-    },
-    { NULL }
-};
-
-static const secretbox_keygen_func_def secretbox_keygen_funcs[] = {
-    {
-        crypto_secretbox_keygen,
-        str(crypto_secretbox_keygen),
-        crypto_secretbox_KEYBYTES
-    },
-    {
-        crypto_secretbox_xsalsa20poly1305_keygen,
-        str(crypto_secretbox_xsalsa20poly1305_keygen),
-        crypto_secretbox_xsalsa20poly1305_KEYBYTES
-    },
-    { NULL }
-};
+    k = lua_newuserdata(L,def->keysize);
+    if(k == NULL) {
+        lua_pushliteral(L,"out of memory");
+        return lua_error(L);
+    }
+    lua_pop(L,1);
+    def->func(k);
+    lua_pushlstring(L,(const char *)k,def->keysize);
+    sodium_memzero(k,def->keysize);
+    return 1;
+}
 
 
 /* crypto_secretbox, crypto_secretbox_xsalsa20poly1305, etc */
 static int
-luasodium_secretbox_closure(lua_State *L) {
+lua_crypto_secretbox(lua_State *L) {
     unsigned char *output      = NULL;
     const unsigned char *input = NULL;
     const unsigned char *nonce = NULL;
@@ -178,21 +41,8 @@ luasodium_secretbox_closure(lua_State *L) {
     size_t noncelen = 0;
     size_t keylen = 0;
 
-    const char *fname          = NULL;
-    secretbox_func f          = NULL;
-    size_t noncebytes         = 0;
-    size_t keybytes           = 0;
-    size_t inputzerobytes     = 0;
-    size_t outputzerobytes    = 0;
-    int    macbytes           = 0;
-
-    fname            = lua_tostring(L,lua_upvalueindex(1));
-    f                = (secretbox_func) lua_touserdata(L, lua_upvalueindex(2));
-    noncebytes       = lua_tointeger(L,lua_upvalueindex(3));
-    keybytes         = lua_tointeger(L,lua_upvalueindex(4));
-    inputzerobytes   = lua_tointeger(L,lua_upvalueindex(5));
-    outputzerobytes  = lua_tointeger(L,lua_upvalueindex(6));
-    macbytes         = lua_tointeger(L,lua_upvalueindex(7));
+    const ls_crypto_secretbox_func_def *def = NULL;
+    def = (const ls_crypto_secretbox_func_def *) lua_touserdata(L,lua_upvalueindex(1));
 
     if(lua_isnoneornil(L,3)) {
         lua_pushliteral(L,"requires 3 parameters");
@@ -203,50 +53,114 @@ luasodium_secretbox_closure(lua_State *L) {
     nonce = (const unsigned char *)lua_tolstring(L,2,&noncelen);
     key   = (const unsigned char *)lua_tolstring(L,3,&keylen);
 
-    if(noncelen != noncebytes) {
-        return luaL_error(L,"wrong nonce size, expected: %d",noncebytes);
+    if(noncelen != def->noncesize) {
+        return luaL_error(L,"wrong nonce size, expected: %d",def->noncesize);
     }
 
-    if(keylen != keybytes) {
-        return luaL_error(L,"wrong key size, expected: %d",keybytes);
+    if(keylen != def->keysize) {
+        return luaL_error(L,"wrong key size, expected: %d",def->keysize);
     }
 
-    if( ((int)inputlen) + macbytes < 0) {
-        return luaL_error(L,"wrong input size, expected at least: %d",macbytes > 0 ? macbytes : -macbytes);
-    }
+    outputlen = inputlen + def->macsize;
 
-    outputlen = (size_t)(((int)inputlen) + macbytes);
-
-    tmp_input = (unsigned char *)lua_newuserdata(L,inputlen + inputzerobytes);
+    tmp_input = (unsigned char *)lua_newuserdata(L,inputlen + def->zerosize);
     if(tmp_input == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
-    output = (unsigned char *)lua_newuserdata(L,outputlen + outputzerobytes);
+    output = (unsigned char *)lua_newuserdata(L,outputlen + def->boxzerosize);
     if(output == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
     lua_pop(L,2);
 
-    sodium_memzero(tmp_input,inputzerobytes);
-    sodium_memzero(output,outputzerobytes);
+    sodium_memzero(tmp_input,def->zerosize);
+    sodium_memzero(output,def->boxzerosize);
 
-    memcpy(&tmp_input[inputzerobytes],input,inputlen);
+    memcpy(&tmp_input[def->zerosize],input,inputlen);
 
-    if(f(output,tmp_input,inputlen+inputzerobytes,nonce,key) == -1) {
-        return luaL_error(L,"%s error",fname);
+    if(def->func(output,tmp_input,inputlen+def->zerosize,nonce,key) == -1) {
+        return luaL_error(L,"%s error",def->name);
     }
 
-    lua_pushlstring(L,(const char *)&output[outputzerobytes],outputlen);
-    sodium_memzero(tmp_input,inputlen + inputzerobytes);
-    sodium_memzero(output,outputlen + outputzerobytes);
+    lua_pushlstring(L,(const char *)&output[def->boxzerosize],outputlen);
+    sodium_memzero(tmp_input,inputlen + def->zerosize);
+    sodium_memzero(output,outputlen + def->boxzerosize);
+    return 1;
+}
+
+/* crypto_secretbox_open, crypto_secretbox_xsalsa20poly1305_open, etc */
+static int
+lua_crypto_secretbox_open(lua_State *L) {
+    unsigned char *output      = NULL;
+    const unsigned char *input = NULL;
+    const unsigned char *nonce = NULL;
+    const unsigned char *key   = NULL;
+
+    unsigned char *tmp_input   = NULL;
+
+    size_t outputlen = 0;
+    size_t inputlen = 0;
+    size_t noncelen = 0;
+    size_t keylen = 0;
+
+    const ls_crypto_secretbox_open_func_def *def = NULL;
+    def = (const ls_crypto_secretbox_open_func_def *) lua_touserdata(L,lua_upvalueindex(1));
+
+    if(lua_isnoneornil(L,3)) {
+        lua_pushliteral(L,"requires 3 parameters");
+        return lua_error(L);
+    }
+
+    input = (const unsigned char *)lua_tolstring(L,1,&inputlen);
+    nonce = (const unsigned char *)lua_tolstring(L,2,&noncelen);
+    key   = (const unsigned char *)lua_tolstring(L,3,&keylen);
+
+    if(inputlen <= def->macsize) {
+        return luaL_error(L,"wront mac size, expected at least: %d",def->macsize);
+    }
+
+    if(noncelen != def->noncesize) {
+        return luaL_error(L,"wrong nonce size, expected: %d",def->noncesize);
+    }
+
+    if(keylen != def->keysize) {
+        return luaL_error(L,"wrong key size, expected: %d",def->keysize);
+    }
+
+    outputlen = inputlen - def->macsize;
+
+    tmp_input = (unsigned char *)lua_newuserdata(L,inputlen + def->boxzerosize);
+    if(tmp_input == NULL) {
+        lua_pushliteral(L,"out of memory");
+        return lua_error(L);
+    }
+    output = (unsigned char *)lua_newuserdata(L,outputlen + def->zerosize);
+    if(output == NULL) {
+        lua_pushliteral(L,"out of memory");
+        return lua_error(L);
+    }
+    lua_pop(L,2);
+
+    sodium_memzero(tmp_input,def->boxzerosize);
+    sodium_memzero(output,def->zerosize);
+
+    memcpy(&tmp_input[def->boxzerosize],input,inputlen);
+
+    if(def->func(output,tmp_input,inputlen+def->boxzerosize,nonce,key) == -1) {
+        return luaL_error(L,"%s error",def->name);
+    }
+
+    lua_pushlstring(L,(const char *)&output[def->zerosize],outputlen);
+    sodium_memzero(tmp_input,inputlen + def->boxzerosize);
+    sodium_memzero(output,outputlen + def->zerosize);
     return 1;
 }
 
 /* crypto_secretbox, crypto_secretbox_xsalsa20poly1305, etc */
 static int
-luasodium_secretbox_easy_closure(lua_State *L) {
+lua_crypto_secretbox_easy(lua_State *L) {
     unsigned char *output      = NULL;
     const unsigned char *input = NULL;
     const unsigned char *nonce = NULL;
@@ -257,17 +171,8 @@ luasodium_secretbox_easy_closure(lua_State *L) {
     size_t noncelen = 0;
     size_t keylen = 0;
 
-    const char *fname          = NULL;
-    secretbox_easy_func f          = NULL;
-    size_t noncebytes         = 0;
-    size_t keybytes           = 0;
-    int    macbytes           = 0;
-
-    fname            = lua_tostring(L,lua_upvalueindex(1));
-    f                = (secretbox_easy_func) lua_touserdata(L, lua_upvalueindex(2));
-    noncebytes       = lua_tointeger(L,lua_upvalueindex(3));
-    keybytes         = lua_tointeger(L,lua_upvalueindex(4));
-    macbytes         = lua_tointeger(L,lua_upvalueindex(5));
+    const ls_crypto_secretbox_open_func_def *def = NULL;
+    def = (const ls_crypto_secretbox_open_func_def *) lua_touserdata(L,lua_upvalueindex(1));
 
     if(lua_isnoneornil(L,3)) {
         lua_pushliteral(L,"requires 3 parameters");
@@ -278,19 +183,15 @@ luasodium_secretbox_easy_closure(lua_State *L) {
     nonce = (const unsigned char *)lua_tolstring(L,2,&noncelen);
     key   = (const unsigned char *)lua_tolstring(L,3,&keylen);
 
-    if(noncelen != noncebytes) {
-        return luaL_error(L,"wrong nonce size, expected: %d",noncebytes);
+    if(noncelen != def->noncesize) {
+        return luaL_error(L,"wrong nonce size, expected: %d",def->noncesize);
     }
 
-    if(keylen != keybytes) {
-        return luaL_error(L,"wrong key size, expected: %d",keybytes);
+    if(keylen != def->keysize) {
+        return luaL_error(L,"wrong key size, expected: %d",def->keysize);
     }
 
-    if( ((int)inputlen) + macbytes < 0) {
-        return luaL_error(L,"wrong input size, expected at least: %d",macbytes > 0 ? macbytes : -macbytes);
-    }
-
-    outputlen = (size_t)(((int)inputlen) + macbytes);
+    outputlen = inputlen + def->macsize;
 
     output = (unsigned char *)lua_newuserdata(L,outputlen);
     if(output == NULL) {
@@ -299,8 +200,63 @@ luasodium_secretbox_easy_closure(lua_State *L) {
     }
     lua_pop(L,1);
 
-    if(f(output,input,inputlen,nonce,key) == -1) {
-        return luaL_error(L,"%s error",fname);
+    if(def->func(output,input,inputlen,nonce,key) == -1) {
+        return luaL_error(L,"%s error",def->name);
+    }
+
+    lua_pushlstring(L,(const char *)output,outputlen);
+    sodium_memzero(output,outputlen);
+    return 1;
+}
+
+/* crypto_secretbox, crypto_secretbox_xsalsa20poly1305, etc */
+static int
+lua_crypto_secretbox_open_easy(lua_State *L) {
+    unsigned char *output      = NULL;
+    const unsigned char *input = NULL;
+    const unsigned char *nonce = NULL;
+    const unsigned char *key   = NULL;
+
+    size_t outputlen = 0;
+    size_t inputlen = 0;
+    size_t noncelen = 0;
+    size_t keylen = 0;
+
+    const ls_crypto_secretbox_open_easy_func_def *def = NULL;
+    def = (const ls_crypto_secretbox_open_easy_func_def *) lua_touserdata(L,lua_upvalueindex(1));
+
+    if(lua_isnoneornil(L,3)) {
+        lua_pushliteral(L,"requires 3 parameters");
+        return lua_error(L);
+    }
+
+    input = (const unsigned char *)lua_tolstring(L,1,&inputlen);
+    nonce = (const unsigned char *)lua_tolstring(L,2,&noncelen);
+    key   = (const unsigned char *)lua_tolstring(L,3,&keylen);
+
+    if(inputlen <= def->macsize) {
+        return luaL_error(L,"wrong mac size, expected at least: %d",def->macsize);
+    }
+
+    if(noncelen != def->noncesize) {
+        return luaL_error(L,"wrong nonce size, expected: %d",def->noncesize);
+    }
+
+    if(keylen != def->keysize) {
+        return luaL_error(L,"wrong key size, expected: %d",def->keysize);
+    }
+
+    outputlen = inputlen - def->macsize;
+
+    output = (unsigned char *)lua_newuserdata(L,outputlen);
+    if(output == NULL) {
+        lua_pushliteral(L,"out of memory");
+        return lua_error(L);
+    }
+    lua_pop(L,1);
+
+    if(def->func(output,input,inputlen,nonce,key) == -1) {
+        return luaL_error(L,"%s error",def->name);
     }
 
     lua_pushlstring(L,(const char *)output,outputlen);
@@ -310,7 +266,7 @@ luasodium_secretbox_easy_closure(lua_State *L) {
 
 /* crypto_secretbox_detached(message, nonce, key) */
 static int
-luasodium_secretbox_detached_closure(lua_State *L) {
+lua_crypto_secretbox_detached(lua_State *L) {
     unsigned char *output = NULL;
     unsigned char *mac = NULL;
     const unsigned char *input = NULL;
@@ -321,17 +277,8 @@ luasodium_secretbox_detached_closure(lua_State *L) {
     size_t noncelen = 0;
     size_t keylen = 0;
 
-    const char *fname          = NULL;
-    secretbox_detached_func f  = NULL;
-    size_t noncebytes          = 0;
-    size_t keybytes            = 0;
-    size_t macbytes            = 0;
-
-    fname            = lua_tostring(L,lua_upvalueindex(1));
-    f                = (secretbox_detached_func) lua_touserdata(L, lua_upvalueindex(2));
-    noncebytes       = lua_tointeger(L,lua_upvalueindex(3));
-    keybytes         = lua_tointeger(L,lua_upvalueindex(4));
-    macbytes         = lua_tointeger(L,lua_upvalueindex(5));
+    const ls_crypto_secretbox_detached_func_def *def = NULL;
+    def = (const ls_crypto_secretbox_detached_func_def *) lua_touserdata(L,lua_upvalueindex(1));
 
     if(lua_isnoneornil(L,3)) {
         lua_pushliteral(L,"requires 3 parameters");
@@ -342,12 +289,12 @@ luasodium_secretbox_detached_closure(lua_State *L) {
     nonce = (const unsigned char *)lua_tolstring(L,2,&noncelen);
     key   = (const unsigned char *)lua_tolstring(L,3,&keylen);
 
-    if(noncelen != noncebytes) {
-        return luaL_error(L,"wrong nonce size, expected: %d",noncebytes);
+    if(noncelen != def->noncesize) {
+        return luaL_error(L,"wrong nonce size, expected: %d",def->noncesize);
     }
 
-    if(keylen != keybytes) {
-        return luaL_error(L,"wrong key size, expected: %d",keybytes);
+    if(keylen != def->keysize) {
+        return luaL_error(L,"wrong key size, expected: %d",def->keysize);
     }
 
     output = lua_newuserdata(L,inputlen);
@@ -355,28 +302,28 @@ luasodium_secretbox_detached_closure(lua_State *L) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
-    mac = lua_newuserdata(L,macbytes);
+    mac = lua_newuserdata(L,def->macsize);
     if(mac == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
     lua_pop(L,2);
 
-    if(f(output,mac,input,inputlen,nonce,key) == -1) {
-        return luaL_error(L,"%s error",fname);
+    if(def->func(output,mac,input,inputlen,nonce,key) == -1) {
+        return luaL_error(L,"%s error",def->name);
     }
 
     lua_pushlstring(L,(const char *)output,inputlen);
-    lua_pushlstring(L,(const char *)mac,macbytes);
+    lua_pushlstring(L,(const char *)mac,def->macsize);
 
     sodium_memzero(output,inputlen);
-    sodium_memzero(mac,macbytes);
+    sodium_memzero(mac,def->macsize);
     return 2;
 }
 
 /* crypto_secretbox_open_detached(cipher, mac, nonce, key) */
 static int
-luasodium_secretbox_open_detached_closure(lua_State *L) {
+lua_crypto_secretbox_open_detached(lua_State *L) {
     unsigned char *output = NULL;
     const unsigned char *input = NULL;
     const unsigned char *mac = NULL;
@@ -388,17 +335,8 @@ luasodium_secretbox_open_detached_closure(lua_State *L) {
     size_t keylen = 0;
     size_t maclen = 0;
 
-    const char *fname          = NULL;
-    secretbox_open_detached_func f  = NULL;
-    size_t noncebytes          = 0;
-    size_t keybytes            = 0;
-    size_t macbytes            = 0;
-
-    fname            = lua_tostring(L,lua_upvalueindex(1));
-    f                = (secretbox_open_detached_func) lua_touserdata(L, lua_upvalueindex(2));
-    noncebytes       = lua_tointeger(L,lua_upvalueindex(3));
-    keybytes         = lua_tointeger(L,lua_upvalueindex(4));
-    macbytes         = lua_tointeger(L,lua_upvalueindex(5));
+    const ls_crypto_secretbox_open_detached_func_def *def = NULL;
+    def = (const ls_crypto_secretbox_open_detached_func_def *) lua_touserdata(L,lua_upvalueindex(1));
 
     if(lua_isnoneornil(L,4)) {
         lua_pushliteral(L,"requires 4 parameters");
@@ -410,16 +348,16 @@ luasodium_secretbox_open_detached_closure(lua_State *L) {
     nonce = (const unsigned char *)lua_tolstring(L,3,&noncelen);
     key   = (const unsigned char *)lua_tolstring(L,4,&keylen);
 
-    if(maclen != macbytes) {
-        return luaL_error(L,"wrong mac size, expected: %d",macbytes);
+    if(maclen != def->macsize) {
+        return luaL_error(L,"wrong mac size, expected: %d",def->macsize);
     }
 
-    if(noncelen != noncebytes) {
-        return luaL_error(L,"wrong nonce size, expected: %d",noncebytes);
+    if(noncelen != def->noncesize) {
+        return luaL_error(L,"wrong nonce size, expected: %d",def->noncesize);
     }
 
-    if(keylen != keybytes) {
-        return luaL_error(L,"wrong key size, expected: %d",keybytes);
+    if(keylen != def->keysize) {
+        return luaL_error(L,"wrong key size, expected: %d",def->keysize);
     }
 
     output = lua_newuserdata(L,inputlen);
@@ -430,8 +368,8 @@ luasodium_secretbox_open_detached_closure(lua_State *L) {
 
     lua_pop(L,1);
 
-    if(f(output,input,mac,inputlen,nonce,key) == -1) {
-        return luaL_error(L,"%s error",fname);
+    if(def->func(output,input,mac,inputlen,nonce,key) == -1) {
+        return luaL_error(L,"%s error",def->name);
     }
 
     lua_pushlstring(L,(const char *)output,inputlen);
@@ -439,116 +377,115 @@ luasodium_secretbox_open_detached_closure(lua_State *L) {
     return 1;
 }
 
-/* crypto_secretbox_keygen() */
-static int
-luasodium_secretbox_keygen_closure(lua_State *L) {
-    unsigned char *k = NULL;
+static const ls_crypto_secretbox_keygen_func_def * const ls_crypto_secretbox_keygen_funcs[] = {
+    &ls_crypto_secretbox_keygen_func,
+    &ls_crypto_secretbox_xsalsa20poly1305_keygen_func,
+    NULL,
+};
 
-    secretbox_keygen_func f = NULL;
-    size_t size = 0;
+static const ls_crypto_secretbox_func_def * const ls_crypto_secretbox_funcs[] = {
+    &ls_crypto_secretbox_func,
+    &ls_crypto_secretbox_xsalsa20poly1305_func,
+    NULL,
+};
 
-    f    = (secretbox_keygen_func) lua_touserdata(L, lua_upvalueindex(2));
-    size =  lua_tointeger(L,lua_upvalueindex(3));
+static const ls_crypto_secretbox_open_func_def * const ls_crypto_secretbox_open_funcs[] = {
+    &ls_crypto_secretbox_open_func,
+    &ls_crypto_secretbox_xsalsa20poly1305_open_func,
+    NULL,
+};
 
-    k = lua_newuserdata(L,size);
-    if(k == NULL) {
-        lua_pushliteral(L,"out of memory");
-        return lua_error(L);
-    }
-    lua_pop(L,1);
-    f(k);
-    lua_pushlstring(L,(const char *)k,size);
-    sodium_memzero(k,size);
-    return 1;
-}
+static const ls_crypto_secretbox_easy_func_def * const ls_crypto_secretbox_easy_funcs[] = {
+    &ls_crypto_secretbox_easy_func,
+    &ls_crypto_secretbox_xchacha20poly1305_easy_func,
+    NULL,
+};
 
-static const struct luaL_Reg luasodium_secretbox[] = {
-    { NULL, NULL },
+static const ls_crypto_secretbox_open_easy_func_def * const ls_crypto_secretbox_open_easy_funcs[] = {
+    &ls_crypto_secretbox_open_easy_func,
+    &ls_crypto_secretbox_xchacha20poly1305_open_easy_func,
+    NULL,
+};
+
+static const ls_crypto_secretbox_detached_func_def * const ls_crypto_secretbox_detached_funcs[] = {
+    &ls_crypto_secretbox_detached_func,
+    &ls_crypto_secretbox_xchacha20poly1305_detached_func,
+    NULL,
+};
+
+static const ls_crypto_secretbox_open_detached_func_def * const ls_crypto_secretbox_open_detached_funcs[] = {
+    &ls_crypto_secretbox_open_detached_func,
+    &ls_crypto_secretbox_xchacha20poly1305_open_detached_func,
+    NULL,
 };
 
 static void
-push_secretbox_closures(lua_State *L) {
-    const secretbox_func_def *f = secretbox_funcs;
-    while(f->secretbox != NULL) {
-        lua_pushstring(L,f->secretbox_name);
-        lua_pushlightuserdata(L,f->secretbox);
-        lua_pushinteger(L,f->noncebytes);
-        lua_pushinteger(L,f->keybytes);
-        lua_pushinteger(L,f->zerobytes);
-        lua_pushinteger(L,f->boxzerobytes);
-        lua_pushinteger(L,f->macbytes);
-        lua_pushcclosure(L, luasodium_secretbox_closure, 7);
-        lua_setfield(L,-2,f->secretbox_name);
-
-        lua_pushstring(L,f->open_name);
-        lua_pushlightuserdata(L,f->open);
-        lua_pushinteger(L,f->noncebytes);
-        lua_pushinteger(L,f->keybytes);
-        lua_pushinteger(L,f->boxzerobytes);
-        lua_pushinteger(L,f->zerobytes);
-        lua_pushinteger(L,((int)f->macbytes) * -1);
-        lua_pushcclosure(L, luasodium_secretbox_closure, 7);
-        lua_setfield(L,-2,f->open_name);
-        f++;
+ls_push_crypto_secretbox_keygen_closures(lua_State *L) {
+    const ls_crypto_secretbox_keygen_func_def * const *f = ls_crypto_secretbox_keygen_funcs;
+    for(; f[0] != NULL; f++) {
+        lua_pushlightuserdata(L,(void *)f[0]);
+        lua_pushcclosure(L,lua_crypto_secretbox_keygen,1);
+        lua_setfield(L,-2,f[0]->name);
     }
 }
 
 static void
-push_secretbox_easy_closures(lua_State *L) {
-    const secretbox_easy_func_def *f = secretbox_easy_funcs;
-    while(f->secretbox != NULL) {
-        lua_pushstring(L,f->secretbox_name);
-        lua_pushlightuserdata(L,f->secretbox);
-        lua_pushinteger(L,f->noncebytes);
-        lua_pushinteger(L,f->keybytes);
-        lua_pushinteger(L,f->macbytes);
-        lua_pushcclosure(L, luasodium_secretbox_easy_closure, 5);
-        lua_setfield(L,-2,f->secretbox_name);
-
-        lua_pushstring(L,f->open_name);
-        lua_pushlightuserdata(L,f->open);
-        lua_pushinteger(L,f->noncebytes);
-        lua_pushinteger(L,f->keybytes);
-        lua_pushinteger(L,((int)f->macbytes) * -1);
-        lua_pushcclosure(L, luasodium_secretbox_easy_closure, 5);
-        lua_setfield(L,-2,f->open_name);
-        f++;
+ls_push_crypto_secretbox_closures(lua_State *L) {
+    const ls_crypto_secretbox_func_def * const *f = ls_crypto_secretbox_funcs;
+    for(; f[0] != NULL; f++) {
+        lua_pushlightuserdata(L,(void *)f[0]);
+        lua_pushcclosure(L,lua_crypto_secretbox,1);
+        lua_setfield(L,-2,f[0]->name);
     }
 }
 
 static void
-push_secretbox_detached_closures(lua_State *L) {
-    const secretbox_detached_func_def *f = secretbox_detached_funcs;
-    while(f->secretbox != NULL) {
-        lua_pushstring(L,f->secretbox_name);
-        lua_pushlightuserdata(L,f->secretbox);
-        lua_pushinteger(L,f->noncebytes);
-        lua_pushinteger(L,f->keybytes);
-        lua_pushinteger(L,f->macbytes);
-        lua_pushcclosure(L, luasodium_secretbox_detached_closure, 5);
-        lua_setfield(L,-2,f->secretbox_name);
-
-        lua_pushstring(L,f->open_name);
-        lua_pushlightuserdata(L,f->open);
-        lua_pushinteger(L,f->noncebytes);
-        lua_pushinteger(L,f->keybytes);
-        lua_pushinteger(L,f->macbytes);
-        lua_pushcclosure(L, luasodium_secretbox_open_detached_closure, 5);
-        lua_setfield(L,-2,f->open_name);
-        f++;
+ls_push_crypto_secretbox_open_closures(lua_State *L) {
+    const ls_crypto_secretbox_open_func_def * const *f = ls_crypto_secretbox_open_funcs;
+    for(; f[0] != NULL; f++) {
+        lua_pushlightuserdata(L,(void *)f[0]);
+        lua_pushcclosure(L,lua_crypto_secretbox_open,1);
+        lua_setfield(L,-2,f[0]->name);
     }
 }
 
 static void
-push_secretbox_keygen_closures(lua_State *L) {
-    const secretbox_keygen_func_def *f = secretbox_keygen_funcs;
-    while(f->keygen != NULL) {
-        lua_pushstring(L,f->name);
-        lua_pushlightuserdata(L,f->keygen);
-        lua_pushinteger(L,f->size);
-        lua_pushcclosure(L, luasodium_secretbox_keygen_closure, 3);
-        lua_setfield(L,-2,f->name);
-        f++;
+ls_push_crypto_secretbox_easy_closures(lua_State *L) {
+    const ls_crypto_secretbox_easy_func_def * const *f = ls_crypto_secretbox_easy_funcs;
+    for(; f[0] != NULL; f++) {
+        lua_pushlightuserdata(L,(void *)f[0]);
+        lua_pushcclosure(L,lua_crypto_secretbox_easy,1);
+        lua_setfield(L,-2,f[0]->name);
+    }
+}
+
+static void
+ls_push_crypto_secretbox_open_easy_closures(lua_State *L) {
+    const ls_crypto_secretbox_open_easy_func_def * const *f = ls_crypto_secretbox_open_easy_funcs;
+    for(; f[0] != NULL; f++) {
+        lua_pushlightuserdata(L,(void *)f[0]);
+        lua_pushcclosure(L,lua_crypto_secretbox_open_easy,1);
+        lua_setfield(L,-2,f[0]->name);
+    }
+}
+
+static void
+ls_push_crypto_secretbox_detached_closures(lua_State *L) {
+    const ls_crypto_secretbox_detached_func_def * const *f = ls_crypto_secretbox_detached_funcs;
+    for(; f[0] != NULL; f++) {
+        lua_pushlightuserdata(L,(void *)f[0]);
+        lua_pushcclosure(L,lua_crypto_secretbox_detached,1);
+        lua_setfield(L,-2,f[0]->name);
+    }
+}
+
+static void
+ls_push_crypto_secretbox_open_detached_closures(lua_State *L) {
+    const ls_crypto_secretbox_open_detached_func_def * const *f = ls_crypto_secretbox_open_detached_funcs;
+    for(; f[0] != NULL; f++) {
+        lua_pushlightuserdata(L,(void *)f[0]);
+        lua_pushcclosure(L,lua_crypto_secretbox_open_detached,1);
+        lua_setfield(L,-2,f[0]->name);
     }
 }
 
@@ -556,14 +493,15 @@ int
 luaopen_luasodium_crypto_secretbox_core(lua_State *L) {
     LUASODIUM_INIT(L)
     lua_newtable(L);
+    luasodium_set_constants(L,ls_crypto_secretbox_constants);
 
-    luaL_setfuncs(L,luasodium_secretbox,0);
-    luasodium_set_constants(L,luasodium_secretbox_constants);
-
-    push_secretbox_closures(L);
-    push_secretbox_easy_closures(L);
-    push_secretbox_detached_closures(L);
-    push_secretbox_keygen_closures(L);
+    ls_push_crypto_secretbox_closures(L);
+    ls_push_crypto_secretbox_open_closures(L);
+    ls_push_crypto_secretbox_easy_closures(L);
+    ls_push_crypto_secretbox_open_easy_closures(L);
+    ls_push_crypto_secretbox_detached_closures(L);
+    ls_push_crypto_secretbox_open_detached_closures(L);
+    ls_push_crypto_secretbox_keygen_closures(L);
 
     return 1;
 }

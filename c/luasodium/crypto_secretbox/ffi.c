@@ -1,54 +1,27 @@
 #include "../luasodium-ffi.h"
 #include "constants.h"
+#include "functions.h"
 #include "core.luah"
 
-#define str(s) #s
-
-static const char *const easy_sig = "int (*)(unsigned char *c, "
-                                    "const unsigned char *m, "
-                                    "unsigned long long mlen, "
-                                    "const unsigned char *n, "
-                                    "const unsigned char *k)";
-
-static const char * const detached_sig = "int (*)(unsigned char *c, "
-                                              "unsigned char *mac, "
-                                              "const unsigned char *m, "
-                                              "unsigned long long mlen, "
-                                              "const unsigned char *n, "
-                                              "const unsigned char *k)";
-
-static const char * const open_detached_sig = "int (*)(unsigned char *m, "
-                                              "const unsigned char *c, "
-                                              "const unsigned char *mac, "
-                                              "unsigned long long mlen, "
-                                              "const unsigned char *n, "
-                                              "const unsigned char *k)";
-
-static const char * const keygen_sig = "void (*)(unsigned char *)";
-
-static const
-luasodium_ffi_func ffi_funcs[] = {
-    LS_FFI_FUNC(crypto_secretbox,easy_sig),
-    LS_FFI_FUNC(crypto_secretbox_open,easy_sig),
-    LS_FFI_FUNC(crypto_secretbox_xsalsa20poly1305,easy_sig),
-    LS_FFI_FUNC(crypto_secretbox_xsalsa20poly1305_open,easy_sig),
-
-    LS_FFI_FUNC(crypto_secretbox_easy,easy_sig),
-    LS_FFI_FUNC(crypto_secretbox_open_easy,easy_sig),
-    LS_FFI_FUNC(crypto_secretbox_xchacha20poly1305_easy,easy_sig),
-    LS_FFI_FUNC(crypto_secretbox_xchacha20poly1305_open_easy,easy_sig),
-
-    LS_FFI_FUNC(crypto_secretbox_detached,detached_sig),
-    LS_FFI_FUNC(crypto_secretbox_xchacha20poly1305_detached,detached_sig),
-
-    LS_FFI_FUNC(crypto_secretbox_open_detached,open_detached_sig),
-    LS_FFI_FUNC(crypto_secretbox_xchacha20poly1305_open_detached,open_detached_sig),
-
-    LS_FFI_FUNC(crypto_secretbox_keygen,keygen_sig),
-    LS_FFI_FUNC(crypto_secretbox_xsalsa20poly1305_keygen,keygen_sig),
-
-    LS_FFI_END
+static const luasodium_function_t * const ls_crypto_secretbox_functions[] = {
+    (const luasodium_function_t *)&ls_crypto_secretbox_keygen_func,
+    (const luasodium_function_t *)&ls_crypto_secretbox_func,
+    (const luasodium_function_t *)&ls_crypto_secretbox_open_func,
+    (const luasodium_function_t *)&ls_crypto_secretbox_easy_func,
+    (const luasodium_function_t *)&ls_crypto_secretbox_open_easy_func,
+    (const luasodium_function_t *)&ls_crypto_secretbox_detached_func,
+    (const luasodium_function_t *)&ls_crypto_secretbox_open_detached_func,
+    (const luasodium_function_t *)&ls_crypto_secretbox_xsalsa20poly1305_keygen_func,
+    (const luasodium_function_t *)&ls_crypto_secretbox_xsalsa20poly1305_func,
+    (const luasodium_function_t *)&ls_crypto_secretbox_xsalsa20poly1305_open_func,
+    (const luasodium_function_t *)&ls_crypto_secretbox_xchacha20poly1305_easy_func,
+    (const luasodium_function_t *)&ls_crypto_secretbox_xchacha20poly1305_open_easy_func,
+    (const luasodium_function_t *)&ls_crypto_secretbox_xchacha20poly1305_detached_func,
+    (const luasodium_function_t *)&ls_crypto_secretbox_xchacha20poly1305_open_detached_func,
+    NULL
 };
+
+
 
 int
 luaopen_luasodium_crypto_secretbox_ffi(lua_State *L) {
@@ -56,12 +29,9 @@ luaopen_luasodium_crypto_secretbox_ffi(lua_State *L) {
         return lua_error(L);
     }
 
-    luasodium_push_init(L);
-
-    lua_newtable(L);
-    luasodium_set_constants(L,luasodium_secretbox_constants);
-
-    luasodium_push_ffi_funcs(L,ffi_funcs);
+    luasodium_push_inittable(L);
+    luasodium_push_constants(L,ls_crypto_secretbox_constants);
+    luasodium_push_functions(L,ls_crypto_secretbox_functions);
 
     if(lua_pcall(L,3,1,0)) {
         return lua_error(L);

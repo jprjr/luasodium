@@ -1,4 +1,4 @@
-static const luasodium_constant_t luasodium_secretbox_constants[] = {
+static const luasodium_constant_t ls_crypto_secretbox_constants[] = {
     LS_CONST(crypto_secretbox_KEYBYTES),
     LS_CONST(crypto_secretbox_MACBYTES),
     LS_CONST(crypto_secretbox_NONCEBYTES),
