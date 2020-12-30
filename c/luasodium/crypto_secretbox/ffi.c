@@ -1,6 +1,5 @@
 #include "../luasodium-ffi.h"
 #include "constants.h"
-#include "types.h"
 #include "core.luah"
 
 #define str(s) #s
@@ -53,21 +52,14 @@ luasodium_ffi_func ffi_funcs[] = {
 
 int
 luaopen_luasodium_crypto_secretbox_ffi(lua_State *L) {
-    unsigned int i = 0;
-    const luasodium_constant_t *c = luasodium_secretbox_constants;
-
     if(luaL_loadbuffer(L,crypto_secretbox_lua,crypto_secretbox_lua_length - 1,"crypto_secretbox.lua")) {
         return lua_error(L);
     }
 
-    i += luasodium_push_init(L);
+    luasodium_push_init(L);
 
     lua_newtable(L);
-    for(; c->name != NULL; c++) {
-        lua_pushstring(L,c->name);
-        lua_pushinteger(L,c->value);
-        lua_settable(L,-3);
-    }
+    luasodium_set_constants(L,luasodium_secretbox_constants);
 
     luasodium_push_ffi_funcs(L,ffi_funcs);
 

@@ -43,6 +43,30 @@ luasodium_push_init(lua_State *L) {
 }
 
 static void
+luasodium_push_inittable(lua_State *L) {
+    lua_newtable(L);
+
+    lua_newtable(L);
+    lua_pushlightuserdata(L,sodium_init);
+    lua_setfield(L,-2,"func");
+
+    lua_pushliteral(L,"int (*)(void)");
+    lua_setfield(L,-2,"signature");
+
+    lua_setfield(L,-2,"sodium_init");
+
+    lua_newtable(L);
+    lua_pushlightuserdata(L,sodium_memzero);
+    lua_setfield(L,-2,"func");
+
+    lua_pushliteral(L,"void (*)(void * const, const size_t)");
+    lua_setfield(L,-2,"signature");
+
+    lua_setfield(L,-2,"sodium_memzero");
+}
+
+
+static void
 luasodium_push_ffi_funcs(lua_State *L, const luasodium_ffi_func *f) {
     unsigned int i = 0;
     lua_newtable(L);
