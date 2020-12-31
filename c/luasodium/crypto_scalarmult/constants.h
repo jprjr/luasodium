@@ -1,6 +1,6 @@
-static const luasodium_constant_t luasodium_crypto_scalarmult_constants[] = {
-    { "crypto_scalarmult_BYTES", crypto_scalarmult_BYTES },
-    { "crypto_scalarmult_SCALARBYTES", crypto_scalarmult_SCALARBYTES },
+static const luasodium_constant_t ls_crypto_scalarmult_constants[] = {
+    LS_CONST(crypto_scalarmult_BYTES),
+    LS_CONST(crypto_scalarmult_SCALARBYTES),
     { NULL, 0 },
 };
 
