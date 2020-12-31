@@ -2,11 +2,57 @@ local ffi = require'ffi'
 local string_len = string.len
 local tonumber = tonumber
 local ffi_string = ffi.string
+local string_format = string.format
+local type = type
 
 local char_array = ffi.typeof('char[?]')
 
+local constants
 local sodium_lib
-local randombytes_SEEDBYTES
+
+local constant_keys = {
+  'randombytes_SEEDBYTES'
+}
+
+local signatures = {
+  {
+    functions = { 'randombytes_random' },
+    signature = [[
+      uint32_t %s(void);
+    ]],
+  },
+  {
+    functions = { 'randombytes_uniform' },
+    signature = [[
+      uint32_t %s(const uint32_t upper_bound);
+    ]],
+  },
+  {
+    functions = { 'randombytes_buf' },
+    signature = [[
+      void %s(void * const buf, const size_t size);
+    ]],
+  },
+  {
+    functions = { 'randombytes_buf_deterministic' },
+    signature = [[
+      void %s(void * const buf, const size_t size,
+               const unsigned char *seed);
+    ]],
+  },
+  {
+    functions = { 'randombytes_close' },
+    signature = [[
+      int %s(void);
+    ]],
+  },
+  {
+    functions = { 'randombytes_stir' },
+    signature = [[
+      void %s(void);
+    ]],
+  }
+}
 
 local function test_cspace()
   if ffi.C.sodium_init then
@@ -17,51 +63,29 @@ end
 -- function pointers are passed in from c module
 local c_pointers = {...}
 
-if #c_pointers > 1 then
+if #c_pointers == 3 and
+  type(c_pointers[1]) == 'table' then
   sodium_lib = {}
 
-  sodium_lib.sodium_init = ffi.cast([[
-    int (*)(void)
-  ]],c_pointers[1])
+  sodium_lib.sodium_init = ffi.cast(
+    c_pointers[1].sodium_init.signature,
+    c_pointers[1].sodium_init.func)
 
-  randombytes_SEEDBYTES = c_pointers[2]
+  sodium_lib.sodium_memzero = ffi.cast(
+    c_pointers[1].sodium_memzero.signature,
+    c_pointers[1].sodium_memzero.func)
 
-  sodium_lib.randombytes_random = ffi.cast([[
-  uint32_t (*)(void)
-  ]],c_pointers[3])
+  constants = c_pointers[2]
 
-  sodium_lib.randombytes_uniform = ffi.cast([[
-  uint32_t (*)(const uint32_t)
-  ]],c_pointers[4])
+  for _,f in ipairs(c_pointers[3]) do
+    sodium_lib[f.name] = ffi.cast(f.signature,f.func)
+  end
 
-  sodium_lib.randombytes_buf = ffi.cast([[
-  void (*)(void * const, const size_t)
-  ]],c_pointers[5])
-
-  sodium_lib.randombytes_seedbytes = ffi.cast([[
-  size_t (*)(void)
-  ]],c_pointers[6])
-
-  sodium_lib.randombytes_close = ffi.cast([[
-  int (*)(void)
-  ]],c_pointers[7])
-
-  sodium_lib.randombytes_stir = ffi.cast([[
-  void (*)(void)
-  ]],c_pointers[8])
-
-  sodium_lib.randombytes_buf_deterministic = ffi.cast([[
-  void (*)(void * const, const size_t, const unsigned char[ ]]
-  .. randombytes_SEEDBYTES .. [[ ])]],c_pointers[9])
 else
+
   ffi.cdef([[
     int sodium_init(void);
-    uint32_t randombytes_random(void);
-    uint32_t randombytes_uniform(const uint32_t upper_bound);
-    void randombytes_buf(void * const buf, const size_t size);
-    size_t randombytes_seedbytes(void);
-    int randombytes_close(void);
-    void randombytes_stir(void);
+    void sodium_memzero(void * const pnt, const size_t len);
   ]])
 
   do
@@ -72,70 +96,94 @@ else
       sodium_lib = ffi.load('sodium')
     end
   end
-  randombytes_SEEDBYTES = tonumber(sodium_lib.randombytes_seedbytes())
-  ffi.cdef([[
-  void randombytes_buf_deterministic(void * const buf, const size_t size,
-                                     const unsigned char seed[]] .. randombytes_SEEDBYTES .. [[]);
-  ]])
-end
 
-local function lua_randombytes_random()
-  return tonumber(sodium_lib.randombytes_random())
-end
+  constants = {}
 
-local function lua_randombytes_uniform(upper)
-  if(type(upper) ~= 'number') then
-    return error('missing number argument')
+  for _,c in ipairs(constant_keys) do
+    ffi.cdef('size_t ' .. c:lower() .. '(void);')
+    constants[c] = tonumber(sodium_lib[c:lower()]())
   end
-  return tonumber(sodium_lib.randombytes_uniform(upper))
-end
 
-local function lua_randombytes_buf(size)
-  if(type(size) ~= 'number') then
-    return error('missing number argument')
+  for _,v in ipairs(signatures) do
+    for _,f in ipairs(v.functions) do
+      ffi.cdef(string_format(v.signature,f))
+    end
   end
-  local tmp = char_array(size)
-  sodium_lib.randombytes_buf(tmp,size)
-  return ffi.string(tmp,size)
 end
 
-local function lua_randombytes_seedbytes()
-  return tonumber(sodium_lib.randombytes_seedbytes())
-end
-
-local function lua_randombytes_buf_deterministic(size, seed)
-  if not seed then
-    return error('requires 2 arguments')
+local function lua_randombytes_random(fname)
+  return function()
+    return tonumber(sodium_lib[fname]())
   end
-  if string_len(seed) ~= randombytes_SEEDBYTES then
-    return error('wrong seed length')
+end
+
+local function lua_randombytes_uniform(fname)
+  return function(upper)
+    if(type(upper) ~= 'number') then
+      return error('missing number argument')
+    end
+    return tonumber(sodium_lib[fname](upper))
   end
-  local tmp = char_array(size)
-  sodium_lib.randombytes_buf_deterministic(tmp,size,seed)
-  return ffi.string(tmp,size)
 end
 
-local function lua_randombytes_close()
-  return sodium_lib.randombytes_close() == 0
+local function lua_randombytes_buf(fname)
+  return function(size)
+    if(type(size) ~= 'number') then
+      return error('missing number argument')
+    end
+    local tmp = char_array(size)
+    sodium_lib[fname](tmp,size)
+    local tmp_str = ffi_string(tmp,size)
+    sodium_lib.sodium_memzero(tmp,size)
+    return tmp_str
+  end
 end
 
-local function lua_randombytes_stir()
-  sodium_lib.randombytes_stir()
+local function lua_randombytes_buf_deterministic(fname,seedbytes)
+  return function(size,seed)
+    if not seed then
+      return error('requires 2 arguments')
+    end
+    if string_len(seed) ~= seedbytes then
+      return error('wrong seed length')
+    end
+    local tmp = char_array(size)
+    sodium_lib[fname](tmp,size,seed)
+    local tmp_str = ffi_string(tmp,size)
+    sodium_lib.sodium_memzero(tmp,size)
+    return tmp_str
+  end
+end
+
+local function lua_randombytes_close(fname)
+  return function()
+    return sodium_lib[fname]() == 0
+  end
+end
+
+local function lua_randombytes_stir(fname)
+  return function()
+    sodium_lib[fname]()
+  end
 end
 
 if sodium_lib.sodium_init() == -1 then
   return error('sodium_init error')
 end
 
-local M = {
-  randombytes_random = lua_randombytes_random,
-  randombytes_uniform = lua_randombytes_uniform,
-  randombytes_buf = lua_randombytes_buf,
-  randombytes_buf_deterministic = lua_randombytes_buf_deterministic,
-  randombytes_close = lua_randombytes_close,
-  randombytes_stir = lua_randombytes_stir,
-  randombytes_seedbytes = lua_randombytes_seedbytes,
-  randombytes_SEEDBYTES = randombytes_SEEDBYTES,
-}
+local M = {}
+
+for k,v in pairs(constants) do
+  M[k] = v
+end
+
+M.randombytes_random  = lua_randombytes_random('randombytes_random')
+M.randombytes_uniform = lua_randombytes_uniform('randombytes_uniform')
+M.randombytes_buf     = lua_randombytes_buf('randombytes_buf')
+M.randombytes_buf_deterministic = lua_randombytes_buf_deterministic(
+  'randombytes_buf_deterministic',
+  constants.randombytes_SEEDBYTES)
+M.randombytes_close = lua_randombytes_close('randombytes_close')
+M.randombytes_stir = lua_randombytes_stir('randombytes_stir')
 
 return M
