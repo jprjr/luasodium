@@ -67,10 +67,10 @@ luasodium/%.lua: lua/luasodium/%.lua
 luasodium/%.so: c/luasodium/%.o
 	$(CC) -shared -o $@ $^ $(LDFLAGS)
 
-c/luasodium/utils/core.o: c/luasodium/utils/core.c
+c/luasodium/utils/core.o: c/luasodium/utils/core.c c/luasodium/utils/constants.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-c/luasodium/utils/ffi.o: c/luasodium/utils/ffi.c c/luasodium/utils/core.luah
+c/luasodium/utils/ffi.o: c/luasodium/utils/ffi.c c/luasodium/utils/constants.h c/luasodium/utils/core.luah
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 c/luasodium/version/core.o: c/luasodium/version/core.c c/luasodium/version/core.luah
@@ -79,28 +79,28 @@ c/luasodium/version/core.o: c/luasodium/version/core.c c/luasodium/version/core.
 c/luasodium/version/ffi.o: c/luasodium/version/ffi.c c/luasodium/version/core.luah
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-c/luasodium/randombytes/core.o: c/luasodium/randombytes/core.c
+c/luasodium/randombytes/core.o: c/luasodium/randombytes/core.c c/luasodium/randombytes/constants.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-c/luasodium/randombytes/ffi.o: c/luasodium/randombytes/ffi.c c/luasodium/randombytes/core.luah
+c/luasodium/randombytes/ffi.o: c/luasodium/randombytes/ffi.c c/luasodium/randombytes/constants.h c/luasodium/randombytes/core.luah
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-c/luasodium/crypto_secretbox/core.o: c/luasodium/crypto_secretbox/core.c
+c/luasodium/crypto_secretbox/core.o: c/luasodium/crypto_secretbox/core.c c/luasodium/crypto_secretbox/constants.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-c/luasodium/crypto_secretbox/ffi.o: c/luasodium/crypto_secretbox/ffi.c c/luasodium/crypto_secretbox/core.luah
+c/luasodium/crypto_secretbox/ffi.o: c/luasodium/crypto_secretbox/ffi.c c/luasodium/crypto_secretbox/constants.h c/luasodium/crypto_secretbox/core.luah
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-c/luasodium/crypto_box/core.o: c/luasodium/crypto_box/core.c
+c/luasodium/crypto_box/core.o: c/luasodium/crypto_box/core.c c/luasodium/crypto_box/constants.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-c/luasodium/crypto_box/ffi.o: c/luasodium/crypto_box/ffi.c c/luasodium/crypto_box/core.luah
+c/luasodium/crypto_box/ffi.o: c/luasodium/crypto_box/ffi.c c/luasodium/crypto_box/constants.h c/luasodium/crypto_box/core.luah
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-c/luasodium/crypto_scalarmult/core.o: c/luasodium/crypto_scalarmult/core.c
+c/luasodium/crypto_scalarmult/core.o: c/luasodium/crypto_scalarmult/core.c c/luasodium/crypto_scalarmult/constants.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-c/luasodium/crypto_scalarmult/ffi.o: c/luasodium/crypto_scalarmult/ffi.c c/luasodium/crypto_scalarmult/core.luah
+c/luasodium/crypto_scalarmult/ffi.o: c/luasodium/crypto_scalarmult/ffi.c c/luasodium/crypto_scalarmult/constants.h c/luasodium/crypto_scalarmult/core.luah
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 clean:
