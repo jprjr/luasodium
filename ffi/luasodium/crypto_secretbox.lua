@@ -139,13 +139,13 @@ local crypto_secretbox_NONCEBYTES   = constants.crypto_secretbox_NONCEBYTES
 local crypto_secretbox_ZEROBYTES    = constants.crypto_secretbox_ZEROBYTES
 local crypto_secretbox_BOXZEROBYTES = constants.crypto_secretbox_BOXZEROBYTES
 
-local function lua_crypto_secretbox(input, nonce, key)
+local function lua_crypto_secretbox(m, nonce, key)
     if not key then
       return error('requires 3 arguments')
     end
 
-    local inputlen = string_len(input)
-    local outputlen = inputlen + crypto_secretbox_MACBYTES
+    local mlen = string_len(m)
+    local clen = mlen + crypto_secretbox_MACBYTES
 
     if string_len(nonce) ~= crypto_secretbox_NONCEBYTES then
       return error(string_format('wrong nonce size, expected: %d',
@@ -157,33 +157,33 @@ local function lua_crypto_secretbox(input, nonce, key)
         crypto_secretbox_KEYBYTES))
     end
 
-    local tmp_input = char_array(inputlen + crypto_secretbox_ZEROBYTES)
-    ffi.fill(tmp_input,crypto_secretbox_ZEROBYTES,0)
-    ffi.copy(tmp_input+crypto_secretbox_ZEROBYTES,input,inputlen)
+    local tmp_m = char_array(mlen + crypto_secretbox_ZEROBYTES)
+    ffi.fill(tmp_m,crypto_secretbox_ZEROBYTES,0)
+    ffi.copy(tmp_m+crypto_secretbox_ZEROBYTES,m,mlen)
 
-    local output = char_array(outputlen + crypto_secretbox_BOXZEROBYTES)
-    ffi.fill(output,crypto_secretbox_BOXZEROBYTES,0)
+    local c = char_array(clen + crypto_secretbox_BOXZEROBYTES)
+    ffi.fill(c,crypto_secretbox_BOXZEROBYTES,0)
 
     if sodium_lib.crypto_secretbox(
-      output,tmp_input,inputlen+crypto_secretbox_ZEROBYTES,
+      c,tmp_m,mlen+crypto_secretbox_ZEROBYTES,
       nonce,key) == -1  then
       return error('crypto_secretbox error')
     end
-    local output_str = ffi_string(output+crypto_secretbox_BOXZEROBYTES,outputlen)
-    sodium_lib.sodium_memzero(tmp_input,inputlen + crypto_secretbox_ZEROBYTES)
-    sodium_lib.sodium_memzero(output,outputlen + crypto_secretbox_BOXZEROBYTES)
-    return output_str
+    local c_str = ffi_string(c+crypto_secretbox_BOXZEROBYTES,clen)
+    sodium_lib.sodium_memzero(tmp_m,mlen + crypto_secretbox_ZEROBYTES)
+    sodium_lib.sodium_memzero(c,clen + crypto_secretbox_BOXZEROBYTES)
+    return c_str
 end
 
-local function lua_crypto_secretbox_open(input, nonce, key)
+local function lua_crypto_secretbox_open(c, nonce, key)
     if not key then
       return error('requires 3 arguments')
     end
 
-    local inputlen = string_len(input)
+    local clen = string_len(c)
 
-    if inputlen <= crypto_secretbox_MACBYTES then
-      return error(string.format('wrong input size, expected at least: %d',
+    if clen <= crypto_secretbox_MACBYTES then
+      return error(string.format('wrong c size, expected at least: %d',
         crypto_secretbox_MACBYTES))
     end
 
@@ -197,34 +197,34 @@ local function lua_crypto_secretbox_open(input, nonce, key)
         crypto_secretbox_KEYBYTES))
     end
 
-    local outputlen = inputlen - crypto_secretbox_MACBYTES
+    local mlen = clen - crypto_secretbox_MACBYTES
 
-    local tmp_input = char_array(inputlen + crypto_secretbox_BOXZEROBYTES)
-    ffi.fill(tmp_input,crypto_secretbox_BOXZEROBYTES,0)
-    ffi.copy(tmp_input+crypto_secretbox_BOXZEROBYTES,input,inputlen)
+    local tmp_c = char_array(clen + crypto_secretbox_BOXZEROBYTES)
+    ffi.fill(tmp_c,crypto_secretbox_BOXZEROBYTES,0)
+    ffi.copy(tmp_c+crypto_secretbox_BOXZEROBYTES,c,clen)
 
-    local output = char_array(outputlen + crypto_secretbox_ZEROBYTES)
-    ffi.fill(output,crypto_secretbox_ZEROBYTES,0)
+    local m = char_array(mlen + crypto_secretbox_ZEROBYTES)
+    ffi.fill(m,crypto_secretbox_ZEROBYTES,0)
 
     if sodium_lib.crypto_secretbox_open(
-      output,tmp_input,inputlen+crypto_secretbox_BOXZEROBYTES,
+      m,tmp_c,clen+crypto_secretbox_BOXZEROBYTES,
       nonce,key) == -1  then
       return error('crypto_secretbox_open error')
     end
 
-    local output_str = ffi_string(output+crypto_secretbox_ZEROBYTES,outputlen)
-    sodium_lib.sodium_memzero(tmp_input,inputlen + crypto_secretbox_BOXZEROBYTES)
-    sodium_lib.sodium_memzero(output,outputlen + crypto_secretbox_ZEROBYTES)
-    return output_str
+    local m_str = ffi_string(m+crypto_secretbox_ZEROBYTES,mlen)
+    sodium_lib.sodium_memzero(tmp_c,clen + crypto_secretbox_BOXZEROBYTES)
+    sodium_lib.sodium_memzero(m,mlen + crypto_secretbox_ZEROBYTES)
+    return m_str
 end
 
-local function lua_crypto_secretbox_easy(input, nonce, key)
+local function lua_crypto_secretbox_easy(m, nonce, key)
     if not key then
       return error('requires 3 arguments')
     end
 
-    local inputlen = string_len(input)
-    local outputlen = inputlen + crypto_secretbox_MACBYTES
+    local mlen = string_len(m)
+    local clen = mlen + crypto_secretbox_MACBYTES
 
     if string_len(nonce) ~= crypto_secretbox_NONCEBYTES then
       return error(string_format('wrong nonce size, expected: %d',
@@ -236,28 +236,28 @@ local function lua_crypto_secretbox_easy(input, nonce, key)
         crypto_secretbox_KEYBYTES))
     end
 
-    local output = char_array(outputlen)
+    local c = char_array(clen)
 
     if sodium_lib.crypto_secretbox_easy(
-      output,input,inputlen,
+      c,m,mlen,
       nonce,key) == -1  then
       return error('crypto_secretbox_easy error')
     end
 
-    local output_str = ffi_string(output,outputlen)
-    sodium_lib.sodium_memzero(output,outputlen)
-    return output_str
+    local c_str = ffi_string(c,clen)
+    sodium_lib.sodium_memzero(c,clen)
+    return c_str
 end
 
-local function lua_crypto_secretbox_open_easy(input, nonce, key)
+local function lua_crypto_secretbox_open_easy(c, nonce, key)
     if not key then
       return error('requires 3 arguments')
     end
 
-    local inputlen = string_len(input)
+    local clen = string_len(c)
 
-    if inputlen <= crypto_secretbox_MACBYTES then
-      return error(string.format('wrong input size, expected at least: %d',
+    if clen <= crypto_secretbox_MACBYTES then
+      return error(string.format('wrong c size, expected at least: %d',
         crypto_secretbox_MACBYTES))
     end
 
@@ -271,18 +271,18 @@ local function lua_crypto_secretbox_open_easy(input, nonce, key)
         crypto_secretbox_KEYBYTES))
     end
 
-    local outputlen = inputlen - crypto_secretbox_MACBYTES
-    local output = char_array(outputlen)
+    local mlen = clen - crypto_secretbox_MACBYTES
+    local m = char_array(mlen)
 
     if sodium_lib.crypto_secretbox_open_easy(
-      output,input,inputlen,
+      m,c,clen,
       nonce,key) == -1  then
       return error('crypto_secretbox_open_easy error')
     end
 
-    local output_str = ffi_string(output,outputlen)
-    sodium_lib.sodium_memzero(output,outputlen)
-    return output_str
+    local m_str = ffi_string(m,mlen)
+    sodium_lib.sodium_memzero(m,mlen)
+    return m_str
 end
 
 local function lua_crypto_secretbox_detached(message, nonce, key)

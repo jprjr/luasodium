@@ -169,48 +169,93 @@ local crypto_box_BEFORENMBYTES  = constants.crypto_box_BEFORENMBYTES
 local crypto_box_BOXZEROBYTES   = constants.crypto_box_BOXZEROBYTES
 local crypto_box_ZEROBYTES      = constants.crypto_box_ZEROBYTES
 
-local function lua_crypto_box_keypair()
-  local pk = char_array(crypto_box_PUBLICKEYBYTES)
-  local sk = char_array(crypto_box_SECRETKEYBYTES)
-  if tonumber(sodium_lib.crypto_box_keypair(pk,sk)) == -1 then
-    return error('crypto_box_keypair error')
-  end
+local function lua_crypto_box(m, nonce, pk, sk)
+    if not sk then
+      return error('requires 4 arguments')
+    end
 
-  local pk_str = ffi_string(pk,crypto_box_PUBLICKEYBYTES)
-  local sk_str = ffi_string(sk,crypto_box_SECRETKEYBYTES)
+    local mlen = string_len(m)
+    local clen = mlen + crypto_box_MACBYTES
 
-  sodium_lib.sodium_memzero(pk,crypto_box_PUBLICKEYBYTES)
-  sodium_lib.sodium_memzero(sk,crypto_box_SECRETKEYBYTES)
-  return pk_str, sk_str
+    if string_len(nonce) ~= crypto_box_NONCEBYTES then
+      return error(string_format('wrong nonce size, expected: %d',
+        crypto_box_NONCEBYTES))
+    end
+
+    if string_len(pk) ~= crypto_box_PUBLICKEYBYTES then
+      return error(string_format('wrong key size, expected: %d',
+        crypto_box_PUBLICKEYBYTES))
+    end
+
+    if string_len(sk) ~= crypto_box_SECRETKEYBYTES then
+      return error(string_format('wrong key size, expected: %d',
+        crypto_box_PUBLICKEYBYTES))
+    end
+
+    local tmp_m = char_array(mlen + crypto_box_ZEROBYTES)
+    ffi.fill(tmp_m,crypto_box_ZEROBYTES,0)
+    ffi.copy(tmp_m+crypto_box_ZEROBYTES,m,mlen)
+
+    local c = char_array(clen + crypto_box_BOXZEROBYTES)
+    ffi.fill(c,crypto_box_BOXZEROBYTES,0)
+
+    if sodium_lib.crypto_box(
+      c,tmp_m,mlen+crypto_box_ZEROBYTES,
+      nonce,pk,sk) == -1  then
+      return error('crypto_box error')
+    end
+    local c_str = ffi_string(c + crypto_box_BOXZEROBYTES,clen)
+    sodium_lib.sodium_memzero(tmp_m,mlen + crypto_box_ZEROBYTES)
+    sodium_lib.sodium_memzero(c,clen + crypto_box_BOXZEROBYTES)
+    return c_str
 end
 
-local function lua_crypto_box_seed_keypair(seed)
-  if not seed then
-    return error('requires 1 argument')
-  end
-  if string_len(seed) ~= crypto_box_SEEDBYTES then
-    return error(string_format(
-      'wrong seed length, expected: %d', crypto_box_SEEDBYTES))
-  end
-  local pk = char_array(crypto_box_PUBLICKEYBYTES)
-  local sk = char_array(crypto_box_SECRETKEYBYTES)
-  if tonumber(sodium_lib.crypto_box_seed_keypair(pk,sk,seed)) == -1 then
-    return error('crypto_box_seed_keypair error')
-  end
+local function lua_crypto_box_open(c, nonce, pk, sk)
+    if not sk then
+      return error('requires 4 arguments')
+    end
 
-  local pk_str = ffi_string(pk,crypto_box_PUBLICKEYBYTES)
-  local sk_str = ffi_string(sk,crypto_box_SECRETKEYBYTES)
-  sodium_lib.sodium_memzero(pk,crypto_box_PUBLICKEYBYTES)
-  sodium_lib.sodium_memzero(sk,crypto_box_SECRETKEYBYTES)
-  return pk_str, sk_str
-end
+    local clen = string_len(c)
 
-local function lua_crypto_box()
-  return nil
-end
+    if clen <= crypto_box_MACBYTES then
+      return error(string.format('wrong c size, expected at least: %d',
+        crypto_box_MACBYTES))
+    end
 
-local function lua_crypto_box_open()
-  return nil
+    if string_len(nonce) ~= crypto_box_NONCEBYTES then
+      return error(string_format('wrong nonce size, expected: %d',
+        crypto_box_NONCEBYTES))
+    end
+
+    if string_len(pk) ~= crypto_box_PUBLICKEYBYTES then
+      return error(string_format('wrong key size, expected: %d',
+        crypto_box_PUBLICKEYBYTES))
+    end
+
+    if string_len(sk) ~= crypto_box_SECRETKEYBYTES then
+      return error(string_format('wrong key size, expected: %d',
+        crypto_box_PUBLICKEYBYTES))
+    end
+
+    local mlen = clen - crypto_box_MACBYTES
+
+    local tmp_c = char_array(clen + crypto_box_BOXZEROBYTES)
+    ffi.fill(tmp_c,crypto_box_BOXZEROBYTES,0)
+    ffi.copy(tmp_c+crypto_box_BOXZEROBYTES,c,clen)
+
+    local m = char_array(mlen + crypto_box_ZEROBYTES)
+    ffi.fill(m,crypto_box_ZEROBYTES,0)
+
+    if sodium_lib.crypto_box_open(
+      m,tmp_c,clen+crypto_box_BOXZEROBYTES,
+      nonce,pk,sk) == -1  then
+      return error('crypto_box_open error')
+    end
+
+    local m_str = ffi_string(m+crypto_box_ZEROBYTES,mlen)
+    sodium_lib.sodium_memzero(tmp_c,clen + crypto_box_BOXZEROBYTES)
+    sodium_lib.sodium_memzero(m,mlen + crypto_box_ZEROBYTES)
+    return m_str
 end
 
 local function lua_crypto_box_easy(m,n,pk,sk)
@@ -541,13 +586,48 @@ local function lua_crypto_box_open_detached_afternm(c,mac,n,k)
   return m_str
 end
 
+local function lua_crypto_box_keypair()
+  local pk = char_array(crypto_box_PUBLICKEYBYTES)
+  local sk = char_array(crypto_box_SECRETKEYBYTES)
+  if tonumber(sodium_lib.crypto_box_keypair(pk,sk)) == -1 then
+    return error('crypto_box_keypair error')
+  end
+
+  local pk_str = ffi_string(pk,crypto_box_PUBLICKEYBYTES)
+  local sk_str = ffi_string(sk,crypto_box_SECRETKEYBYTES)
+
+  sodium_lib.sodium_memzero(pk,crypto_box_PUBLICKEYBYTES)
+  sodium_lib.sodium_memzero(sk,crypto_box_SECRETKEYBYTES)
+  return pk_str, sk_str
+end
+
+local function lua_crypto_box_seed_keypair(seed)
+  if not seed then
+    return error('requires 1 argument')
+  end
+  if string_len(seed) ~= crypto_box_SEEDBYTES then
+    return error(string_format(
+      'wrong seed length, expected: %d', crypto_box_SEEDBYTES))
+  end
+  local pk = char_array(crypto_box_PUBLICKEYBYTES)
+  local sk = char_array(crypto_box_SECRETKEYBYTES)
+  if tonumber(sodium_lib.crypto_box_seed_keypair(pk,sk,seed)) == -1 then
+    return error('crypto_box_seed_keypair error')
+  end
+
+  local pk_str = ffi_string(pk,crypto_box_PUBLICKEYBYTES)
+  local sk_str = ffi_string(sk,crypto_box_SECRETKEYBYTES)
+  sodium_lib.sodium_memzero(pk,crypto_box_PUBLICKEYBYTES)
+  sodium_lib.sodium_memzero(sk,crypto_box_SECRETKEYBYTES)
+  return pk_str, sk_str
+end
+
+
 if sodium_lib.sodium_init() == -1 then
   return error('sodium_init error')
 end
 
 local M = {
-  crypto_box_keypair = lua_crypto_box_keypair,
-  crypto_box_seed_keypair = lua_crypto_box_seed_keypair,
   crypto_box = lua_crypto_box,
   crypto_box_open = lua_crypto_box_open,
   crypto_box_easy = lua_crypto_box_easy,
@@ -559,6 +639,8 @@ local M = {
   crypto_box_open_easy_afternm = lua_crypto_box_open_easy_afternm,
   crypto_box_detached_afternm = lua_crypto_box_detached_afternm,
   crypto_box_open_detached_afternm = lua_crypto_box_open_detached_afternm,
+  crypto_box_keypair = lua_crypto_box_keypair,
+  crypto_box_seed_keypair = lua_crypto_box_seed_keypair,
 }
 
 for k,v in pairs(constants) do

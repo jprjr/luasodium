@@ -52,6 +52,8 @@ do
   local encrypted = lib.crypto_box_easy(message,nonce,receiver_pk,sender_sk)
   local decrypted = lib.crypto_box_open_easy(encrypted,nonce,sender_pk,receiver_sk)
   assert(decrypted == message)
+  assert(lib.crypto_box(message,nonce,receiver_pk,sender_sk) == encrypted)
+  assert(lib.crypto_box_open(encrypted,nonce,sender_pk,receiver_sk) == message)
 end
 
 do

@@ -1,6 +1,9 @@
 #include "../luasodium-c.h"
 #include "constants.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 static int
 ls_crypto_box_keypair(lua_State *L) {
     unsigned char *pk = NULL;
@@ -75,6 +78,144 @@ ls_crypto_box_seed_keypair(lua_State *L) {
     sodium_memzero(sk,crypto_box_SECRETKEYBYTES);
 
     return 2;
+}
+
+static int
+ls_crypto_box(lua_State *L) {
+    unsigned char *c      = NULL;
+    const unsigned char *m = NULL;
+    const unsigned char *nonce = NULL;
+    const unsigned char *pk    = NULL;
+    const unsigned char *sk    = NULL;
+
+    unsigned char *tmp_m   = NULL;
+
+    size_t clen = 0;
+    size_t mlen = 0;
+    size_t noncelen = 0;
+    size_t pklen = 0;
+    size_t sklen = 0;
+
+    if(lua_isnoneornil(L,4)) {
+        lua_pushliteral(L,"requires 4 parameters");
+        return lua_error(L);
+    }
+
+    m = (const unsigned char *)lua_tolstring(L,1,&mlen);
+    nonce = (const unsigned char *)lua_tolstring(L,2,&noncelen);
+    pk    = (const unsigned char *)lua_tolstring(L,3,&pklen);
+    sk    = (const unsigned char *)lua_tolstring(L,4,&sklen);
+
+    if(noncelen != crypto_box_NONCEBYTES) {
+        return luaL_error(L,"wrong nonce size, expected: %d",crypto_box_NONCEBYTES);
+    }
+
+    if(pklen != crypto_box_PUBLICKEYBYTES) {
+        return luaL_error(L,"wrong public key size, expected: %d",crypto_box_PUBLICKEYBYTES);
+    }
+
+    if(sklen != crypto_box_SECRETKEYBYTES) {
+        return luaL_error(L,"wrong secret key size, expected: %d",crypto_box_SECRETKEYBYTES);
+    }
+
+    clen = mlen + crypto_box_MACBYTES;
+
+    tmp_m = (unsigned char *)lua_newuserdata(L,mlen + crypto_box_ZEROBYTES);
+    if(tmp_m == NULL) {
+        lua_pushliteral(L,"out of memory");
+        return lua_error(L);
+    }
+    c = (unsigned char *)lua_newuserdata(L,clen + crypto_box_BOXZEROBYTES);
+    if(c == NULL) {
+        lua_pushliteral(L,"out of memory");
+        return lua_error(L);
+    }
+    lua_pop(L,2);
+
+    sodium_memzero(tmp_m,crypto_box_ZEROBYTES);
+    sodium_memzero(c,crypto_box_BOXZEROBYTES);
+
+    memcpy(&tmp_m[crypto_box_ZEROBYTES],m,mlen);
+
+    if(crypto_box(c,tmp_m,mlen+crypto_box_ZEROBYTES,nonce,pk,sk) == -1) {
+        return luaL_error(L,"crypto_box error");
+    }
+
+    lua_pushlstring(L,(const char *)&c[crypto_box_BOXZEROBYTES],clen);
+    sodium_memzero(tmp_m,mlen + crypto_box_ZEROBYTES);
+    sodium_memzero(c,clen + crypto_box_BOXZEROBYTES);
+    return 1;
+}
+
+static int
+ls_crypto_box_open(lua_State *L) {
+    unsigned char *m      = NULL;
+    const unsigned char *c = NULL;
+    const unsigned char *nonce = NULL;
+    const unsigned char *pk    = NULL;
+    const unsigned char *sk    = NULL;
+
+    unsigned char *tmp_c   = NULL;
+
+    size_t mlen = 0;
+    size_t clen = 0;
+    size_t noncelen = 0;
+    size_t pklen = 0;
+    size_t sklen = 0;
+
+    if(lua_isnoneornil(L,4)) {
+        lua_pushliteral(L,"requires 4 parameters");
+        return lua_error(L);
+    }
+
+    c = (const unsigned char *)lua_tolstring(L,1,&clen);
+    nonce = (const unsigned char *)lua_tolstring(L,2,&noncelen);
+    pk    = (const unsigned char *)lua_tolstring(L,3,&pklen);
+    sk    = (const unsigned char *)lua_tolstring(L,4,&sklen);
+
+    if(clen <= crypto_box_MACBYTES) {
+        return luaL_error(L,"wrong mac size, expected at least: %d",crypto_box_MACBYTES);
+    }
+
+    if(noncelen != crypto_box_NONCEBYTES) {
+        return luaL_error(L,"wrong nonce size, expected: %d",crypto_box_NONCEBYTES);
+    }
+
+    if(pklen != crypto_box_PUBLICKEYBYTES) {
+        return luaL_error(L,"wrong public key size, expected: %d",crypto_box_PUBLICKEYBYTES);
+    }
+
+    if(sklen != crypto_box_SECRETKEYBYTES) {
+        return luaL_error(L,"wrong secret key size, expected: %d",crypto_box_SECRETKEYBYTES);
+    }
+
+    mlen = clen - crypto_box_MACBYTES;
+
+    tmp_c = (unsigned char *)lua_newuserdata(L,clen + crypto_box_BOXZEROBYTES);
+    if(tmp_c == NULL) {
+        lua_pushliteral(L,"out of memory");
+        return lua_error(L);
+    }
+    m = (unsigned char *)lua_newuserdata(L,mlen + crypto_box_ZEROBYTES);
+    if(m == NULL) {
+        lua_pushliteral(L,"out of memory");
+        return lua_error(L);
+    }
+    lua_pop(L,2);
+
+    sodium_memzero(tmp_c,crypto_box_BOXZEROBYTES);
+    sodium_memzero(m,crypto_box_ZEROBYTES);
+
+    memcpy(&tmp_c[crypto_box_BOXZEROBYTES],c,clen);
+
+    if(crypto_box_open(m,tmp_c,clen+crypto_box_BOXZEROBYTES,nonce,pk,sk) == -1) {
+        return luaL_error(L,"crypto_box_open error");
+    }
+
+    lua_pushlstring(L,(const char *)&m[crypto_box_ZEROBYTES],mlen);
+    sodium_memzero(tmp_c,clen + crypto_box_BOXZEROBYTES);
+    sodium_memzero(m,mlen + crypto_box_ZEROBYTES);
+    return 1;
 }
 
 static int
@@ -569,8 +710,8 @@ ls_crypto_box_open_detached_afternm(lua_State *L) {
 }
 
 static const struct luaL_Reg ls_crypto_box_functions[] = {
-    LS_LUA_FUNC(crypto_box_keypair),
-    LS_LUA_FUNC(crypto_box_seed_keypair),
+    LS_LUA_FUNC(crypto_box),
+    LS_LUA_FUNC(crypto_box_open),
     LS_LUA_FUNC(crypto_box_easy),
     LS_LUA_FUNC(crypto_box_open_easy),
     LS_LUA_FUNC(crypto_box_detached),
@@ -580,6 +721,8 @@ static const struct luaL_Reg ls_crypto_box_functions[] = {
     LS_LUA_FUNC(crypto_box_open_easy_afternm),
     LS_LUA_FUNC(crypto_box_detached_afternm),
     LS_LUA_FUNC(crypto_box_open_detached_afternm),
+    LS_LUA_FUNC(crypto_box_keypair),
+    LS_LUA_FUNC(crypto_box_seed_keypair),
     { NULL, NULL },
 };
 
