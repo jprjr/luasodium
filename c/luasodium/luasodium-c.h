@@ -3,6 +3,7 @@
 
 #include "luasodium.h"
 
+#define LS_LUA_FUNC(x) { #x, ls_ ## x }
 
 #if !defined(luaL_newlibtable) \
   && (!defined LUA_VERSION_NUM || LUA_VERSION_NUM==501)

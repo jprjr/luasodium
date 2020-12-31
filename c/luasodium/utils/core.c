@@ -4,7 +4,7 @@
 #include <string.h>
 
 static int
-luasodium_init(lua_State *L) {
+ls_sodium_init(lua_State *L) {
     if(sodium_init() == -1) {
         lua_pushliteral(L,"sodium_init error");
         return lua_error(L);
@@ -14,7 +14,7 @@ luasodium_init(lua_State *L) {
 }
 
 static int
-luasodium_memcmp(lua_State *L) {
+ls_sodium_memcmp(lua_State *L) {
     const char *b1 = NULL;
     const char *b2 = NULL;
     size_t len = 0;
@@ -37,7 +37,7 @@ luasodium_memcmp(lua_State *L) {
 
 /* luasodium.bin2hex(bin) */
 static int
-luasodium_bin2hex(lua_State *L) {
+ls_sodium_bin2hex(lua_State *L) {
     const char *bin = NULL;
     char *hex = NULL;
     size_t bin_len = 0;
@@ -58,16 +58,18 @@ luasodium_bin2hex(lua_State *L) {
     lua_pop(L,1);
     sodium_bin2hex(hex,hex_len+1,(const unsigned char *)bin,bin_len);
     lua_pushstring(L,hex);
+    sodium_memzero(hex,hex_len + 1);
     return 1;
 }
 
 /* luasodium.hex2bin(hex, [ignore]) */
 static int
-luasodium_hex2bin(lua_State *L) {
+ls_sodium_hex2bin(lua_State *L) {
     const char *hex = NULL;
     const char *hex_end = NULL;
     const char *ignore = NULL;
     unsigned char *bin = NULL;
+    int r = 1;
 
     size_t hex_len = 0;
     size_t bin_len = 0;
@@ -108,14 +110,15 @@ luasodium_hex2bin(lua_State *L) {
     lua_pushlstring(L,(const char *)bin,out_bin_len);
     if(hex_end < hex + hex_len) {
         lua_pushlstring(L,hex_end,(hex + hex_len) - hex_end);
-        return 2;
+        r = 2;
     }
-    return 1;
+    sodium_memzero(bin,bin_len);
+    return r;
 }
 
 /* luasodium.bin2base64(bin, variant) */
 static int
-luasodium_bin2base64(lua_State *L) {
+ls_sodium_bin2base64(lua_State *L) {
     const char *bin = NULL;
     char *b64 = NULL;
     size_t bin_len = 0;
@@ -153,17 +156,19 @@ luasodium_bin2base64(lua_State *L) {
       (const unsigned char *)bin, bin_len,
       variant);
     lua_pushstring(L,b64);
+    sodium_memzero(b64,b64_len);
     return 1;
 }
 
 /* luasodium.base642bin(base64, variant, [ignore]) */
 static int
-luasodium_base642bin(lua_State *L) {
+ls_sodium_base642bin(lua_State *L) {
     const char *base64 = NULL;
     const char *base64_end = NULL;
     const char *ignore = NULL;
     unsigned char *bin = NULL;
     lua_Integer variant = 0;
+    int r = 1;
 
     size_t base64_len;
     size_t bin_len;
@@ -214,13 +219,14 @@ luasodium_base642bin(lua_State *L) {
     lua_pushlstring(L,(const char *)bin,out_bin_len);
     if(base64_end < base64 + base64_len) {
         lua_pushlstring(L,base64_end,(base64 + base64_len) - base64_end);
-        return 2;
+        r = 2;
     }
-    return 1;
+    sodium_memzero(bin,bin_len);
+    return r;
 }
 
 static int
-luasodium_increment(lua_State *L) {
+ls_sodium_increment(lua_State *L) {
     const char *n = NULL;
     char *r = NULL;
     size_t nlen = 0;
@@ -237,11 +243,12 @@ luasodium_increment(lua_State *L) {
 
     sodium_increment((unsigned char *)r,nlen);
     lua_pushlstring(L,r,nlen);
+    sodium_memzero(r,nlen);
     return 1;
 }
 
 static int
-luasodium_add(lua_State *L) {
+ls_sodium_add(lua_State *L) {
     const char *a = NULL;
     const char *b = NULL;
     char *r = NULL;
@@ -266,11 +273,12 @@ luasodium_add(lua_State *L) {
     memcpy(r,a,alen);
     sodium_add((unsigned char *)r,(const unsigned char *)b,alen);
     lua_pushlstring(L,r,alen);
+    sodium_memzero(r,alen);
     return 1;
 }
 
 static int
-luasodium_sub(lua_State *L) {
+ls_sodium_sub(lua_State *L) {
     const char *a = NULL;
     const char *b = NULL;
     char *r = NULL;
@@ -295,11 +303,12 @@ luasodium_sub(lua_State *L) {
     memcpy(r,a,alen);
     sodium_sub((unsigned char *)r,(const unsigned char *)b,alen);
     lua_pushlstring(L,r,alen);
+    sodium_memzero(r,alen);
     return 1;
 }
 
 static int
-luasodium_compare(lua_State *L) {
+ls_sodium_compare(lua_State *L) {
     const char *a = NULL;
     const char *b = NULL;
     size_t alen = 0;
@@ -318,7 +327,7 @@ luasodium_compare(lua_State *L) {
 }
 
 static int
-luasodium_is_zero(lua_State *L) {
+ls_sodium_is_zero(lua_State *L) {
     const char *n = NULL;
     size_t nlen = 0;
 
@@ -333,7 +342,7 @@ luasodium_is_zero(lua_State *L) {
 }
 
 static int
-luasodium_pad(lua_State *L) {
+ls_sodium_pad(lua_State *L) {
     const char *n = NULL;
     char *r = NULL;
     size_t nlen = 0;
@@ -363,15 +372,17 @@ luasodium_pad(lua_State *L) {
 
     if(sodium_pad(&outlen,(unsigned char *)r,
         nlen,blocksize,rounded) != 0) {
+        sodium_memzero(r,rounded);
         lua_pushliteral(L,"sodium_pad error");
         return lua_error(L);
     }
     lua_pushlstring(L,r,outlen);
+    sodium_memzero(r,rounded);
     return 1;
 }
 
 static int
-luasodium_unpad(lua_State *L) {
+ls_sodium_unpad(lua_State *L) {
     const char *n = NULL;
     size_t nlen = 0;
     size_t blocksize = 0;
@@ -389,30 +400,30 @@ luasodium_unpad(lua_State *L) {
     return 1;
 }
 
-static const struct luaL_Reg luasodium_methods[] = {
-    { "sodium_init", luasodium_init },
-    { "sodium_memcmp", luasodium_memcmp },
-    { "sodium_bin2hex", luasodium_bin2hex },
-    { "sodium_hex2bin", luasodium_hex2bin },
-    { "sodium_bin2base64", luasodium_bin2base64 },
-    { "sodium_base642bin", luasodium_base642bin },
-    { "sodium_increment", luasodium_increment },
-    { "sodium_add", luasodium_add },
-    { "sodium_sub", luasodium_sub },
-    { "sodium_compare", luasodium_compare },
-    { "sodium_is_zero", luasodium_is_zero },
-    { "sodium_pad", luasodium_pad },
-    { "sodium_unpad", luasodium_unpad },
+static const struct luaL_Reg ls_sodium_functions[] = {
+    LS_LUA_FUNC(sodium_init),
+    LS_LUA_FUNC(sodium_memcmp),
+    LS_LUA_FUNC(sodium_bin2hex),
+    LS_LUA_FUNC(sodium_hex2bin),
+    LS_LUA_FUNC(sodium_bin2base64),
+    LS_LUA_FUNC(sodium_base642bin),
+    LS_LUA_FUNC(sodium_increment),
+    LS_LUA_FUNC(sodium_add),
+    LS_LUA_FUNC(sodium_sub),
+    LS_LUA_FUNC(sodium_compare),
+    LS_LUA_FUNC(sodium_is_zero),
+    LS_LUA_FUNC(sodium_pad),
+    LS_LUA_FUNC(sodium_unpad),
     { NULL, NULL },
 };
 
 int
 luaopen_luasodium_utils_core(lua_State *L) {
     LUASODIUM_INIT(L)
-    lua_newtable(L);
 
-    luaL_setfuncs(L,luasodium_methods,0);
-    luasodium_set_constants(L,luasodium_constants);
+    lua_newtable(L);
+    luasodium_set_constants(L,ls_utils_constants);
+    luaL_setfuncs(L,ls_sodium_functions,0);
 
     return 1;
 }

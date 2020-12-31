@@ -1,16 +1,17 @@
 #include "../luasodium-ffi.h"
 #include "constants.h"
-#include "functions.h"
 #include "core.luah"
 
-static const luasodium_function_t * const ls_randombytes_functions[] = {
-    (const luasodium_function_t *)&ls_randombytes_random_func,
-    (const luasodium_function_t *)&ls_randombytes_uniform_func,
-    (const luasodium_function_t *)&ls_randombytes_buf_func,
-    (const luasodium_function_t *)&ls_randombytes_buf_deterministic_func,
-    (const luasodium_function_t *)&ls_randombytes_close_func,
-    (const luasodium_function_t *)&ls_randombytes_stir_func,
-    NULL
+static const luasodium_function_t ls_randombytes_functions[] = {
+    LS_FUNC(sodium_init),
+    LS_FUNC(sodium_memzero),
+    LS_FUNC(randombytes_random),
+    LS_FUNC(randombytes_uniform),
+    LS_FUNC(randombytes_buf),
+    LS_FUNC(randombytes_buf_deterministic),
+    LS_FUNC(randombytes_close),
+    LS_FUNC(randombytes_stir),
+    { NULL, NULL },
 };
 
 int
@@ -19,11 +20,10 @@ luaopen_luasodium_randombytes_ffi(lua_State *L) {
         return lua_error(L);
     }
 
-    luasodium_push_inittable(L);
-    luasodium_push_constants(L,ls_randombytes_constants);
     luasodium_push_functions(L,ls_randombytes_functions);
+    luasodium_push_constants(L,ls_randombytes_constants);
 
-    if(lua_pcall(L,3,1,0)) {
+    if(lua_pcall(L,2,1,0)) {
         return lua_error(L);
     }
     return 1;

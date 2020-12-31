@@ -19,10 +19,9 @@ typedef void (*ls_func_ptr)(void);
 typedef struct luasodium_function_s {
     const char *name;
     ls_func_ptr func;
-    const char *signature;
 } luasodium_function_t;
 
-#define LS_FUNC(x,sig) #x, x, sig
+#define LS_FUNC(x) { #x, (ls_func_ptr)x }
 
 static void
 luasodium_set_constants(lua_State *L, const luasodium_constant_t *c) {

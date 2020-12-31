@@ -3,20 +3,94 @@ local ffi = require'ffi'
 local tonumber = tonumber
 local error = error
 local string_len = string.len
+local string_format = string.format
 local math_ceil = math.ceil
 local ffi_string = ffi.string
-
--- either a table of function pointers, or the
--- ffi lib with libsodium functions
-local sodium_lib
-
--- constants
-local sodium_base64_VARIANT_ORIGINAL
-local sodium_base64_VARIANT_ORIGINAL_NO_PADDING
-local sodium_base64_VARIANT_URLSAFE
-local sodium_base64_VARIANT_URLSAFE_NO_PADDING
+local type= type
 
 local char_array = ffi.typeof('char[?]')
+
+-- no functions for finding these at run-time, just hard-coded
+local constants = {
+  sodium_base64_VARIANT_ORIGINAL = 1,
+  sodium_base64_VARIANT_ORIGINAL_NO_PADDING = 3,
+  sodium_base64_VARIANT_URLSAFE = 5,
+  sodium_base64_VARIANT_URLSAFE_NO_PADDING = 7,
+}
+
+local sodium_lib
+
+local signatures = {
+  ['sodium_init'] = [[
+    int %s(void)
+  ]],
+
+  ['sodium_memzero'] = [[
+    void %s(void * const pnt, const size_t len)
+  ]],
+
+  ['sodium_memcmp'] = [[
+    int %s(const void * const, const void * const, size_t)
+  ]],
+
+  ['sodium_bin2hex'] = [[
+    char *%s(char * const, const size_t,
+             const unsigned char * const, const size_t)
+  ]],
+
+  ['sodium_hex2bin'] = [[
+    int %s(unsigned char * const, const size_t,
+            const char * const, const size_t,
+            const char * const, size_t * const,
+            const char ** const)
+  ]],
+
+  ['sodium_bin2base64'] = [[
+    char *%s(char * const, const size_t,
+               const unsigned char * const, const size_t,
+               const int variant)
+  ]],
+
+  ['sodium_base642bin'] = [[
+    int %s(unsigned char * const, const size_t,
+            const char * const, const size_t,
+            const char * const, size_t * const,
+            const char ** const, const int)
+  ]],
+
+  ['sodium_increment'] = [[
+    void %s(unsigned char *, const size_t)
+  ]],
+
+  ['sodium_add'] = [[
+    void %s(unsigned char *, const unsigned char *, const size_t)
+  ]],
+
+  ['sodium_sub'] = [[
+    void %s(unsigned char *, const unsigned char *, const size_t)
+  ]],
+
+  ['sodium_compare'] = [[
+    int %s(const void * const, const void * const, size_t)
+  ]],
+
+  ['sodium_is_zero'] = [[
+    int %s(const unsigned char *, const size_t)
+  ]],
+
+  ['sodium_pad'] = [[
+    int %s(size_t *, unsigned char *,
+            size_t, size_t, size_t)
+  ]],
+
+  ['sodium_unpad'] = [[
+    int %s(size_t *, const unsigned char *, size_t, size_t)
+  ]],
+
+  ['sodium_base64_encoded_len'] = [[
+    size_t %s(size_t bin_len, int variant)
+  ]],
+}
 
 local function test_cspace()
   if ffi.C.sodium_init then
@@ -28,117 +102,21 @@ end
 local c_pointers = {...}
 
 
-if #c_pointers > 1 then -- we're being loaded from the c module
+if #c_pointers == 2 and
+  type(c_pointers[1]) == 'table' then -- we're being loaded from the c module
   sodium_lib = {}
 
-  sodium_lib.sodium_init = ffi.cast([[
-  int (*)(void)
-  ]],c_pointers[1])
+  for k,f in pairs(c_pointers[1]) do
+    sodium_lib[k] = ffi.cast(string_format(signatures[k],'(*)'),f)
+  end
 
-  sodium_lib.sodium_memcmp = ffi.cast([[
-  int (*)(const void * const, const void * const, size_t)
-  ]],c_pointers[2])
+  for k,v in pairs(c_pointers[2]) do
+    constants[k] = v
+  end
 
-  sodium_lib.sodium_bin2hex = ffi.cast([[
-  char *(*)(char * const, const size_t,
-            const unsigned char * const, const size_t)
-  ]],c_pointers[3])
-
-  sodium_lib.sodium_hex2bin = ffi.cast([[
-  int (*)(unsigned char * const, const size_t,
-          const char * const, const size_t,
-          const char * const, size_t * const,
-         const char ** const)
-  ]],c_pointers[4])
-
-  sodium_lib.sodium_bin2base64 = ffi.cast([[
-  char * (*)(char * const, const size_t,
-             const unsigned char * const, const size_t,
-             const int variant)
-  ]],c_pointers[5])
-
-  sodium_lib.sodium_base642bin = ffi.cast([[
-  int (*)(unsigned char * const, const size_t,
-          const char * const, const size_t,
-          const char * const, size_t * const,
-          const char ** const, const int)
-  ]],c_pointers[6])
-
-  sodium_lib.sodium_increment = ffi.cast([[
-  void (*)(unsigned char *, const size_t)
-  ]], c_pointers[7])
-
-  sodium_lib.sodium_add = ffi.cast([[
-  void (*)(unsigned char *, const unsigned char *, const size_t)
-  ]],c_pointers[8])
-
-  sodium_lib.sodium_sub = ffi.cast([[
-  void (*)(unsigned char *, const unsigned char *, const size_t)
-  ]],c_pointers[9])
-
-  sodium_lib.sodium_compare = ffi.cast([[
-  int (*)(const void * const, const void * const, size_t)
-  ]],c_pointers[10])
-
-  sodium_lib.sodium_is_zero = ffi.cast([[
-  int (*)(const unsigned char *, const size_t)
-  ]],c_pointers[11])
-
-  sodium_lib.sodium_pad = ffi.cast([[
-  int (*)(size_t *, unsigned char *,
-          size_t, size_t, size_t)
-  ]],c_pointers[12])
-
-  sodium_lib.sodium_unpad = ffi.cast([[
-  int (*)(size_t *, const unsigned char *, size_t, size_t)
-  ]],c_pointers[13])
-
-  sodium_lib.sodium_base64_encoded_len = ffi.cast([[
-  size_t (*)(size_t bin_len, int variant)
-  ]],c_pointers[14])
-
-  sodium_base64_VARIANT_ORIGINAL = c_pointers[15]
-  sodium_base64_VARIANT_ORIGINAL_NO_PADDING = c_pointers[16]
-  sodium_base64_VARIANT_URLSAFE = c_pointers[17]
-  sodium_base64_VARIANT_URLSAFE_NO_PADDING = c_pointers[18]
 else
-  -- https://libsodium.gitbook.io/doc/usage
   ffi.cdef[[
     int sodium_init(void);
-  ]]
-
-  -- https://libsodium.gitbook.io/doc/helpers
-  ffi.cdef[[
-    int sodium_memcmp(const void * const b1_, const void * const b2_, size_t len);
-    char *sodium_bin2hex(char * const hex, const size_t hex_maxlen,
-                         const unsigned char * const bin, const size_t bin_len);
-    int sodium_hex2bin(unsigned char * const bin, const size_t bin_maxlen,
-                       const char * const hex, const size_t hex_len,
-                       const char * const ignore, size_t * const bin_len,
-                       const char ** const hex_end);
-    char *sodium_bin2base64(char * const b64, const size_t b64_maxlen,
-                            const unsigned char * const bin, const size_t bin_len,
-                            const int variant);
-    int sodium_base642bin(unsigned char * const bin, const size_t bin_maxlen,
-                          const char * const b64, const size_t b64_len,
-                          const char * const ignore, size_t * const bin_len,
-                          const char ** const b64_end, const int variant);
-    void sodium_increment(unsigned char *n, const size_t nlen);
-    void sodium_add(unsigned char *a, const unsigned char *b, const size_t len);
-    void sodium_sub(unsigned char *a, const unsigned char *b, const size_t len);
-    int sodium_compare(const void * const b1_, const void * const b2_, size_t len);
-    int sodium_is_zero(const unsigned char *n, const size_t nlen);
-    void sodium_stackzero(const size_t len);
-
-    size_t sodium_base64_encoded_len(size_t bin_len, int variant);
-  ]]
-
-  -- https://libsodium.gitbook.io/doc/padding
-  ffi.cdef[[
-    int sodium_pad(size_t *padded_buflen_p, unsigned char *buf,
-                   size_t unpadded_buflen, size_t blocksize, size_t max_buflen);
-    int sodium_unpad(size_t *unpadded_buflen_p, const unsigned char *buf,
-                     size_t padded_buflen, size_t blocksize);
   ]]
 
   do
@@ -149,18 +127,17 @@ else
       sodium_lib = ffi.load('sodium')
     end
   end
-  -- copied from utils.h
-  sodium_base64_VARIANT_ORIGINAL = 1
-  sodium_base64_VARIANT_ORIGINAL_NO_PADDING = 3
-  sodium_base64_VARIANT_URLSAFE = 5
-  sodium_base64_VARIANT_URLSAFE_NO_PADDING = 7
+
+  for f,sig in pairs(signatures) do
+    ffi.cdef(string_format(sig,f))
+  end
 end
 
 local base64_variants = {
-  [sodium_base64_VARIANT_ORIGINAL] = true,
-  [sodium_base64_VARIANT_ORIGINAL_NO_PADDING] = true,
-  [sodium_base64_VARIANT_URLSAFE] = true,
-  [sodium_base64_VARIANT_URLSAFE_NO_PADDING] = true,
+  [constants.sodium_base64_VARIANT_ORIGINAL] = true,
+  [constants.sodium_base64_VARIANT_ORIGINAL_NO_PADDING] = true,
+  [constants.sodium_base64_VARIANT_URLSAFE] = true,
+  [constants.sodium_base64_VARIANT_URLSAFE_NO_PADDING] = true,
 }
 
 local function luasodium_init()
@@ -186,7 +163,9 @@ local function luasodium_bin2hex(bin)
   local hex_len = bin_len * 2
   local hex = char_array(hex_len + 1)
   sodium_lib.sodium_bin2hex(hex,hex_len+1,bin,bin_len)
-  return ffi_string(hex)
+  local hex_str = ffi_string(hex)
+  sodium_lib.sodium_memzero(hex,hex_len+1)
+  return hex_str
 end
 
 local function luasodium_hex2bin(hex,ignore)
@@ -215,7 +194,10 @@ local function luasodium_hex2bin(hex,ignore)
   if hex_end[0] < tmp_hex + hex_len then
     rem = ffi_string(hex_end[0], (tmp_hex + hex_len) - hex_end[0])
   end
-  return ffi_string(bin,out_bin_len[0]), rem
+  local bin_str = ffi_string(bin,out_bin_len[0])
+  sodium_lib.sodium_memzero(tmp_hex,hex_len)
+  sodium_lib.sodium_memzero(bin,bin_len)
+  return bin_str, rem
 end
 
 local function luasodium_bin2base64(bin,variant)
@@ -236,7 +218,9 @@ local function luasodium_bin2base64(bin,variant)
     b64, b64_len,
     bin,bin_len,variant)
 
-  return ffi_string(b64,b64_len-1)
+  local b64_str = ffi_string(b64,b64_len-1)
+  sodium_lib.sodium_memzero(b64,b64_len)
+  return b64_str
 end
 
 local function luasodium_base642bin(base64,variant,ignore)
@@ -270,8 +254,12 @@ local function luasodium_base642bin(base64,variant,ignore)
   if base64_end[0] < tmp_base64 + base64_len then
     rem = ffi_string(base64_end[0], (tmp_base64 + base64_len) - base64_end[0])
   end
+  local bin_str = ffi_string(bin,out_bin_len[0])
 
-  return ffi_string(bin,out_bin_len[0]), rem
+  sodium_lib.sodium_memzero(tmp_base64,base64_len)
+  sodium_lib.sodium_memzero(bin,bin_len)
+
+  return bin_str, rem
 end
 
 local function luasodium_increment(n)
@@ -279,7 +267,9 @@ local function luasodium_increment(n)
   local tmp_n = char_array(nlen)
   ffi.copy(tmp_n,n,nlen)
   sodium_lib.sodium_increment(tmp_n,nlen)
-  return ffi_string(tmp_n,nlen)
+  local ret = ffi_string(tmp_n,nlen)
+  sodium_lib.sodium_memzero(tmp_n,nlen)
+  return ret
 end
 
 local function luasodium_add(a,b)
@@ -292,7 +282,9 @@ local function luasodium_add(a,b)
   ffi.copy(tmp_a,a,alen)
 
   sodium_lib.sodium_add(tmp_a,b,alen)
-  return ffi_string(tmp_a,alen)
+  local ret = ffi_string(tmp_a,alen)
+  sodium_lib.sodium_memzero(tmp_a,alen)
+  return ret
 end
 
 local function luasodium_sub(a,b)
@@ -305,7 +297,9 @@ local function luasodium_sub(a,b)
   ffi.copy(tmp_a,a,alen)
 
   sodium_lib.sodium_sub(tmp_a,b,alen)
-  return ffi_string(tmp_a,alen)
+  local ret = ffi_string(tmp_a,alen)
+  sodium_lib.sodium_memzero(tmp_a,alen)
+  return ret
 end
 
 local function luasodium_compare(a,b)
@@ -343,7 +337,9 @@ local function luasodium_pad(n,blocksize)
     return error('sodium_pad error')
   end
 
-  return ffi_string(r,outlen[0])
+  local r_str = ffi_string(r,outlen[0])
+  sodium_lib.sodium_memzero(r,rounded);
+  return r_str
 end
 
 local function luasodium_unpad(n,blocksize)
@@ -376,10 +372,10 @@ local M = {
   sodium_compare = luasodium_compare,
   sodium_pad = luasodium_pad,
   sodium_unpad = luasodium_unpad,
-  sodium_base64_VARIANT_ORIGINAL = sodium_base64_VARIANT_ORIGINAL,
-  sodium_base64_VARIANT_ORIGINAL_NO_PADDING = sodium_base64_VARIANT_ORIGINAL_NO_PADDING,
-  sodium_base64_VARIANT_URLSAFE = sodium_base64_VARIANT_URLSAFE,
-  sodium_base64_VARIANT_URLSAFE_NO_PADDING = sodium_base64_VARIANT_URLSAFE_NO_PADDING,
 }
+
+for k,v in pairs(constants) do
+  M[k] = v
+end
 
 return M

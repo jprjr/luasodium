@@ -13,25 +13,17 @@ luasodium_push_constants(lua_State *L, const luasodium_constant_t *c) {
 }
 
 static unsigned int
-luasodium_push_functions(lua_State *L, const luasodium_function_t * const *f) {
-    unsigned int i = 0;
+luasodium_push_functions(lua_State *L, const luasodium_function_t *f) {
     lua_newtable(L);
 
-    for(; *f != NULL; f++) {
-        lua_newtable(L);
-        lua_pushstring(L,(*f)->name);
-        lua_setfield(L,-2,"name");
-        lua_pushstring(L,(*f)->signature);
-        lua_setfield(L,-2,"signature");
-        lua_pushlightuserdata(L,(*f)->func);
-        lua_setfield(L,-2,"func");
-        lua_rawseti(L,-2,++i);
+    for(; f->name != NULL; f++) {
+        lua_pushlightuserdata(L,f->func);
+        lua_setfield(L,-2,f->name);
     }
     return 1;
 }
 
-
-
+#if 0
 static void
 luasodium_push_inittable(lua_State *L) {
     lua_newtable(L);
@@ -54,5 +46,6 @@ luasodium_push_inittable(lua_State *L) {
 
     lua_setfield(L,-2,"sodium_memzero");
 }
+#endif
 
 #endif
