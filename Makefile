@@ -41,9 +41,6 @@ clean:
 	$(MAKE) -f Makefile.dist clean
 	rm -f aux/bin2c $(LUASODIUM_FFIS)
 
-README.md: docs/parts.txt $(wildcard docs/*.md)
-	while read line ; do cat docs/$$line ; done < docs/parts.txt > README.md
-
 VERSION = $(shell $(LUA) aux/version.lua)
 
 release: $(LUASODIUM_FFIS) README.md
