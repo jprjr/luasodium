@@ -3,7 +3,7 @@
 
 static int
 ls_crypto_scalarmult_base(lua_State *L) {
-    unsigned char *q = NULL;
+    unsigned char q[crypto_scalarmult_BYTES];
     const unsigned char *n = NULL;
     size_t n_len = 0;
 
@@ -18,13 +18,6 @@ ls_crypto_scalarmult_base(lua_State *L) {
           crypto_scalarmult_SCALARBYTES);
     }
 
-    q = lua_newuserdata(L,crypto_scalarmult_BYTES);
-    if(q == NULL) {
-        lua_pushliteral(L,"out of memory");
-        return lua_error(L);
-    }
-    lua_pop(L,1);
-
     if(crypto_scalarmult_base(q,n) == -1) {
         return luaL_error(L,"crypto_scalarmult_base error");
     }
@@ -36,7 +29,7 @@ ls_crypto_scalarmult_base(lua_State *L) {
 
 static int
 ls_crypto_scalarmult(lua_State *L) {
-    unsigned char *q = NULL;
+    unsigned char q[crypto_scalarmult_BYTES];
     const unsigned char *n = NULL;
     const unsigned char *p = NULL;
     size_t n_len = 0;
@@ -58,13 +51,6 @@ ls_crypto_scalarmult(lua_State *L) {
         return luaL_error(L,"wrong scalar length, expected: %d",
           crypto_scalarmult_BYTES);
     }
-
-    q = lua_newuserdata(L,crypto_scalarmult_BYTES);
-    if(q == NULL) {
-        lua_pushliteral(L,"out of memory");
-        return lua_error(L);
-    }
-    lua_pop(L,1);
 
     if(crypto_scalarmult(q,n,p) == -1) {
         return luaL_error(L,"crypto_scalarmult error");
