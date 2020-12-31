@@ -6,22 +6,8 @@
 
 static int
 ls_crypto_box_keypair(lua_State *L) {
-    unsigned char *pk = NULL;
-    unsigned char *sk = NULL;
-
-    pk = lua_newuserdata(L,crypto_box_PUBLICKEYBYTES);
-    if(pk == NULL) {
-        lua_pushliteral(L,"out of memory");
-        return lua_error(L);
-    }
-
-    sk = lua_newuserdata(L,crypto_box_SECRETKEYBYTES);
-    if(sk == NULL) {
-        lua_pushliteral(L,"out of memory");
-        return lua_error(L);
-    }
-
-    lua_pop(L,2);
+    unsigned char pk[crypto_box_PUBLICKEYBYTES];
+    unsigned char sk[crypto_box_SECRETKEYBYTES];
 
     if(crypto_box_keypair(pk,sk) == -1) {
         lua_pushliteral(L,"crypto_box_keypair error");
@@ -39,8 +25,8 @@ ls_crypto_box_keypair(lua_State *L) {
 
 static int
 ls_crypto_box_seed_keypair(lua_State *L) {
-    unsigned char *pk = NULL;
-    unsigned char *sk = NULL;
+    unsigned char pk[crypto_box_PUBLICKEYBYTES];
+    unsigned char sk[crypto_box_SECRETKEYBYTES];
     const unsigned char *seed = NULL;
     size_t seed_len = 0;
 
@@ -55,18 +41,6 @@ ls_crypto_box_seed_keypair(lua_State *L) {
         return luaL_error(L,"wrong seed length, expected: %d",
           crypto_box_SEEDBYTES);
     }
-
-    pk = lua_newuserdata(L,crypto_box_PUBLICKEYBYTES);
-    if(pk == NULL) {
-        lua_pushliteral(L,"out of memory");
-        return lua_error(L);
-    }
-    sk = lua_newuserdata(L,crypto_box_SECRETKEYBYTES);
-    if(sk == NULL) {
-        lua_pushliteral(L,"out of memory");
-        return lua_error(L);
-    }
-    lua_pop(L,2);
 
     if(crypto_box_seed_keypair(pk,sk,seed) == -1) {
         return luaL_error(L,"crypto_box_seed_keypair error");
@@ -338,7 +312,7 @@ ls_crypto_box_open_easy(lua_State *L) {
 static int
 ls_crypto_box_detached(lua_State *L) {
     unsigned char *c   = NULL;
-    unsigned char *mac = NULL;
+    unsigned char mac[crypto_box_MACBYTES];
     const unsigned char *m = NULL;
     const unsigned char *n = NULL;
     const unsigned char *pk = NULL;
@@ -378,12 +352,7 @@ ls_crypto_box_detached(lua_State *L) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
-    mac = lua_newuserdata(L,crypto_box_MACBYTES);
-    if(mac == NULL) {
-        lua_pushliteral(L,"out of memory");
-        return lua_error(L);
-    }
-    lua_pop(L,2);
+    lua_pop(L,1);
 
     if(crypto_box_detached(c,mac,m,mlen,n,pk,sk) == -1) {
         return luaL_error(L,"crypto_box_detached error");
@@ -462,7 +431,7 @@ ls_crypto_box_open_detached(lua_State *L) {
 
 static int
 ls_crypto_box_beforenm(lua_State *L) {
-    unsigned char *k = NULL;
+    unsigned char k[crypto_box_BEFORENMBYTES];
     const unsigned char *pk = NULL;
     const unsigned char *sk = NULL;
 
@@ -485,12 +454,6 @@ ls_crypto_box_beforenm(lua_State *L) {
     if(sklen != crypto_box_SECRETKEYBYTES) {
         return luaL_error(L,"wrong secret key length, expected: %d",
           crypto_box_SECRETKEYBYTES);
-    }
-
-    k = lua_newuserdata(L,crypto_box_BEFORENMBYTES);
-    if(k == NULL) {
-        lua_pushliteral(L,"out of memory");
-        return lua_error(L);
     }
 
     if(crypto_box_beforenm(k,pk,sk) == -1) {
@@ -606,7 +569,7 @@ ls_crypto_box_open_easy_afternm(lua_State *L) {
 static int
 ls_crypto_box_detached_afternm(lua_State *L) {
     unsigned char *c = NULL;
-    unsigned char *mac = NULL;
+    unsigned char mac[crypto_box_MACBYTES];
     const unsigned char *m = NULL;
     const unsigned char *n = NULL;
     const unsigned char *k = NULL;
@@ -638,12 +601,7 @@ ls_crypto_box_detached_afternm(lua_State *L) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
-    mac = lua_newuserdata(L,crypto_box_MACBYTES);
-    if(mac == NULL) {
-        lua_pushliteral(L,"out of memory");
-        return lua_error(L);
-    }
-    lua_pop(L,2);
+    lua_pop(L,1);
 
     if(crypto_box_detached_afternm(c,mac,m,mlen,n,k) == -1) {
         return luaL_error(L,"crypto_box_detached_afternm error");
