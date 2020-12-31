@@ -125,19 +125,14 @@ If a `libsodium` function writes data into a buffer,
 this library will automatically allocate and return
 a string.
 
-### Idiom: `easy`-like wrappers.
+### Idiom: Handle zero-padding
 
 The [original NaCl library](https://nacl.cr.yp.to/) requires the
-user to have padding before messages and ciphertexts. `libsodium` has
-*some* versions of functions that handle padding, but not
-everywhere. Example, there's a `crypto_secretbox_xsalsapoly1305`
-function, but no `crypto_secretbox_xsalsapoly1305_easy` function.
+user to have padding before messages and ciphertexts.
 
-This library will take care of adding padding, you do **not**
-need to prefix your messages and ciphertexts with padding
-bytes. You can call `crypto_secretbox` and
-`crypto_secretbox_easy` with the same parameters and get
-the same result.
+If a `libsodium` function requires padding, this library
+will take care of it for you, you'll never need to add padding.
+
 
 ### Idiom: strings are immutable.
 
