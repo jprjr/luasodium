@@ -1,19 +1,21 @@
 local M = {}
 
-local version           = require'luasodium.version.core'
-local utils             = require'luasodium.utils.core'
-local crypto_secretbox  = require'luasodium.crypto_secretbox.core'
-local crypto_box        = require'luasodium.crypto_box.core'
-local crypto_scalarmult = require'luasodium.crypto_scalarmult.core'
-local randombytes = require'luasodium.randombytes.core'
+local crypto_auth        = require'luasodium.crypto_auth.core'
+local crypto_box         = require'luasodium.crypto_box.core'
+local crypto_secretbox   = require'luasodium.crypto_secretbox.core'
+local crypto_scalarmult  = require'luasodium.crypto_scalarmult.core'
+local randombytes        = require'luasodium.randombytes.core'
+local utils              = require'luasodium.utils.core'
+local version            = require'luasodium.version.core'
 
 local modules = {
-  version,
-  utils,
-  crypto_secretbox,
+  crypto_auth,
   crypto_box,
   crypto_scalarmult,
+  crypto_secretbox,
   randombytes,
+  utils,
+  version,
 }
 
 for _,mod in ipairs(modules) do

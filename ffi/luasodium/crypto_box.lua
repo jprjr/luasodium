@@ -157,7 +157,6 @@ else
   for f,sig in pairs(signatures) do
     ffi.cdef(string_format(sig,f))
   end
-
 end
 
 local crypto_box_PUBLICKEYBYTES = constants.crypto_box_PUBLICKEYBYTES

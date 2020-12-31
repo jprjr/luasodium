@@ -9,6 +9,7 @@ LUASODIUM_FFIS = \
   c/luasodium/version/core.luah \
   c/luasodium/crypto_secretbox/core.luah \
   c/luasodium/crypto_box/core.luah \
+  c/luasodium/crypto_auth/core.luah \
   c/luasodium/crypto_scalarmult/core.luah \
   c/luasodium/randombytes/core.luah
 
@@ -27,6 +28,9 @@ c/luasodium/crypto_scalarmult/core.luah: ffi/luasodium/crypto_scalarmult.lua aux
 c/luasodium/crypto_box/core.luah: ffi/luasodium/crypto_box.lua aux/bin2c
 	./aux/bin2c $< $@ $(patsubst %.lua,%_lua,$(notdir $<))
 
+c/luasodium/crypto_auth/core.luah: ffi/luasodium/crypto_auth.lua aux/bin2c
+	./aux/bin2c $< $@ $(patsubst %.lua,%_lua,$(notdir $<))
+
 c/luasodium/randombytes/core.luah: ffi/luasodium/randombytes.lua aux/bin2c
 	./aux/bin2c $< $@ $(patsubst %.lua,%_lua,$(notdir $<))
 
@@ -37,9 +41,12 @@ clean:
 	$(MAKE) -f Makefile.dist clean
 	rm -f aux/bin2c $(LUASODIUM_FFIS)
 
+README.md: docs/parts.txt $(wildcard docs/*.md)
+	while read line ; do cat docs/$$line ; done < docs/parts.txt > README.md
+
 VERSION = $(shell $(LUA) aux/version.lua)
 
-release: $(LUASODIUM_FFIS)
+release: $(LUASODIUM_FFIS) README.md
 	rm -rf luasodium-$(VERSION) dist/luasodium-$(VERSION)
 	rm -rf dist/luasodium-$(VERSION).tar.gz
 	rm -rf dist/luasodium-$(VERSION).tar.xz

@@ -3,12 +3,13 @@
 PKGCONFIG = pkg-config
 LUA = lua
 
-$(shell mkdir -p luasodium/version)
-$(shell mkdir -p luasodium/utils)
-$(shell mkdir -p luasodium/crypto_secretbox)
+$(shell mkdir -p luasodium/crypto_auth)
 $(shell mkdir -p luasodium/crypto_box)
 $(shell mkdir -p luasodium/crypto_scalarmult)
+$(shell mkdir -p luasodium/crypto_secretbox)
 $(shell mkdir -p luasodium/randombytes)
+$(shell mkdir -p luasodium/utils)
+$(shell mkdir -p luasodium/version)
 
 LUASODIUM_OBJS = \
   c/luasodium/version/core.o \
@@ -17,6 +18,8 @@ LUASODIUM_OBJS = \
   c/luasodium/utils/ffi.o \
   c/luasodium/crypto_secretbox/core.o \
   c/luasodium/crypto_secretbox/ffi.o \
+  c/luasodium/crypto_auth/core.o \
+  c/luasodium/crypto_auth/ffi.o \
   c/luasodium/crypto_box/core.o \
   c/luasodium/crypto_box/ffi.o \
   c/luasodium/crypto_scalarmult/core.o \
@@ -31,6 +34,8 @@ LUASODIUM_DLLS = \
   luasodium/utils/ffi.so \
   luasodium/crypto_secretbox/core.so \
   luasodium/crypto_secretbox/ffi.so \
+  luasodium/crypto_auth/core.so \
+  luasodium/crypto_auth/ffi.so \
   luasodium/crypto_box/core.so \
   luasodium/crypto_box/ffi.so \
   luasodium/crypto_scalarmult/core.so \
@@ -46,6 +51,7 @@ LUASODIUM_LUAS = \
   luasodium/version.lua \
   luasodium/crypto_secretbox.lua \
   luasodium/crypto_box.lua \
+  luasodium/crypto_auth.lua \
   luasodium/crypto_scalarmult.lua \
   luasodium/randombytes.lua
 
@@ -89,6 +95,12 @@ c/luasodium/crypto_secretbox/core.o: c/luasodium/crypto_secretbox/core.c c/luaso
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 c/luasodium/crypto_secretbox/ffi.o: c/luasodium/crypto_secretbox/ffi.c c/luasodium/crypto_secretbox/constants.h c/luasodium/crypto_secretbox/core.luah
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+c/luasodium/crypto_auth/core.o: c/luasodium/crypto_auth/core.c c/luasodium/crypto_auth/constants.h
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+c/luasodium/crypto_auth/ffi.o: c/luasodium/crypto_auth/ffi.c c/luasodium/crypto_auth/constants.h c/luasodium/crypto_auth/core.luah
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 c/luasodium/crypto_box/core.o: c/luasodium/crypto_box/core.c c/luasodium/crypto_box/constants.h
