@@ -50,7 +50,7 @@ libsodium [is planning to remove](https://github.com/jedisct1/libsodium/issues/1
 so I'm going to prioritize covering the high-level functions.
 
 I'll mark this as version `1.0.0` when I've covered all the original,
-high-level[NaCl](https://nacl.cr.yp.to/index.html) functions, and
+high-level [NaCl](https://nacl.cr.yp.to/index.html) functions, and
 any equivalent "easy"/"detached" variants that `libsodium` has added.
 I think at that point, this library should be pretty usable.
 
