@@ -37,83 +37,81 @@ local constant_keys = {
 }
 
 local signatures = {
-  {
-    functions = { 'crypto_box_keypair' },
-    signature = [[
-      int %s(unsigned char *pk, unsigned char *sk);
-    ]],
-  },
-  {
-    functions = { 'crypto_box_seed_keypair' },
-    signature = [[
-      int %s(unsigned char *pk, unsigned char *sk,
-             const unsigned char *seed);
-    ]],
-  },
-  {
-    functions = { 'crypto_box', 'crypto_box_open',
-                  'crypto_box_easy', 'crypto_box_open_easy' },
-    signature = [[
+  ['sodium_init'] = [[
+    int %s(void)
+  ]],
+  ['sodium_memzero'] = [[
+    void %s(void * const pnt, const size_t len)
+  ]],
+  ['crypto_box_keypair'] = [[
+    int %s(unsigned char *pk, unsigned char *sk)
+  ]],
+  ['crypto_box_seed_keypair'] = [[
+    int %s(unsigned char *pk, unsigned char *sk,
+           const unsigned char *seed)
+  ]],
+  ['crypto_box'] = [[
       int %s(unsigned char *c, const unsigned char *m,
              unsigned long long mlen, const unsigned char *n,
-             const unsigned char *pk, const unsigned char *sk);
-    ]],
-  },
-  {
-    functions = { 'crypto_box_detached' },
-    signature = [[
+             const unsigned char *pk, const unsigned char *sk)
+  ]],
+  ['crypto_box_open'] = [[
+      int %s(unsigned char *m, const unsigned char *c,
+             unsigned long long clen, const unsigned char *n,
+             const unsigned char *pk, const unsigned char *sk)
+  ]],
+  ['crypto_box_easy'] = [[
+      int %s(unsigned char *c, const unsigned char *m,
+             unsigned long long mlen, const unsigned char *n,
+             const unsigned char *pk, const unsigned char *sk)
+  ]],
+  ['crypto_box_open_easy'] = [[
+      int %s(unsigned char *m, const unsigned char *c,
+             unsigned long long clen, const unsigned char *n,
+             const unsigned char *pk, const unsigned char *sk)
+  ]],
+  ['crypto_box_detached'] = [[
       int %s(unsigned char *c, unsigned char *mac,
              const unsigned char *m,
              unsigned long long mlen,
              const unsigned char *n,
              const unsigned char *pk,
-             const unsigned char *sk);
-    ]],
-  },
-  {
-    functions = { 'crypto_box_open_detached' },
-    signature = [[
+             const unsigned char *sk)
+  ]],
+  ['crypto_box_open_detached'] = [[
       int %s(unsigned char *m,
              const unsigned char *c,
              const unsigned char *mac,
              unsigned long long clen,
              const unsigned char *n,
              const unsigned char *pk,
-             const unsigned char *sk);
-    ]],
-  },
-  {
-    functions = { 'crypto_box_beforenm' },
-    signature = [[
+             const unsigned char *sk)
+  ]],
+  ['crypto_box_beforenm'] = [[
       int %s(unsigned char *k, const unsigned char *pk,
-             const unsigned char *sk);
-    ]],
-  },
-  {
-    functions = { 'crypto_box_easy_afternm','crypto_box_open_easy_afternm' },
-    signature = [[
+             const unsigned char *sk)
+  ]],
+  ['crypto_box_easy_afternm'] = [[
       int %s(unsigned char *c, const unsigned char *m,
              unsigned long long mlen, const unsigned char *n,
-             const unsigned char *k);
-    ]],
-  },
-  {
-    functions = { 'crypto_box_detached_afternm' },
-    signature = [[
+             const unsigned char *k)
+  ]],
+  ['crypto_box_open_easy_afternm'] = [[
+      int %s(unsigned char *m, const unsigned char *c,
+             unsigned long long clen, const unsigned char *n,
+             const unsigned char *k)
+  ]],
+  ['crypto_box_detached_afternm'] = [[
       int %s(unsigned char *c, unsigned char *mac,
              const unsigned char *m, unsigned long long mlen,
-             const unsigned char *n, const unsigned char *k);
-    ]],
-  },
-  {
-    functions = { 'crypto_box_open_detached_afternm' },
-    signature = [[
+             const unsigned char *n, const unsigned char *k)
+  ]],
+  ['crypto_box_open_detached_afternm'] = [[
       int %s(unsigned char *m, const unsigned char *c,
              const unsigned char *mac,
              unsigned long long clen, const unsigned char *n,
-             const unsigned char *k);
-    ]],
-  },
+             const unsigned char *k)
+  ]],
 }
 
 local function test_cspace()
@@ -124,29 +122,19 @@ end
 
 local c_pointers = { ... }
 
-if #c_pointers == 3 and
+if #c_pointers == 2 and
   type(c_pointers[1]) == 'table' then
   sodium_lib = {}
 
-  sodium_lib.sodium_init = ffi.cast(
-    c_pointers[1].sodium_init.signature,
-    c_pointers[1].sodium_init.func)
-
-  sodium_lib.sodium_memzero = ffi.cast(
-    c_pointers[1].sodium_memzero.signature,
-    c_pointers[1].sodium_memzero.func)
-
-  constants = c_pointers[2]
-
-  for _,f in ipairs(c_pointers[3]) do
-    sodium_lib[f.name] = ffi.cast(f.signature,f.func)
+  for k,f in pairs(c_pointers[1]) do
+    sodium_lib[k] = ffi.cast(string_format(signatures[k],'(*)'),f)
   end
 
+  constants = c_pointers[2]
 
 else
   ffi.cdef([[
     int sodium_init(void);
-    void sodium_memzero(void * const pnt, const size_t len);
   ]])
   do
     local ok, lib = pcall(test_cspace)
@@ -164,52 +152,46 @@ else
     constants[c] = tonumber(sodium_lib[c:lower()]())
   end
 
-  for _,v in ipairs(signatures) do
-    for _,f in ipairs(v.functions) do
-      ffi.cdef(string_format(v.signature,f))
-    end
+  for f,sig in pairs(signatures) do
+    ffi.cdef(string_format(sig,f))
   end
 
 end
 
-local function lua_crypto_box_keypair(fname,pksize,sksize)
-  return function()
-    local pk = char_array(pksize)
-    local sk = char_array(sksize)
-    if tonumber(sodium_lib[fname](pk,sk)) == -1 then
-      return error('crypto_box_keypair error')
-    end
-
-    local pk_str = ffi_string(pk,pksize)
-    local sk_str = ffi_string(sk,sksize)
-
-    sodium_lib.sodium_memzero(pk,pksize)
-    sodium_lib.sodium_memzero(sk,sksize)
-    return pk_str, sk_str
+local function lua_crypto_box_keypair()
+  local pk = char_array(constants.crypto_box_PUBLICKEYBYTES)
+  local sk = char_array(constants.crypto_box_SECRETKEYBYTES)
+  if tonumber(sodium_lib.crypto_box_keypair(pk,sk)) == -1 then
+    return error('crypto_box_keypair error')
   end
+
+  local pk_str = ffi_string(pk,constants.crypto_box_PUBLICKEYBYTES)
+  local sk_str = ffi_string(sk,constants.crypto_box_SECRETKEYBYTES)
+
+  sodium_lib.sodium_memzero(pk,constants.crypto_box_PUBLICKEYBYTES)
+  sodium_lib.sodium_memzero(sk,constants.crypto_box_SECRETKEYBYTES)
+  return pk_str, sk_str
 end
 
-local function lua_crypto_box_seed_keypair(fname,pksize,sksize,seedsize)
-  return function(seed)
-    if not seed then
-      return error('requires 1 argument')
-    end
-    if string_len(seed) ~= seedsize then
-      return error(string_format(
-        'wrong seed length, expected: %d', seedsize))
-    end
-    local pk = char_array(pksize)
-    local sk = char_array(sksize)
-    if tonumber(sodium_lib[fname](pk,sk,seed)) == -1 then
-      return error(string_format('%s error',fname))
-    end
-
-    local pk_str = ffi_string(pk,pksize)
-    local sk_str = ffi_string(sk,sksize)
-    sodium_lib.sodium_memzero(pk,pksize)
-    sodium_lib.sodium_memzero(sk,sksize)
-    return pk_str, sk_str
+local function lua_crypto_box_seed_keypair(seed)
+  if not seed then
+    return error('requires 1 argument')
   end
+  if string_len(seed) ~= constants.crypto_box_SEEDBYTES then
+    return error(string_format(
+      'wrong seed length, expected: %d', constants.crypto_box_SEEDBYTES))
+  end
+  local pk = char_array(constants.crypto_box_PUBLICKEYBYTES)
+  local sk = char_array(constants.crypto_box_SECRETKEYBYTES)
+  if tonumber(sodium_lib.crypto_box_seed_keypair(pk,sk,seed)) == -1 then
+    return error('crypto_box_seed_keypair error')
+  end
+
+  local pk_str = ffi_string(pk,constants.crypto_box_PUBLICKEYBYTES)
+  local sk_str = ffi_string(sk,constants.crypto_box_SECRETKEYBYTES)
+  sodium_lib.sodium_memzero(pk,constants.crypto_box_PUBLICKEYBYTES)
+  sodium_lib.sodium_memzero(sk,constants.crypto_box_SECRETKEYBYTES)
+  return pk_str, sk_str
 end
 
 local function lua_crypto_box()
@@ -220,448 +202,357 @@ local function lua_crypto_box_open()
   return nil
 end
 
-local function lua_crypto_box_easy(fname,noncesize,macsize,pksize,sksize)
-  return function(m,n,pk,sk)
-    local c
-    if not sk then
-      return error('requires 4 arguments')
-    end
-
-    local mlen = string_len(m)
-    local clen = mlen + macsize
-
-    if string_len(n) ~= noncesize then
-      return error(string_format(
-        'wrong nonce length, expected: %d', noncesize))
-    end
-
-    if string_len(pk) ~= pksize then
-      return error(string_format(
-        'wrong public key length, expected: %d', pksize))
-    end
-
-    if string_len(sk) ~= sksize then
-      return error(string_format(
-        'wrong secret key length, expected: %d', sksize))
-    end
-
-    c = char_array(clen)
-
-    if tonumber(sodium_lib[fname](c,m,mlen,n,pk,sk)) == -1 then
-      return error(string_format('%s error',fname))
-    end
-
-    local c_str = ffi_string(c,clen)
-    sodium_lib.sodium_memzero(c,clen)
-    return c_str
+local function lua_crypto_box_easy(m,n,pk,sk)
+  local c
+  if not sk then
+    return error('requires 4 arguments')
   end
+
+  local mlen = string_len(m)
+  local clen = mlen + constants.crypto_box_MACBYTES
+
+  if string_len(n) ~= constants.crypto_box_NONCEBYTES then
+    return error(string_format(
+      'wrong nonce length, expected: %d', constants.crypto_box_NONCEBYTES))
+  end
+
+  if string_len(pk) ~= constants.crypto_box_PUBLICKEYBYTES then
+    return error(string_format(
+      'wrong public key length, expected: %d', constants.crypto_box_PUBLICKEYBYTES))
+  end
+
+  if string_len(sk) ~= constants.crypto_box_SECRETKEYBYTES then
+    return error(string_format(
+      'wrong secret key length, expected: %d', constants.crypto_box_SECRETKEYBYTES))
+  end
+
+  c = char_array(clen)
+
+  if tonumber(sodium_lib.crypto_box_easy(c,m,mlen,n,pk,sk)) == -1 then
+    return error('crypto_box_easy error')
+  end
+
+  local c_str = ffi_string(c,clen)
+  sodium_lib.sodium_memzero(c,clen)
+  return c_str
 end
 
-local function lua_crypto_box_open_easy(fname,noncesize,macsize,pksize,sksize)
-  return function(c,n,pk,sk)
-    local m
-    if not sk then
-      return error('requires 4 arguments')
-    end
-
-    local clen = string_len(c)
-
-    if clen <= macsize then
-      return error(string_format(
-        'wrong cipher length, expected at least: %d',
-        macsize))
-    end
-
-    if string_len(n) ~= noncesize then
-      return error(string_format(
-        'wrong nonce length, expected: %d', noncesize))
-    end
-
-    if string_len(pk) ~= pksize then
-      return error(string_format(
-        'wrong public key length, expected: %d', pksize))
-    end
-
-    if string_len(sk) ~= sksize then
-      return error(string_format(
-        'wrong secret key length, expected: %d', sksize))
-    end
-
-    local mlen = clen - macsize
-
-    m = char_array(mlen)
-
-    if tonumber(sodium_lib[fname](m,c,clen,n,pk,sk)) == -1 then
-      return error(string_format('%s error',fname))
-    end
-
-    local m_str = ffi_string(m,mlen)
-    sodium_lib.sodium_memzero(m,mlen)
-    return m_str
+local function lua_crypto_box_open_easy(c,n,pk,sk)
+  local m
+  if not sk then
+    return error('requires 4 arguments')
   end
+
+  local clen = string_len(c)
+
+  if clen <= constants.crypto_box_MACBYTES then
+    return error(string_format(
+      'wrong cipher length, expected at least: %d',
+      constants.crypto_box_MACBYTES))
+  end
+
+  if string_len(n) ~= constants.crypto_box_NONCEBYTES then
+    return error(string_format(
+      'wrong nonce length, expected: %d', constants.crypto_box_NONCEBYTES))
+  end
+
+  if string_len(pk) ~= constants.crypto_box_PUBLICKEYBYTES then
+    return error(string_format(
+      'wrong public key length, expected: %d', constants.crypto_box_PUBLICKEYBYTES))
+  end
+
+  if string_len(sk) ~= constants.crypto_box_SECRETKEYBYTES then
+    return error(string_format(
+      'wrong secret key length, expected: %d', constants.crypto_box_SECRETKEYBYTES))
+  end
+
+  local mlen = clen - constants.crypto_box_MACBYTES
+
+  m = char_array(mlen)
+
+  if tonumber(sodium_lib.crypto_box_open_easy(m,c,clen,n,pk,sk)) == -1 then
+    return error('crypto_box_open_easy error')
+  end
+
+  local m_str = ffi_string(m,mlen)
+  sodium_lib.sodium_memzero(m,mlen)
+  return m_str
 end
 
-local function lua_crypto_box_detached(fname,noncesize,macsize,pksize,sksize)
-  return function(m,n,pk,sk)
-    local c
-    local mac
+local function lua_crypto_box_detached(m,n,pk,sk)
+  local c
+  local mac
 
-    if not sk then
-      return error('requires 4 arguments')
-    end
-
-    local mlen = string_len(m)
-
-    if string_len(n) ~= noncesize then
-      return error(string_format(
-        'wrong nonce length, expected: %d', noncesize))
-    end
-
-    if string_len(pk) ~= pksize then
-      return error(string_format(
-        'wrong public key length, expected: %d', pksize))
-    end
-
-    if string_len(sk) ~= sksize then
-      return error(string_format(
-        'wrong secret key length, expected: %d', sksize))
-    end
-
-    c = char_array(mlen)
-    mac = char_array(macsize)
-
-    if tonumber(sodium_lib[fname](c,mac,m,mlen,n,pk,sk)) == -1 then
-      return error(string_format('%s error',fname))
-    end
-
-    local c_str = ffi_string(c,mlen)
-    local mac_str = ffi_string(mac,macsize)
-
-    sodium_lib.sodium_memzero(c,mlen)
-    sodium_lib.sodium_memzero(mac,macsize)
-
-    return c_str, mac_str
+  if not sk then
+    return error('requires 4 arguments')
   end
+
+  local mlen = string_len(m)
+
+  if string_len(n) ~= constants.crypto_box_NONCEBYTES then
+    return error(string_format(
+      'wrong nonce length, expected: %d', constants.crypto_box_NONCEBYTES))
+  end
+
+  if string_len(pk) ~= constants.crypto_box_PUBLICKEYBYTES then
+    return error(string_format(
+      'wrong public key length, expected: %d', constants.crypto_box_PUBLICKEYBYTES))
+  end
+
+  if string_len(sk) ~= constants.crypto_box_SECRETKEYBYTES then
+    return error(string_format(
+      'wrong secret key length, expected: %d', constants.crypto_box_SECRETKEYBYTES))
+  end
+
+  c = char_array(mlen)
+  mac = char_array(constants.crypto_box_MACBYTES)
+
+  if tonumber(sodium_lib.crypto_box_detached(c,mac,m,mlen,n,pk,sk)) == -1 then
+    return error('crypto_box_detached error')
+  end
+
+  local c_str = ffi_string(c,mlen)
+  local mac_str = ffi_string(mac,constants.crypto_box_MACBYTES)
+
+  sodium_lib.sodium_memzero(c,mlen)
+  sodium_lib.sodium_memzero(mac,constants.crypto_box_MACBYTES)
+
+  return c_str, mac_str
 end
 
-local function lua_crypto_box_open_detached(fname,noncesize,macsize,pksize,sksize)
-  return function(c,mac,n,pk,sk)
-    local m
+local function lua_crypto_box_open_detached(c,mac,n,pk,sk)
+  local m
 
-    if not sk then
-      return error('requires 5 arguments')
-    end
-
-    local clen = string_len(c)
-    local maclen = string_len(mac)
-
-    if maclen ~= macsize then
-      return error(string_format(
-        'wrong mac length, expected: %d',
-        macsize))
-    end
-
-    if string_len(n) ~= noncesize then
-      return error(string_format(
-        'wrong nonce length, expected: %d', noncesize))
-    end
-
-    if string_len(pk) ~= pksize then
-      return error(string_format(
-        'wrong public key length, expected: %d', pksize))
-    end
-
-    if string_len(sk) ~= sksize then
-      return error(string_format(
-        'wrong secret key length, expected: %d', sksize))
-    end
-
-    m = char_array(clen)
-
-    if tonumber(sodium_lib[fname](m,c,mac,clen,n,pk,sk)) == -1 then
-      return error(string_format('%s error',fname))
-    end
-
-    local m_str = ffi_string(m,clen)
-    sodium_lib.sodium_memzero(m,clen)
-    return m_str
+  if not sk then
+    return error('requires 5 arguments')
   end
+
+  local clen = string_len(c)
+  local maclen = string_len(mac)
+
+  if maclen ~= constants.crypto_box_MACBYTES then
+    return error(string_format(
+      'wrong mac length, expected: %d',
+      constants.crypto_box_MACBYTES))
+  end
+
+  if string_len(n) ~= constants.crypto_box_NONCEBYTES then
+    return error(string_format(
+      'wrong nonce length, expected: %d', constants.crypto_box_NONCEBYTES))
+  end
+
+  if string_len(pk) ~= constants.crypto_box_PUBLICKEYBYTES then
+    return error(string_format(
+      'wrong public key length, expected: %d', constants.crypto_box_PUBLICKEYBYTES))
+  end
+
+  if string_len(sk) ~= constants.crypto_box_SECRETKEYBYTES then
+    return error(string_format(
+      'wrong secret key length, expected: %d', constants.crypto_box_SECRETKEYBYTES))
+  end
+
+  m = char_array(clen)
+
+  if tonumber(sodium_lib.crypto_box_open_detached(m,c,mac,clen,n,pk,sk)) == -1 then
+    return error('crypto_box_open_detached error')
+  end
+
+  local m_str = ffi_string(m,clen)
+  sodium_lib.sodium_memzero(m,clen)
+  return m_str
 end
 
-local function lua_crypto_box_beforenm(fname,ksize,pksize,sksize)
-  return function(pk,sk)
-    local k
+local function lua_crypto_box_beforenm(pk,sk)
+  local k
 
-    if not sk then
-      return error('requires 2 arguments')
-    end
-
-    if string_len(pk) ~= pksize then
-      return error(string_format(
-        'wrong public key length, expected: %d', pksize))
-    end
-
-    if string_len(sk) ~= sksize then
-      return error(string_format(
-        'wrong secret key length, expected: %d', sksize))
-    end
-
-    k = char_array(ksize)
-
-    if tonumber(sodium_lib[fname](k,pk,sk)) == -1  then
-      return error(string_format('%s error',fname))
-    end
-
-    local k_str = ffi_string(k,ksize)
-    sodium_lib.sodium_memzero(k,ksize)
-    return k_str
+  if not sk then
+    return error('requires 2 arguments')
   end
+
+  if string_len(pk) ~= constants.crypto_box_PUBLICKEYBYTES then
+    return error(string_format(
+      'wrong public key length, expected: %d', constants.crypto_box_PUBLICKEYBYTES))
+  end
+
+  if string_len(sk) ~= constants.crypto_box_SECRETKEYBYTES then
+    return error(string_format(
+      'wrong secret key length, expected: %d', constants.crypto_box_SECRETKEYBYTES))
+  end
+
+  k = char_array(constants.crypto_box_BEFORENMBYTES)
+
+  if tonumber(sodium_lib.crypto_box_beforenm(k,pk,sk)) == -1  then
+    return error('crypto_box_beforenm error')
+  end
+
+  local k_str = ffi_string(k,constants.crypto_box_BEFORENMBYTES)
+  sodium_lib.sodium_memzero(k,constants.crypto_box_BEFORENMBYTES)
+  return k_str
 end
 
-local function lua_crypto_box_easy_afternm(fname,noncesize,macsize,ksize)
-  return function(m,n,k)
-    local c
+local function lua_crypto_box_easy_afternm(m,n,k)
+  local c
 
-    if not k then
-      return error('requires 3 arguments')
-    end
-
-    local mlen = string_len(m)
-    local clen = mlen + macsize
-
-    if string_len(n) ~= noncesize then
-      return error(string_format(
-        'wrong nonce length, expected: %d', noncesize))
-    end
-
-    if string_len(k) ~= ksize then
-      return error(string_format(
-        'wrong shared key length, expected: %d', ksize))
-    end
-
-    c = char_array(clen)
-
-    if tonumber(sodium_lib[fname](c,m,mlen,n,k)) == -1 then
-      return error(string_format('%s error',fname))
-    end
-    local c_str = ffi_string(c,clen)
-    sodium_lib.sodium_memzero(c,clen)
-    return c_str
+  if not k then
+    return error('requires 3 arguments')
   end
+
+  local mlen = string_len(m)
+  local clen = mlen + constants.crypto_box_MACBYTES
+
+  if string_len(n) ~= constants.crypto_box_NONCEBYTES then
+    return error(string_format(
+      'wrong nonce length, expected: %d', constants.crypto_box_NONCEBYTES))
+  end
+
+  if string_len(k) ~= constants.crypto_box_BEFORENMBYTES then
+    return error(string_format(
+      'wrong shared key length, expected: %d', constants.crypto_box_BEFORENMBYTES))
+  end
+
+  c = char_array(clen)
+
+  if tonumber(sodium_lib.crypto_box_easy_afternm(c,m,mlen,n,k)) == -1 then
+    return error('crypto_box_easy_afternm')
+  end
+  local c_str = ffi_string(c,clen)
+  sodium_lib.sodium_memzero(c,clen)
+  return c_str
 end
 
-local function lua_crypto_box_open_easy_afternm(fname,noncesize,macsize,ksize)
-  return function(c,n,k)
-    local m
+local function lua_crypto_box_open_easy_afternm(c,n,k)
+  local m
 
-    if not k then
-      return error('requires 3 arguments')
-    end
-
-    local clen = string_len(c)
-
-    if clen <= macsize then
-      return error(string_format(
-        'wrong cipher length, expected at least: %d',
-        macsize))
-    end
-
-    if string_len(n) ~= noncesize then
-      return error(string_format(
-        'wrong nonce length, expected: %d', noncesize))
-    end
-
-    if string_len(k) ~= ksize then
-      return error(string_format(
-        'wrong shared key length, expected: %d', ksize))
-    end
-
-    local mlen = clen - macsize
-
-    m = char_array(mlen)
-
-    if tonumber(sodium_lib[fname](m,c,clen,n,k)) == -1 then
-      return error(string_format('%s error',fname))
-    end
-
-    local m_str = ffi_string(m,mlen)
-    sodium_lib.sodium_memzero(m,mlen)
-    return m_str
+  if not k then
+    return error('requires 3 arguments')
   end
+
+  local clen = string_len(c)
+
+  if clen <= constants.crypto_box_MACBYTES then
+    return error(string_format(
+      'wrong cipher length, expected at least: %d',
+      constants.crypto_box_MACBYTES))
+  end
+
+  if string_len(n) ~= constants.crypto_box_NONCEBYTES then
+    return error(string_format(
+      'wrong nonce length, expected: %d', constants.crypto_box_NONCEBYTES))
+  end
+
+  if string_len(k) ~= constants.crypto_box_BEFORENMBYTES then
+    return error(string_format(
+      'wrong shared key length, expected: %d', constants.crypto_box_BEFORENMBYTES))
+  end
+
+  local mlen = clen - constants.crypto_box_MACBYTES
+
+  m = char_array(mlen)
+
+  if tonumber(sodium_lib.crypto_box_open_easy_afternm(m,c,clen,n,k)) == -1 then
+    return error('crypto_box_open_easy_afternm')
+  end
+
+  local m_str = ffi_string(m,mlen)
+  sodium_lib.sodium_memzero(m,mlen)
+  return m_str
 end
 
-local function lua_crypto_box_detached_afternm(fname,noncesize,macsize,ksize)
-  return function(m,n,k)
-    local c
-    local mac
+local function lua_crypto_box_detached_afternm(m,n,k)
+  local c
+  local mac
 
-    if not k then
-      return error('requires 3 arguments')
-    end
-
-    local mlen = string_len(m)
-
-    if string_len(n) ~= noncesize then
-      return error(string_format(
-        'wrong nonce length, expected: %d', noncesize))
-    end
-
-    if string_len(k) ~= ksize then
-      return error(string_format(
-        'wrong shared key length, expected: %d', ksize))
-    end
-
-    c = char_array(mlen)
-    mac = char_array(macsize)
-
-    if tonumber(sodium_lib[fname](c,mac,m,mlen,n,k)) == -1 then
-      return error(string_format('%s error',fname))
-    end
-
-    local c_str = ffi_string(c,mlen)
-    local mac_str = ffi_string(mac,macsize)
-
-    sodium_lib.sodium_memzero(c,mlen)
-    sodium_lib.sodium_memzero(mac,macsize)
-
-    return c_str, mac_str
+  if not k then
+    return error('requires 3 arguments')
   end
+
+  local mlen = string_len(m)
+
+  if string_len(n) ~= constants.crypto_box_NONCEBYTES then
+    return error(string_format(
+      'wrong nonce length, expected: %d', constants.crypto_box_NONCEBYTES))
+  end
+
+  if string_len(k) ~= constants.crypto_box_BEFORENMBYTES then
+    return error(string_format(
+      'wrong shared key length, expected: %d', constants.crypto_box_BEFORENMBYTES))
+  end
+
+  c = char_array(mlen)
+  mac = char_array(constants.crypto_box_MACBYTES)
+
+  if tonumber(sodium_lib.crypto_box_detached_afternm(c,mac,m,mlen,n,k)) == -1 then
+    return error('crypto_box_detached_afternm error')
+  end
+
+  local c_str = ffi_string(c,mlen)
+  local mac_str = ffi_string(mac,constants.crypto_box_MACBYTES)
+
+  sodium_lib.sodium_memzero(c,mlen)
+  sodium_lib.sodium_memzero(mac,constants.crypto_box_MACBYTES)
+
+  return c_str, mac_str
 end
 
-local function lua_crypto_box_open_detached_afternm(fname, noncesize, macsize, ksize)
-  return function(c,mac,n,k)
-    local m
+local function lua_crypto_box_open_detached_afternm(c,mac,n,k)
+  local m
 
-    if not k then
-      return error('requires 4 arguments')
-    end
-
-    local clen = string_len(c)
-    local maclen = string_len(mac)
-
-    if maclen ~= macsize then
-      return error(string_format(
-        'wrong mac length, expected: %d',
-        macsize))
-    end
-
-    if string_len(n) ~= noncesize then
-      return error(string_format(
-        'wrong nonce length, expected: %d', noncesize))
-    end
-
-    if string_len(k) ~= ksize then
-      return error(string_format(
-        'wrong shared key length, expected: %d', ksize))
-    end
-
-    m = char_array(clen)
-
-    if tonumber(sodium_lib[fname](m,c,mac,clen,n,k)) == -1 then
-      return error(string_format('%s error',fname))
-    end
-    local m_str = ffi_string(m,clen)
-    sodium_lib.sodium_memzero(m,clen)
-    return m_str
+  if not k then
+    return error('requires 4 arguments')
   end
+
+  local clen = string_len(c)
+  local maclen = string_len(mac)
+
+  if maclen ~= constants.crypto_box_MACBYTES then
+    return error(string_format(
+      'wrong mac length, expected: %d',
+      constants.crypto_box_MACBYTES))
+  end
+
+  if string_len(n) ~= constants.crypto_box_NONCEBYTES then
+    return error(string_format(
+      'wrong nonce length, expected: %d', constants.crypto_box_NONCEBYTES))
+  end
+
+  if string_len(k) ~= constants.crypto_box_BEFORENMBYTES then
+    return error(string_format(
+      'wrong shared key length, expected: %d', constants.crypto_box_BEFORENMBYTES))
+  end
+
+  m = char_array(clen)
+
+  if tonumber(sodium_lib.crypto_box_open_detached_afternm(m,c,mac,clen,n,k)) == -1 then
+    return error('crypto_box_open_detached_afternm error')
+  end
+  local m_str = ffi_string(m,clen)
+  sodium_lib.sodium_memzero(m,clen)
+  return m_str
 end
 
 if sodium_lib.sodium_init() == -1 then
   return error('sodium_init error')
 end
 
-local M = {}
+local M = {
+  crypto_box_keypair = lua_crypto_box_keypair,
+  crypto_box_seed_keypair = lua_crypto_box_seed_keypair,
+  crypto_box = lua_crypto_box,
+  crypto_box_open = lua_crypto_box_open,
+  crypto_box_easy = lua_crypto_box_easy,
+  crypto_box_open_easy = lua_crypto_box_open_easy,
+  crypto_box_detached = lua_crypto_box_detached,
+  crypto_box_open_detached = lua_crypto_box_open_detached,
+  crypto_box_beforenm = lua_crypto_box_beforenm,
+  crypto_box_easy_afternm = lua_crypto_box_easy_afternm,
+  crypto_box_open_easy_afternm = lua_crypto_box_open_easy_afternm,
+  crypto_box_detached_afternm = lua_crypto_box_detached_afternm,
+  crypto_box_open_detached_afternm = lua_crypto_box_open_detached_afternm,
+}
 
 for k,v in pairs(constants) do
   M[k] = v
 end
-
-M.crypto_box_keypair = lua_crypto_box_keypair(
-  'crypto_box_keypair',
-  constants.crypto_box_PUBLICKEYBYTES,
-  constants.crypto_box_SECRETKEYBYTES)
-
-M.crypto_box_seed_keypair = lua_crypto_box_seed_keypair(
-  'crypto_box_seed_keypair',
-  constants.crypto_box_PUBLICKEYBYTES,
-  constants.crypto_box_SECRETKEYBYTES,
-  constants.crypto_box_SECRETKEYBYTES)
-
-M.crypto_box = lua_crypto_box(
-  'crypto_box',
-  constants.crypto_box_NONCEBYTES,
-  constants.crypto_box_MACBYTES,
-  constants.crypto_box_PUBLICKEYBYTES,
-  constants.crypto_box_SECRETKEYBYTES,
-  constants.crypto_box_BOXZEROBYTES,
-  constants.crypto_box_ZEROBYTES)
-
-M.crypto_box_open = lua_crypto_box_open(
-  'crypto_box_open',
-  constants.crypto_box_NONCEBYTES,
-  constants.crypto_box_MACBYTES,
-  constants.crypto_box_PUBLICKEYBYTES,
-  constants.crypto_box_SECRETKEYBYTES,
-  constants.crypto_box_ZEROBYTES,
-  constants.crypto_box_BOXZEROBYTES)
-
-M.crypto_box_easy = lua_crypto_box_easy(
-  'crypto_box_easy',
-  constants.crypto_box_NONCEBYTES,
-  constants.crypto_box_MACBYTES,
-  constants.crypto_box_PUBLICKEYBYTES,
-  constants.crypto_box_SECRETKEYBYTES)
-
-M.crypto_box_open_easy = lua_crypto_box_open_easy(
-  'crypto_box_open_easy',
-  constants.crypto_box_NONCEBYTES,
-  constants.crypto_box_MACBYTES,
-  constants.crypto_box_PUBLICKEYBYTES,
-  constants.crypto_box_SECRETKEYBYTES)
-
-M.crypto_box_detached = lua_crypto_box_detached(
-  'crypto_box_detached',
-  constants.crypto_box_NONCEBYTES,
-  constants.crypto_box_MACBYTES,
-  constants.crypto_box_PUBLICKEYBYTES,
-  constants.crypto_box_SECRETKEYBYTES)
-
-M.crypto_box_open_detached = lua_crypto_box_open_detached(
-  'crypto_box_open_detached',
-  constants.crypto_box_NONCEBYTES,
-  constants.crypto_box_MACBYTES,
-  constants.crypto_box_PUBLICKEYBYTES,
-  constants.crypto_box_SECRETKEYBYTES)
-
-M.crypto_box_beforenm = lua_crypto_box_beforenm(
-  'crypto_box_beforenm',
-  constants.crypto_box_BEFORENMBYTES,
-  constants.crypto_box_PUBLICKEYBYTES,
-  constants.crypto_box_SECRETKEYBYTES)
-
-M.crypto_box_easy_afternm = lua_crypto_box_easy_afternm(
-  'crypto_box_easy_afternm',
-  constants.crypto_box_NONCEBYTES,
-  constants.crypto_box_MACBYTES,
-  constants.crypto_box_BEFORENMBYTES)
-
-M.crypto_box_open_easy_afternm = lua_crypto_box_open_easy_afternm(
-  'crypto_box_open_easy_afternm',
-  constants.crypto_box_NONCEBYTES,
-  constants.crypto_box_MACBYTES,
-  constants.crypto_box_BEFORENMBYTES)
-
-M.crypto_box_detached_afternm = lua_crypto_box_detached_afternm(
-  'crypto_box_detached_afternm',
-  constants.crypto_box_NONCEBYTES,
-  constants.crypto_box_MACBYTES,
-  constants.crypto_box_BEFORENMBYTES)
-
-M.crypto_box_open_detached_afternm = lua_crypto_box_open_detached_afternm(
-  'crypto_box_open_detached_afternm',
-  constants.crypto_box_NONCEBYTES,
-  constants.crypto_box_MACBYTES,
-  constants.crypto_box_BEFORENMBYTES)
 
 return M
 

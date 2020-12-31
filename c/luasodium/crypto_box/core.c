@@ -453,8 +453,8 @@ ls_crypto_box_open_easy_afternm(lua_State *L) {
     }
     lua_pop(L,1);
 
-    if(crypto_box_easy_afternm(m,c,clen,n,k) == -1) {
-        return luaL_error(L,"crypto_box_easy_afternm error");
+    if(crypto_box_open_easy_afternm(m,c,clen,n,k) == -1) {
+        return luaL_error(L,"crypto_box_open_easy_afternm error");
     }
 
     lua_pushlstring(L,(const char *)m,mlen);
