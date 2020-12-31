@@ -33,6 +33,27 @@ This is how the version on [OPM](https://opm.openresty.org/package/jprjr/luasodi
 is published, since OPM doesn't allow C modules. In this case,
 it will use `ffi.load` to locate the `sodium` library.
 
+## Status and roadmap
+
+I noticed that a lot of `libsodium` functions are pretty similar, so
+I initially tried using closures to encapsulate functions. This wound
+up creating a lot of overhead on my part - I created structures
+to track everything, and had closures referencing those structures.
+
+Now I just have a 1-to-1 mapping of a `libsodium` function
+to a Lua wrapper. I may revisit this and go with a simpler
+closure implementation in the future.
+
+I don't plan to cover *all* the libsodium API, at least not for
+version `1.0.0`. There's a lot of low-level functions that
+libsodium [is planning to remove](https://github.com/jedisct1/libsodium/issues/1017),
+so I'm going to prioritize covering the high-level functions.
+
+I'll mark this as version `1.0.0` when I've covered all the original,
+high-level[NaCl](https://nacl.cr.yp.to/index.html) functions, and
+any equivalent "easy"/"detached" variants that `libsodium` has added.
+I think at that point, this library should be pretty usable.
+
 ## Caveats
 
 `libsodium` includes functions for secure programming, like allocating
@@ -42,14 +63,15 @@ the stack, and so on.
 I'm not sure how possible it is to implement these kinds of functions
 in Lua. In Lua, I allocate memory using `lua_newuserdata` or LuaJIT's
 `ffi.new()`, so that Lua can keep track of it and garbage collect it.
-
-I could write wrappers around these methods that use metatables to
-free memory, but then you get into how to access/use the memory -
-should it be like an array, and you get/set single bytes?
+Before releasing temporary memory back to the garbage collector, I do
+call `sodium_memzero` to wipe it - but this only applies to scratch
+memory.
 
 If you're concerned with making absolutely sure memory is cleared
 out, you should likely code your secure portions in C and use
-`libsodium`'s secure memory functions.
+`libsodium`'s secure memory functions, or forego the standard
+Lua interpreter and write something with a custom allocator
+that uses `sodium_malloc` and `sodium_free`.
 
 ## Installation
 
