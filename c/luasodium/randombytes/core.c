@@ -34,8 +34,8 @@ ls_randombytes_buf(lua_State *L) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
-
     lua_pop(L,1);
+
     randombytes_buf(buf,s);
     lua_pushlstring(L,buf,s);
     sodium_memzero(buf,s);
@@ -68,9 +68,10 @@ ls_randombytes_buf_deterministic(lua_State *L) {
         return lua_error(L);
     }
     lua_pop(L,1);
-    randombytes_buf_deterministic(buf,s,(const unsigned char *)seed);
-    lua_pushlstring(L,buf,s);
 
+    randombytes_buf_deterministic(buf,s,(const unsigned char *)seed);
+
+    lua_pushlstring(L,buf,s);
     sodium_memzero(buf,s);
 
     return 1;
