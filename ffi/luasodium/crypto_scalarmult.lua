@@ -42,7 +42,9 @@ if #c_pointers == 2 and
   sodium_lib = {}
 
   for k,f in pairs(c_pointers[1]) do
-    sodium_lib[k] = ffi.cast(string_format(signatures[k],'(*)'),f)
+    if signatures[k] then
+      sodium_lib[k] = ffi.cast(string_format(signatures[k],'(*)'),f)
+    end
   end
 
   constants = c_pointers[2]
@@ -70,8 +72,10 @@ else
   for f,sig in pairs(signatures) do
     ffi.cdef(string_format(sig,f))
   end
-
 end
+
+local crypto_scalarmult_SCALARBYTES = constants.crypto_scalarmult_SCALARBYTES
+local crypto_scalarmult_BYTES       = constants.crypto_scalarmult_BYTES
 
 local function lua_crypto_scalarmult_base(n)
   local q
@@ -79,18 +83,18 @@ local function lua_crypto_scalarmult_base(n)
     return error('requires 1 argument')
   end
 
-  if(string_len(n) ~= constants.crypto_scalarmult_SCALARBYTES) then
+  if(string_len(n) ~= crypto_scalarmult_SCALARBYTES) then
     return error(string_format(
       'wrong scalar length, expected: %d',
-      constants.crypto_scalarmult_SCALARBYTES
+      crypto_scalarmult_SCALARBYTES
     ))
   end
-  q = char_array(constants.crypto_scalarmult_BYTES)
+  q = char_array(crypto_scalarmult_BYTES)
   if sodium_lib.crypto_scalarmult_base(q,n) == -1 then
     return error('crypto_scalarmult_base error')
   end
-  local q_str = ffi_string(q,constants.crypto_scalarmult_BYTES)
-  sodium_lib.sodium_memzero(q,constants.crypto_scalarmult_BYTES)
+  local q_str = ffi_string(q,crypto_scalarmult_BYTES)
+  sodium_lib.sodium_memzero(q,crypto_scalarmult_BYTES)
   return q_str
 end
 
@@ -100,26 +104,26 @@ local function lua_crypto_scalarmult(n,p)
     return error('requires 2 arguments')
   end
 
-  if(string_len(n) ~= constants.crypto_scalarmult_SCALARBYTES) then
+  if(string_len(n) ~= crypto_scalarmult_SCALARBYTES) then
     return error(string.format(
       'wrong scalar length, expected: %d',
-      constants.crypto_scalarmult_SCALARBYTES
+      crypto_scalarmult_SCALARBYTES
     ))
   end
 
-  if(string_len(p) ~= constants.crypto_scalarmult_BYTES) then
+  if(string_len(p) ~= crypto_scalarmult_BYTES) then
     return error(string_format(
       'wrong scalar length, expected: %d',
-      constants.crypto_scalarmult_BYTES
+      crypto_scalarmult_BYTES
     ))
   end
 
-  q = char_array(constants.crypto_scalarmult_BYTES)
+  q = char_array(crypto_scalarmult_BYTES)
   if sodium_lib.crypto_scalarmult(q,n,p) == -1 then
     return error('crypto_scalarmult error')
   end
-  local q_str = ffi_string(q,constants.crypto_scalarmult_BYTES)
-  sodium_lib.sodium_memzero(q,constants.crypto_scalarmult_BYTES)
+  local q_str = ffi_string(q,crypto_scalarmult_BYTES)
+  sodium_lib.sodium_memzero(q,crypto_scalarmult_BYTES)
   return q_str
 end
 

@@ -127,7 +127,9 @@ if #c_pointers == 2 and
   sodium_lib = {}
 
   for k,f in pairs(c_pointers[1]) do
-    sodium_lib[k] = ffi.cast(string_format(signatures[k],'(*)'),f)
+    if signatures[k] then
+      sodium_lib[k] = ffi.cast(string_format(signatures[k],'(*)'),f)
+    end
   end
 
   constants = c_pointers[2]
@@ -158,18 +160,27 @@ else
 
 end
 
+local crypto_box_PUBLICKEYBYTES = constants.crypto_box_PUBLICKEYBYTES
+local crypto_box_SECRETKEYBYTES = constants.crypto_box_SECRETKEYBYTES
+local crypto_box_MACBYTES       = constants.crypto_box_MACBYTES
+local crypto_box_NONCEBYTES     = constants.crypto_box_NONCEBYTES
+local crypto_box_SEEDBYTES      = constants.crypto_box_SEEDBYTES
+local crypto_box_BEFORENMBYTES  = constants.crypto_box_BEFORENMBYTES
+local crypto_box_BOXZEROBYTES   = constants.crypto_box_BOXZEROBYTES
+local crypto_box_ZEROBYTES      = constants.crypto_box_ZEROBYTES
+
 local function lua_crypto_box_keypair()
-  local pk = char_array(constants.crypto_box_PUBLICKEYBYTES)
-  local sk = char_array(constants.crypto_box_SECRETKEYBYTES)
+  local pk = char_array(crypto_box_PUBLICKEYBYTES)
+  local sk = char_array(crypto_box_SECRETKEYBYTES)
   if tonumber(sodium_lib.crypto_box_keypair(pk,sk)) == -1 then
     return error('crypto_box_keypair error')
   end
 
-  local pk_str = ffi_string(pk,constants.crypto_box_PUBLICKEYBYTES)
-  local sk_str = ffi_string(sk,constants.crypto_box_SECRETKEYBYTES)
+  local pk_str = ffi_string(pk,crypto_box_PUBLICKEYBYTES)
+  local sk_str = ffi_string(sk,crypto_box_SECRETKEYBYTES)
 
-  sodium_lib.sodium_memzero(pk,constants.crypto_box_PUBLICKEYBYTES)
-  sodium_lib.sodium_memzero(sk,constants.crypto_box_SECRETKEYBYTES)
+  sodium_lib.sodium_memzero(pk,crypto_box_PUBLICKEYBYTES)
+  sodium_lib.sodium_memzero(sk,crypto_box_SECRETKEYBYTES)
   return pk_str, sk_str
 end
 
@@ -177,20 +188,20 @@ local function lua_crypto_box_seed_keypair(seed)
   if not seed then
     return error('requires 1 argument')
   end
-  if string_len(seed) ~= constants.crypto_box_SEEDBYTES then
+  if string_len(seed) ~= crypto_box_SEEDBYTES then
     return error(string_format(
-      'wrong seed length, expected: %d', constants.crypto_box_SEEDBYTES))
+      'wrong seed length, expected: %d', crypto_box_SEEDBYTES))
   end
-  local pk = char_array(constants.crypto_box_PUBLICKEYBYTES)
-  local sk = char_array(constants.crypto_box_SECRETKEYBYTES)
+  local pk = char_array(crypto_box_PUBLICKEYBYTES)
+  local sk = char_array(crypto_box_SECRETKEYBYTES)
   if tonumber(sodium_lib.crypto_box_seed_keypair(pk,sk,seed)) == -1 then
     return error('crypto_box_seed_keypair error')
   end
 
-  local pk_str = ffi_string(pk,constants.crypto_box_PUBLICKEYBYTES)
-  local sk_str = ffi_string(sk,constants.crypto_box_SECRETKEYBYTES)
-  sodium_lib.sodium_memzero(pk,constants.crypto_box_PUBLICKEYBYTES)
-  sodium_lib.sodium_memzero(sk,constants.crypto_box_SECRETKEYBYTES)
+  local pk_str = ffi_string(pk,crypto_box_PUBLICKEYBYTES)
+  local sk_str = ffi_string(sk,crypto_box_SECRETKEYBYTES)
+  sodium_lib.sodium_memzero(pk,crypto_box_PUBLICKEYBYTES)
+  sodium_lib.sodium_memzero(sk,crypto_box_SECRETKEYBYTES)
   return pk_str, sk_str
 end
 
@@ -209,21 +220,21 @@ local function lua_crypto_box_easy(m,n,pk,sk)
   end
 
   local mlen = string_len(m)
-  local clen = mlen + constants.crypto_box_MACBYTES
+  local clen = mlen + crypto_box_MACBYTES
 
-  if string_len(n) ~= constants.crypto_box_NONCEBYTES then
+  if string_len(n) ~= crypto_box_NONCEBYTES then
     return error(string_format(
-      'wrong nonce length, expected: %d', constants.crypto_box_NONCEBYTES))
+      'wrong nonce length, expected: %d', crypto_box_NONCEBYTES))
   end
 
-  if string_len(pk) ~= constants.crypto_box_PUBLICKEYBYTES then
+  if string_len(pk) ~= crypto_box_PUBLICKEYBYTES then
     return error(string_format(
-      'wrong public key length, expected: %d', constants.crypto_box_PUBLICKEYBYTES))
+      'wrong public key length, expected: %d', crypto_box_PUBLICKEYBYTES))
   end
 
-  if string_len(sk) ~= constants.crypto_box_SECRETKEYBYTES then
+  if string_len(sk) ~= crypto_box_SECRETKEYBYTES then
     return error(string_format(
-      'wrong secret key length, expected: %d', constants.crypto_box_SECRETKEYBYTES))
+      'wrong secret key length, expected: %d', crypto_box_SECRETKEYBYTES))
   end
 
   c = char_array(clen)
@@ -245,28 +256,28 @@ local function lua_crypto_box_open_easy(c,n,pk,sk)
 
   local clen = string_len(c)
 
-  if clen <= constants.crypto_box_MACBYTES then
+  if clen <= crypto_box_MACBYTES then
     return error(string_format(
       'wrong cipher length, expected at least: %d',
-      constants.crypto_box_MACBYTES))
+      crypto_box_MACBYTES))
   end
 
-  if string_len(n) ~= constants.crypto_box_NONCEBYTES then
+  if string_len(n) ~= crypto_box_NONCEBYTES then
     return error(string_format(
-      'wrong nonce length, expected: %d', constants.crypto_box_NONCEBYTES))
+      'wrong nonce length, expected: %d', crypto_box_NONCEBYTES))
   end
 
-  if string_len(pk) ~= constants.crypto_box_PUBLICKEYBYTES then
+  if string_len(pk) ~= crypto_box_PUBLICKEYBYTES then
     return error(string_format(
-      'wrong public key length, expected: %d', constants.crypto_box_PUBLICKEYBYTES))
+      'wrong public key length, expected: %d', crypto_box_PUBLICKEYBYTES))
   end
 
-  if string_len(sk) ~= constants.crypto_box_SECRETKEYBYTES then
+  if string_len(sk) ~= crypto_box_SECRETKEYBYTES then
     return error(string_format(
-      'wrong secret key length, expected: %d', constants.crypto_box_SECRETKEYBYTES))
+      'wrong secret key length, expected: %d', crypto_box_SECRETKEYBYTES))
   end
 
-  local mlen = clen - constants.crypto_box_MACBYTES
+  local mlen = clen - crypto_box_MACBYTES
 
   m = char_array(mlen)
 
@@ -289,33 +300,33 @@ local function lua_crypto_box_detached(m,n,pk,sk)
 
   local mlen = string_len(m)
 
-  if string_len(n) ~= constants.crypto_box_NONCEBYTES then
+  if string_len(n) ~= crypto_box_NONCEBYTES then
     return error(string_format(
-      'wrong nonce length, expected: %d', constants.crypto_box_NONCEBYTES))
+      'wrong nonce length, expected: %d', crypto_box_NONCEBYTES))
   end
 
-  if string_len(pk) ~= constants.crypto_box_PUBLICKEYBYTES then
+  if string_len(pk) ~= crypto_box_PUBLICKEYBYTES then
     return error(string_format(
-      'wrong public key length, expected: %d', constants.crypto_box_PUBLICKEYBYTES))
+      'wrong public key length, expected: %d', crypto_box_PUBLICKEYBYTES))
   end
 
-  if string_len(sk) ~= constants.crypto_box_SECRETKEYBYTES then
+  if string_len(sk) ~= crypto_box_SECRETKEYBYTES then
     return error(string_format(
-      'wrong secret key length, expected: %d', constants.crypto_box_SECRETKEYBYTES))
+      'wrong secret key length, expected: %d', crypto_box_SECRETKEYBYTES))
   end
 
   c = char_array(mlen)
-  mac = char_array(constants.crypto_box_MACBYTES)
+  mac = char_array(crypto_box_MACBYTES)
 
   if tonumber(sodium_lib.crypto_box_detached(c,mac,m,mlen,n,pk,sk)) == -1 then
     return error('crypto_box_detached error')
   end
 
   local c_str = ffi_string(c,mlen)
-  local mac_str = ffi_string(mac,constants.crypto_box_MACBYTES)
+  local mac_str = ffi_string(mac,crypto_box_MACBYTES)
 
   sodium_lib.sodium_memzero(c,mlen)
-  sodium_lib.sodium_memzero(mac,constants.crypto_box_MACBYTES)
+  sodium_lib.sodium_memzero(mac,crypto_box_MACBYTES)
 
   return c_str, mac_str
 end
@@ -330,25 +341,25 @@ local function lua_crypto_box_open_detached(c,mac,n,pk,sk)
   local clen = string_len(c)
   local maclen = string_len(mac)
 
-  if maclen ~= constants.crypto_box_MACBYTES then
+  if maclen ~= crypto_box_MACBYTES then
     return error(string_format(
       'wrong mac length, expected: %d',
-      constants.crypto_box_MACBYTES))
+      crypto_box_MACBYTES))
   end
 
-  if string_len(n) ~= constants.crypto_box_NONCEBYTES then
+  if string_len(n) ~= crypto_box_NONCEBYTES then
     return error(string_format(
-      'wrong nonce length, expected: %d', constants.crypto_box_NONCEBYTES))
+      'wrong nonce length, expected: %d', crypto_box_NONCEBYTES))
   end
 
-  if string_len(pk) ~= constants.crypto_box_PUBLICKEYBYTES then
+  if string_len(pk) ~= crypto_box_PUBLICKEYBYTES then
     return error(string_format(
-      'wrong public key length, expected: %d', constants.crypto_box_PUBLICKEYBYTES))
+      'wrong public key length, expected: %d', crypto_box_PUBLICKEYBYTES))
   end
 
-  if string_len(sk) ~= constants.crypto_box_SECRETKEYBYTES then
+  if string_len(sk) ~= crypto_box_SECRETKEYBYTES then
     return error(string_format(
-      'wrong secret key length, expected: %d', constants.crypto_box_SECRETKEYBYTES))
+      'wrong secret key length, expected: %d', crypto_box_SECRETKEYBYTES))
   end
 
   m = char_array(clen)
@@ -369,24 +380,24 @@ local function lua_crypto_box_beforenm(pk,sk)
     return error('requires 2 arguments')
   end
 
-  if string_len(pk) ~= constants.crypto_box_PUBLICKEYBYTES then
+  if string_len(pk) ~= crypto_box_PUBLICKEYBYTES then
     return error(string_format(
-      'wrong public key length, expected: %d', constants.crypto_box_PUBLICKEYBYTES))
+      'wrong public key length, expected: %d', crypto_box_PUBLICKEYBYTES))
   end
 
-  if string_len(sk) ~= constants.crypto_box_SECRETKEYBYTES then
+  if string_len(sk) ~= crypto_box_SECRETKEYBYTES then
     return error(string_format(
-      'wrong secret key length, expected: %d', constants.crypto_box_SECRETKEYBYTES))
+      'wrong secret key length, expected: %d', crypto_box_SECRETKEYBYTES))
   end
 
-  k = char_array(constants.crypto_box_BEFORENMBYTES)
+  k = char_array(crypto_box_BEFORENMBYTES)
 
   if tonumber(sodium_lib.crypto_box_beforenm(k,pk,sk)) == -1  then
     return error('crypto_box_beforenm error')
   end
 
-  local k_str = ffi_string(k,constants.crypto_box_BEFORENMBYTES)
-  sodium_lib.sodium_memzero(k,constants.crypto_box_BEFORENMBYTES)
+  local k_str = ffi_string(k,crypto_box_BEFORENMBYTES)
+  sodium_lib.sodium_memzero(k,crypto_box_BEFORENMBYTES)
   return k_str
 end
 
@@ -398,16 +409,16 @@ local function lua_crypto_box_easy_afternm(m,n,k)
   end
 
   local mlen = string_len(m)
-  local clen = mlen + constants.crypto_box_MACBYTES
+  local clen = mlen + crypto_box_MACBYTES
 
-  if string_len(n) ~= constants.crypto_box_NONCEBYTES then
+  if string_len(n) ~= crypto_box_NONCEBYTES then
     return error(string_format(
-      'wrong nonce length, expected: %d', constants.crypto_box_NONCEBYTES))
+      'wrong nonce length, expected: %d', crypto_box_NONCEBYTES))
   end
 
-  if string_len(k) ~= constants.crypto_box_BEFORENMBYTES then
+  if string_len(k) ~= crypto_box_BEFORENMBYTES then
     return error(string_format(
-      'wrong shared key length, expected: %d', constants.crypto_box_BEFORENMBYTES))
+      'wrong shared key length, expected: %d', crypto_box_BEFORENMBYTES))
   end
 
   c = char_array(clen)
@@ -429,23 +440,23 @@ local function lua_crypto_box_open_easy_afternm(c,n,k)
 
   local clen = string_len(c)
 
-  if clen <= constants.crypto_box_MACBYTES then
+  if clen <= crypto_box_MACBYTES then
     return error(string_format(
       'wrong cipher length, expected at least: %d',
-      constants.crypto_box_MACBYTES))
+      crypto_box_MACBYTES))
   end
 
-  if string_len(n) ~= constants.crypto_box_NONCEBYTES then
+  if string_len(n) ~= crypto_box_NONCEBYTES then
     return error(string_format(
-      'wrong nonce length, expected: %d', constants.crypto_box_NONCEBYTES))
+      'wrong nonce length, expected: %d', crypto_box_NONCEBYTES))
   end
 
-  if string_len(k) ~= constants.crypto_box_BEFORENMBYTES then
+  if string_len(k) ~= crypto_box_BEFORENMBYTES then
     return error(string_format(
-      'wrong shared key length, expected: %d', constants.crypto_box_BEFORENMBYTES))
+      'wrong shared key length, expected: %d', crypto_box_BEFORENMBYTES))
   end
 
-  local mlen = clen - constants.crypto_box_MACBYTES
+  local mlen = clen - crypto_box_MACBYTES
 
   m = char_array(mlen)
 
@@ -468,28 +479,28 @@ local function lua_crypto_box_detached_afternm(m,n,k)
 
   local mlen = string_len(m)
 
-  if string_len(n) ~= constants.crypto_box_NONCEBYTES then
+  if string_len(n) ~= crypto_box_NONCEBYTES then
     return error(string_format(
-      'wrong nonce length, expected: %d', constants.crypto_box_NONCEBYTES))
+      'wrong nonce length, expected: %d', crypto_box_NONCEBYTES))
   end
 
-  if string_len(k) ~= constants.crypto_box_BEFORENMBYTES then
+  if string_len(k) ~= crypto_box_BEFORENMBYTES then
     return error(string_format(
-      'wrong shared key length, expected: %d', constants.crypto_box_BEFORENMBYTES))
+      'wrong shared key length, expected: %d', crypto_box_BEFORENMBYTES))
   end
 
   c = char_array(mlen)
-  mac = char_array(constants.crypto_box_MACBYTES)
+  mac = char_array(crypto_box_MACBYTES)
 
   if tonumber(sodium_lib.crypto_box_detached_afternm(c,mac,m,mlen,n,k)) == -1 then
     return error('crypto_box_detached_afternm error')
   end
 
   local c_str = ffi_string(c,mlen)
-  local mac_str = ffi_string(mac,constants.crypto_box_MACBYTES)
+  local mac_str = ffi_string(mac,crypto_box_MACBYTES)
 
   sodium_lib.sodium_memzero(c,mlen)
-  sodium_lib.sodium_memzero(mac,constants.crypto_box_MACBYTES)
+  sodium_lib.sodium_memzero(mac,crypto_box_MACBYTES)
 
   return c_str, mac_str
 end
@@ -504,20 +515,20 @@ local function lua_crypto_box_open_detached_afternm(c,mac,n,k)
   local clen = string_len(c)
   local maclen = string_len(mac)
 
-  if maclen ~= constants.crypto_box_MACBYTES then
+  if maclen ~= crypto_box_MACBYTES then
     return error(string_format(
       'wrong mac length, expected: %d',
-      constants.crypto_box_MACBYTES))
+      crypto_box_MACBYTES))
   end
 
-  if string_len(n) ~= constants.crypto_box_NONCEBYTES then
+  if string_len(n) ~= crypto_box_NONCEBYTES then
     return error(string_format(
-      'wrong nonce length, expected: %d', constants.crypto_box_NONCEBYTES))
+      'wrong nonce length, expected: %d', crypto_box_NONCEBYTES))
   end
 
-  if string_len(k) ~= constants.crypto_box_BEFORENMBYTES then
+  if string_len(k) ~= crypto_box_BEFORENMBYTES then
     return error(string_format(
-      'wrong shared key length, expected: %d', constants.crypto_box_BEFORENMBYTES))
+      'wrong shared key length, expected: %d', crypto_box_BEFORENMBYTES))
   end
 
   m = char_array(clen)

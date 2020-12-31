@@ -107,7 +107,9 @@ if #c_pointers == 2 and
   sodium_lib = {}
 
   for k,f in pairs(c_pointers[1]) do
-    sodium_lib[k] = ffi.cast(string_format(signatures[k],'(*)'),f)
+    if signatures[k] then
+      sodium_lib[k] = ffi.cast(string_format(signatures[k],'(*)'),f)
+    end
   end
 
   for k,v in pairs(c_pointers[2]) do
@@ -133,11 +135,16 @@ else
   end
 end
 
+local sodium_base64_VARIANT_ORIGINAL = constants.sodium_base64_VARIANT_ORIGINAL
+local sodium_base64_VARIANT_ORIGINAL_NO_PADDING = constants.sodium_base64_VARIANT_ORIGINAL_NO_PADDING
+local sodium_base64_VARIANT_URLSAFE = constants.sodium_base64_VARIANT_URLSAFE
+local sodium_base64_VARIANT_URLSAFE_NO_PADDING = constants.sodium_base64_VARIANT_URLSAFE_NO_PADDING
+
 local base64_variants = {
-  [constants.sodium_base64_VARIANT_ORIGINAL] = true,
-  [constants.sodium_base64_VARIANT_ORIGINAL_NO_PADDING] = true,
-  [constants.sodium_base64_VARIANT_URLSAFE] = true,
-  [constants.sodium_base64_VARIANT_URLSAFE_NO_PADDING] = true,
+  [sodium_base64_VARIANT_ORIGINAL] = true,
+  [sodium_base64_VARIANT_ORIGINAL_NO_PADDING] = true,
+  [sodium_base64_VARIANT_URLSAFE] = true,
+  [sodium_base64_VARIANT_URLSAFE_NO_PADDING] = true,
 }
 
 local function luasodium_init()

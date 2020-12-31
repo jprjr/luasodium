@@ -56,7 +56,9 @@ if #c_pointers == 2 and
   sodium_lib = {}
 
   for k,f in pairs(c_pointers[1]) do
-    sodium_lib[k] = ffi.cast(string_format(signatures[k],'(*)'),f)
+    if signatures[k] then
+      sodium_lib[k] = ffi.cast(string_format(signatures[k],'(*)'),f)
+    end
   end
 
   constants = c_pointers[2]
@@ -89,6 +91,8 @@ else
 
 end
 
+local randombytes_SEEDBYTES = constants.randombytes_SEEDBYTES
+
 local function lua_randombytes_random()
   return tonumber(sodium_lib.randombytes_random())
 end
@@ -115,7 +119,7 @@ local function lua_randombytes_buf_deterministic(size,seed)
   if not seed then
     return error('requires 2 arguments')
   end
-  if string_len(seed) ~= constants.randombytes_SEEDBYTES then
+  if string_len(seed) ~= randombytes_SEEDBYTES then
     return error('wrong seed length')
   end
   local tmp = char_array(size)
