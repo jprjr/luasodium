@@ -62,6 +62,18 @@ build = {
       incdirs = "$(SODIUM_INCDIR)",
       libraries = "sodium",
     },
+    ["luasodium.crypto_sign.core"] = {
+      sources = { "c/luasodium/crypto_sign/core.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
+    },
+    ["luasodium.crypto_sign.ffi"] = {
+      sources = { "c/luasodium/crypto_sign/ffi.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
+    },
     ["luasodium.randombytes.core"] = {
       sources = { "c/luasodium/randombytes/core.c" },
       libdirs = "$(SODIUM_LIBDIR)",
@@ -99,6 +111,7 @@ build = {
     ["luasodium.crypto_box"] = "lua/luasodium/crypto_box.lua",
     ["luasodium.crypto_scalarmult"] = "lua/luasodium/crypto_scalarmult.lua",
     ["luasodium.crypto_secretbox"] = "lua/luasodium/crypto_secretbox.lua",
+    ["luasodium.crypto_sign"] = "lua/luasodium/crypto_sign.lua",
     ["luasodium.randombytes"] = "lua/luasodium/randombytes.lua",
     ["luasodium.utils"] = "lua/luasodium/utils.lua",
   },
