@@ -1,6 +1,9 @@
 /aux/bin2c
 *.o
 *.so
+*.a
+*.dll
+*.lib
 *.luah
 *.tar.gz
 *.tar.xz

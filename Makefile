@@ -1,41 +1,45 @@
-.PHONY: release
+.PHONY: release directories test hmm
 
 HOST_CC = cc
 
+LUASODIUM_LUAS = \
+  luasodium.lua \
+  luasodium/core.lua \
+  luasodium/ffi.lua \
+  $(addsuffix,.lua,$(addprefix luasodium/,$(LUASODIUM_MODS)))
+
 include Makefile.dist
 
-LUASODIUM_FFIS = \
-  c/luasodium/utils/core.luah \
-  c/luasodium/version/core.luah \
-  c/luasodium/crypto_secretbox/core.luah \
-  c/luasodium/crypto_sign/core.luah \
-  c/luasodium/crypto_box/core.luah \
-  c/luasodium/crypto_auth/core.luah \
-  c/luasodium/crypto_scalarmult/core.luah \
-  c/luasodium/randombytes/core.luah
+$(shell mkdir -p $(LUASODIUM_LIB_DIRS) luasodium)
+$(shell cp ffi/luasodium.lua luasodium.lua)
 
-c/luasodium/version/core.luah: ffi/luasodium/version.lua aux/bin2c
-	./aux/bin2c $< $@ $(patsubst %.lua,%_lua,$(notdir $<))
+LUASODIUM_LOCAL_DLLS = $(LUASODIUM_DLLS:c/%=%)
+LUASODIUM_LOCAL_LIBS = $(LUASODIUM_LIBS:c/%=%)
 
-c/luasodium/utils/core.luah: ffi/luasodium/utils.lua aux/bin2c
-	./aux/bin2c $< $@ $(patsubst %.lua,%_lua,$(notdir $<))
+test: $(LUASODIUM_LUAS) $(LUASODIUM_DLLS) $(LUASODIUM_LIBS) $(LUASODIUM_LOCAL_DLLS) $(LUASODIUM_LOCAL_LIBS)
+	$(LUA) test-crypto_auth.lua
+	$(LUA) test-crypto_box.lua
+	$(LUA) test-crypto_scalarmult.lua
+	$(LUA) test-crypto_secretbox.lua
+	$(LUA) test-crypto_sign.lua
+	$(LUA) test-randombytes.lua
+	$(LUA) test-utils.lua
 
-c/luasodium/crypto_secretbox/core.luah: ffi/luasodium/crypto_secretbox.lua aux/bin2c
-	./aux/bin2c $< $@ $(patsubst %.lua,%_lua,$(notdir $<))
+luasodium/%.lua: lua/luasodium/%.lua $(basename $@)
+	cp $< $@
 
-c/luasodium/crypto_sign/core.luah: ffi/luasodium/crypto_sign.lua aux/bin2c
-	./aux/bin2c $< $@ $(patsubst %.lua,%_lua,$(notdir $<))
+LUASODIUM_FFIS = $(addsuffix /core.luah,$(addprefix c/luasodium/,$(LUASODIUM_MODS)))
 
-c/luasodium/crypto_scalarmult/core.luah: ffi/luasodium/crypto_scalarmult.lua aux/bin2c
-	./aux/bin2c $< $@ $(patsubst %.lua,%_lua,$(notdir $<))
+hmm:
+	echo $(LUASODIUM_FFIS)
 
-c/luasodium/crypto_box/core.luah: ffi/luasodium/crypto_box.lua aux/bin2c
-	./aux/bin2c $< $@ $(patsubst %.lua,%_lua,$(notdir $<))
+luasodium/%$(DLL): c/luasodium/%$(DLL)
+	cp $< $@
 
-c/luasodium/crypto_auth/core.luah: ffi/luasodium/crypto_auth.lua aux/bin2c
-	./aux/bin2c $< $@ $(patsubst %.lua,%_lua,$(notdir $<))
+luasodium/%$(LIB): c/luasodium/%$(LIB)
+	cp $< $@
 
-c/luasodium/randombytes/core.luah: ffi/luasodium/randombytes.lua aux/bin2c
+c/luasodium/%/core.luah: ffi/luasodium/%.lua aux/bin2c
 	./aux/bin2c $< $@ $(patsubst %.lua,%_lua,$(notdir $<))
 
 aux/bin2c: aux/bin2c.c
@@ -44,8 +48,11 @@ aux/bin2c: aux/bin2c.c
 clean:
 	$(MAKE) -f Makefile.dist clean
 	rm -f aux/bin2c $(LUASODIUM_FFIS)
+	rm -f $(LUASODIUM_LOCAL_DLLS)
+	rm -f $(LUASODIUM_LOCAL_LIBS)
 
 VERSION = $(shell $(LUA) aux/version.lua)
+
 
 release: $(LUASODIUM_FFIS) README.md
 	rm -rf luasodium-$(VERSION) dist/luasodium-$(VERSION)
