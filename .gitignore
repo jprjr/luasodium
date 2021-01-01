@@ -8,6 +8,7 @@
 *.tar.gz
 *.tar.xz
 *.src.rock
+*.luastatic.c
 /dist
 /luasodium.lua
 /luasodium

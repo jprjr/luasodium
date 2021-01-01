@@ -16,7 +16,10 @@ $(shell cp ffi/luasodium.lua luasodium.lua)
 LUASODIUM_LOCAL_DLLS = $(LUASODIUM_DLLS:c/%=%)
 LUASODIUM_LOCAL_LIBS = $(LUASODIUM_LIBS:c/%=%)
 
-test: $(LUASODIUM_LUAS) $(LUASODIUM_DLLS) $(LUASODIUM_LIBS) $(LUASODIUM_LOCAL_DLLS) $(LUASODIUM_LOCAL_LIBS)
+LUASODIUM_TESTS = $(addprefix test-,$(LUASODIUM_MODS))
+LUASODIUM_STATICS = $(addsuffix .luastatic.c,$(LUASODIUM_TESTS))
+
+test: $(LUASODIUM_LUAS) $(LUASODIUM_DLLS) $(LUASODIUM_LIBS) $(LUASODIUM_LOCAL_DLLS) $(LUASODIUM_LOCAL_LIBS) $(LUASODIUM_TESTS)
 	$(LUA) test-crypto_auth.lua
 	$(LUA) test-crypto_box.lua
 	$(LUA) test-crypto_scalarmult.lua
@@ -24,6 +27,17 @@ test: $(LUASODIUM_LUAS) $(LUASODIUM_DLLS) $(LUASODIUM_LIBS) $(LUASODIUM_LOCAL_DL
 	$(LUA) test-crypto_sign.lua
 	$(LUA) test-randombytes.lua
 	$(LUA) test-utils.lua
+	./test-crypto_auth
+	./test-crypto_box
+	./test-crypto_scalarmult
+	./test-crypto_secretbox
+	./test-crypto_sign
+	./test-randombytes
+	./test-utils
+
+test-%: test-%.lua luasodium/%.lua luasodium/%/ffi.a luasodium/%/core.a
+	luastatic test-$(@:test-%=%).lua luasodium/$(@:test-%=%).lua /opt/luajit-2.1.0/lib/libluajit-5.1.a luasodium/$(@:test-%=%)/ffi.a luasodium/$(@:test-%=%)/core.a /usr/lib/libsodium.a -I/opt/luajit-2.1.0/include/luajit-2.1
+
 
 luasodium/%.lua: lua/luasodium/%.lua $(basename $@)
 	cp $< $@
@@ -50,6 +64,8 @@ clean:
 	rm -f aux/bin2c $(LUASODIUM_FFIS)
 	rm -f $(LUASODIUM_LOCAL_DLLS)
 	rm -f $(LUASODIUM_LOCAL_LIBS)
+	rm -f $(LUASODIUM_STATICS)
+	rm -f $(LUASODIUM_TESTS)
 
 VERSION = $(shell $(LUA) aux/version.lua)
 
