@@ -54,6 +54,9 @@ high-level [NaCl](https://nacl.cr.yp.to/index.html) functions, and
 any equivalent "easy"/"detached" variants that `libsodium` has added.
 I think at that point, this library should be pretty usable.
 
+The issues under the [Version 1.0.0 Milestone](https://github.com/jprjr/luasodium/milestone/1)
+list out all the functions that will be covered in a 1.0.0 release.
+
 ## Caveats
 
 `libsodium` includes functions for secure programming, like allocating
