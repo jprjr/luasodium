@@ -7,6 +7,7 @@ $(shell mkdir -p luasodium/crypto_auth)
 $(shell mkdir -p luasodium/crypto_box)
 $(shell mkdir -p luasodium/crypto_scalarmult)
 $(shell mkdir -p luasodium/crypto_secretbox)
+$(shell mkdir -p luasodium/crypto_sign)
 $(shell mkdir -p luasodium/randombytes)
 $(shell mkdir -p luasodium/utils)
 $(shell mkdir -p luasodium/version)
@@ -18,6 +19,8 @@ LUASODIUM_OBJS = \
   c/luasodium/utils/ffi.o \
   c/luasodium/crypto_secretbox/core.o \
   c/luasodium/crypto_secretbox/ffi.o \
+  c/luasodium/crypto_sign/core.o \
+  c/luasodium/crypto_sign/ffi.o \
   c/luasodium/crypto_auth/core.o \
   c/luasodium/crypto_auth/ffi.o \
   c/luasodium/crypto_box/core.o \
@@ -34,6 +37,8 @@ LUASODIUM_DLLS = \
   luasodium/utils/ffi.so \
   luasodium/crypto_secretbox/core.so \
   luasodium/crypto_secretbox/ffi.so \
+  luasodium/crypto_sign/core.so \
+  luasodium/crypto_sign/ffi.so \
   luasodium/crypto_auth/core.so \
   luasodium/crypto_auth/ffi.so \
   luasodium/crypto_box/core.so \
@@ -50,6 +55,7 @@ LUASODIUM_LUAS = \
   luasodium/utils.lua \
   luasodium/version.lua \
   luasodium/crypto_secretbox.lua \
+  luasodium/crypto_sign.lua \
   luasodium/crypto_box.lua \
   luasodium/crypto_auth.lua \
   luasodium/crypto_scalarmult.lua \
@@ -95,6 +101,12 @@ c/luasodium/crypto_secretbox/core.o: c/luasodium/crypto_secretbox/core.c c/luaso
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 c/luasodium/crypto_secretbox/ffi.o: c/luasodium/crypto_secretbox/ffi.c c/luasodium/crypto_secretbox/constants.h c/luasodium/crypto_secretbox/core.luah
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+c/luasodium/crypto_sign/core.o: c/luasodium/crypto_sign/core.c c/luasodium/crypto_sign/constants.h
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+c/luasodium/crypto_sign/ffi.o: c/luasodium/crypto_sign/ffi.c c/luasodium/crypto_sign/constants.h c/luasodium/crypto_sign/core.luah
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 c/luasodium/crypto_auth/core.o: c/luasodium/crypto_auth/core.c c/luasodium/crypto_auth/constants.h

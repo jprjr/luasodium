@@ -8,6 +8,7 @@ LUASODIUM_FFIS = \
   c/luasodium/utils/core.luah \
   c/luasodium/version/core.luah \
   c/luasodium/crypto_secretbox/core.luah \
+  c/luasodium/crypto_sign/core.luah \
   c/luasodium/crypto_box/core.luah \
   c/luasodium/crypto_auth/core.luah \
   c/luasodium/crypto_scalarmult/core.luah \
@@ -20,6 +21,9 @@ c/luasodium/utils/core.luah: ffi/luasodium/utils.lua aux/bin2c
 	./aux/bin2c $< $@ $(patsubst %.lua,%_lua,$(notdir $<))
 
 c/luasodium/crypto_secretbox/core.luah: ffi/luasodium/crypto_secretbox.lua aux/bin2c
+	./aux/bin2c $< $@ $(patsubst %.lua,%_lua,$(notdir $<))
+
+c/luasodium/crypto_sign/core.luah: ffi/luasodium/crypto_sign.lua aux/bin2c
 	./aux/bin2c $< $@ $(patsubst %.lua,%_lua,$(notdir $<))
 
 c/luasodium/crypto_scalarmult/core.luah: ffi/luasodium/crypto_scalarmult.lua aux/bin2c

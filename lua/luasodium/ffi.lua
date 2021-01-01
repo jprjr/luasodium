@@ -2,8 +2,9 @@ local M = {}
 
 local crypto_auth        = require'luasodium.crypto_auth.ffi'
 local crypto_box         = require'luasodium.crypto_box.ffi'
-local crypto_secretbox   = require'luasodium.crypto_secretbox.ffi'
 local crypto_scalarmult  = require'luasodium.crypto_scalarmult.ffi'
+local crypto_secretbox   = require'luasodium.crypto_secretbox.ffi'
+local crypto_sign        = require'luasodium.crypto_sign.ffi'
 local randombytes        = require'luasodium.randombytes.ffi'
 local utils              = require'luasodium.utils.ffi'
 local version            = require'luasodium.version.ffi'
@@ -13,6 +14,7 @@ local modules = {
   crypto_box,
   crypto_scalarmult,
   crypto_secretbox,
+  crypto_sign,
   randombytes,
   utils,
   version,
