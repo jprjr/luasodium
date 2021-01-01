@@ -84,7 +84,7 @@ release: $(LUASODIUM_FFIS) README.md
 	cp LICENSE luasodium-$(VERSION)/LICENSE
 	cp Makefile.dist luasodium-$(VERSION)/Makefile
 	cp dist.ini luasodium-$(VERSION)/dist.ini
-	sed 's/@VERSION@/$(VERSION)/g' < specs/luasodium-release-template.rockspec > luasodium-$(VERSION)/luasodium-$(VERSION)-1.rockspec
+	sed 's/@VERSION@/$(VERSION)/g' < rockspecs/luasodium-release-template.rockspec > luasodium-$(VERSION)/luasodium-$(VERSION)-1.rockspec
 	tar cvf dist/luasodium-$(VERSION).tar luasodium-$(VERSION)
 	gzip -k dist/luasodium-$(VERSION).tar
 	xz dist/luasodium-$(VERSION).tar
