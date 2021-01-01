@@ -1,6 +1,15 @@
 #include "../luasodium-c.h"
 #include "constants.h"
 
+#if LUA_VERSION_NUM >= 502
+static int
+ls_lua_equal(lua_State *L, int index1, int index2) {
+    return lua_compare(L,index1,index2,LUA_OPEQ);
+}
+#else
+#define ls_lua_equal(L,index1,index2) lua_equal(L,index1,index2)
+#endif
+
 static int
 ls_crypto_sign_keypair(lua_State *L) {
     unsigned char pk[crypto_sign_PUBLICKEYBYTES];
@@ -190,6 +199,10 @@ ls_crypto_sign_init(lua_State *L) {
         lua_pop(L,1);
         return luaL_error(L,"crypto_sign_init error");
     }
+
+    lua_pushvalue(L,lua_upvalueindex(1));
+    lua_setmetatable(L,-2);
+
     return 1;
 }
 
@@ -202,6 +215,15 @@ ls_crypto_sign_update(lua_State *L) {
     if(lua_isnoneornil(L,2)) {
         return luaL_error(L,"requires 2 parameters");
     }
+
+    /* verify this is a state object */
+    lua_pushvalue(L,lua_upvalueindex(1));
+    lua_getmetatable(L,1);
+
+    if(!ls_lua_equal(L,-2,-1)) {
+        return luaL_error(L,"invalid userdata");
+    }
+    lua_pop(L,2);
 
     state = (crypto_sign_state *)lua_touserdata(L,1);
     m   = (const unsigned char *)lua_tolstring(L,2,&mlen);
@@ -222,6 +244,15 @@ ls_crypto_sign_final_create(lua_State *L) {
     if(lua_isnoneornil(L,2)) {
         return luaL_error(L,"requires 2 parameters");
     }
+
+    /* verify this is a state object */
+    lua_pushvalue(L,lua_upvalueindex(1));
+    lua_getmetatable(L,1);
+
+    if(!ls_lua_equal(L,-2,-1)) {
+        return luaL_error(L,"invalid userdata");
+    }
+    lua_pop(L,2);
 
     state = (crypto_sign_state *)lua_touserdata(L,1);
     sk  = (const unsigned char *)lua_tolstring(L,2,&sklen);
@@ -251,6 +282,15 @@ ls_crypto_sign_final_verify(lua_State *L) {
     if(lua_isnoneornil(L,3)) {
         return luaL_error(L,"requires 3 parameters");
     }
+
+    /* verify this is a state object */
+    lua_pushvalue(L,lua_upvalueindex(1));
+    lua_getmetatable(L,1);
+
+    if(!ls_lua_equal(L,-2,-1)) {
+        return luaL_error(L,"invalid userdata");
+    }
+    lua_pop(L,2);
 
     state = (crypto_sign_state *)lua_touserdata(L,1);
     sig = (const unsigned char *)lua_tolstring(L,2,&siglen);
@@ -316,6 +356,13 @@ ls_crypto_sign_ed25519_sk_to_pk(lua_State *L) {
     return 1;
 }
 
+static int
+ls_crypto_sign_state__gc(lua_State *L) {
+    crypto_sign_state *state = (crypto_sign_state *)lua_touserdata(L,1);
+    sodium_memzero(state,crypto_sign_statebytes());
+    return 0;
+}
+
 static const struct luaL_Reg ls_crypto_sign_functions[] = {
     LS_LUA_FUNC(crypto_sign_keypair),
     LS_LUA_FUNC(crypto_sign_seed_keypair),
@@ -323,21 +370,74 @@ static const struct luaL_Reg ls_crypto_sign_functions[] = {
     LS_LUA_FUNC(crypto_sign_open),
     LS_LUA_FUNC(crypto_sign_detached),
     LS_LUA_FUNC(crypto_sign_verify_detached),
-    LS_LUA_FUNC(crypto_sign_init),
-    LS_LUA_FUNC(crypto_sign_update),
-    LS_LUA_FUNC(crypto_sign_final_create),
-    LS_LUA_FUNC(crypto_sign_final_verify),
     LS_LUA_FUNC(crypto_sign_ed25519_sk_to_seed),
     LS_LUA_FUNC(crypto_sign_ed25519_sk_to_pk),
     { NULL, NULL },
 };
 
+static const struct luaL_Reg ls_crypto_sign_state_functions[] = {
+    LS_LUA_FUNC(crypto_sign_init),
+    LS_LUA_FUNC(crypto_sign_update),
+    LS_LUA_FUNC(crypto_sign_final_create),
+    LS_LUA_FUNC(crypto_sign_final_verify),
+    { NULL, NULL },
+};
+
 int luaopen_luasodium_crypto_sign_core(lua_State *L) {
     LUASODIUM_INIT(L);
+
     lua_newtable(L);
 
     luasodium_set_constants(L,ls_crypto_sign_constants);
     luaL_setfuncs(L,ls_crypto_sign_functions,0);
+
+    /* create our metatable for crypto_sign_state */
+    lua_newtable(L);
+    lua_pushcclosure(L,ls_crypto_sign_state__gc,0);
+    lua_setfield(L,-2,"__gc");
+
+    /* table of methods */
+    lua_newtable(L);
+    lua_setfield(L,-2,"__index");
+
+    /* top of stack is our metatable */
+    /* push up copies of our module + metatable since setfuncs will pop metatable */
+    lua_pushvalue(L,-2); /* module */
+    lua_pushvalue(L,-2); /* metatable */
+    luaL_setfuncs(L,ls_crypto_sign_state_functions,1);
+    lua_pop(L,1); /* module (copy) */
+
+    /* stack is now:
+     *   table (our modules)
+     *   table (our metatable)
+     */
+
+    lua_getfield(L,-1,"__index");
+    /* module
+     * metatable
+     * __index
+     */
+
+    lua_getfield(L,-3,"crypto_sign_update");
+    /* module
+     * metatable
+     * __index
+     * function
+     */
+    lua_setfield(L,-2,"update");
+
+    lua_getfield(L,-3,"crypto_sign_final_create");
+    lua_setfield(L,-2,"final_create");
+
+    lua_getfield(L,-3,"crypto_sign_final_verify");
+    lua_setfield(L,-2,"final_verify");
+
+    /* module
+     * metatable
+     * __index
+     */
+
+    lua_pop(L,2);
 
     return 1;
 }

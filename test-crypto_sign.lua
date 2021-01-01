@@ -111,6 +111,12 @@ do
 
   assert(lib.crypto_sign_ed25519_sk_to_seed(sk) == seed)
   assert(lib.crypto_sign_ed25519_sk_to_pk(sk) == pk)
+
+  assert(pcall(lib.crypto_sign_update,'garbage','garbage') == false)
+
+  state = lib.crypto_sign_init()
+  state:update(m)
+  assert(state:final_verify(ph_sig,pk) == true)
 end
 
 end

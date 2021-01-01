@@ -3,11 +3,13 @@ local string_len = string.len
 local string_format = string.format
 local ffi_string = ffi.string
 local type = type
+local istype = ffi.istype
 
 local char_array = ffi.typeof('char[?]')
 
 local constants
 local sodium_lib
+local clib
 
 local constant_keys = {
   'crypto_sign_PUBLICKEYBYTES',
@@ -25,6 +27,12 @@ local signatures = {
   ]],
   ['sodium_memzero'] = [[
     void %s(void * const pnt, const size_t len)
+  ]],
+  ['malloc'] = [[
+    void * (%s)(size_t len)
+  ]],
+  ['free'] = [[
+    void %s(void *ptr)
   ]],
   ['crypto_sign_keypair'] = [[
     int %s(unsigned char *pk, unsigned char *sk)
@@ -95,10 +103,12 @@ if #c_pointers == 2 and
       sodium_lib[k] = ffi.cast(string_format(signatures[k],'(*)'),f)
     end
   end
+  clib = sodium_lib
 
   constants = c_pointers[2]
 
 else
+  clib = ffi.C
   ffi.cdef([[
     int sodium_init(void);
   ]])
@@ -123,11 +133,28 @@ else
   end
 end
 
+-- create a struct wrapper for sign state
+ffi.cdef([[
+typedef struct { void *state; } ls_crypto_sign_state_t;
+]])
+
 local crypto_sign_PUBLICKEYBYTES = constants.crypto_sign_PUBLICKEYBYTES
 local crypto_sign_SECRETKEYBYTES = constants.crypto_sign_SECRETKEYBYTES
 local crypto_sign_BYTES          = constants.crypto_sign_BYTES
 local crypto_sign_SEEDBYTES      = constants.crypto_sign_SEEDBYTES
 local crypto_sign_STATEBYTES     = constants.crypto_sign_STATEBYTES
+
+local function zerofree(state)
+  sodium_lib.sodium_memzero(state,crypto_sign_STATEBYTES)
+  clib.free(state)
+end
+
+local crypto_sign_state_methods = {}
+local crypto_sign_state_mt = {
+  __index = crypto_sign_state_methods,
+}
+
+local ls_crypto_sign_state_t = ffi.metatype('ls_crypto_sign_state_t',crypto_sign_state_mt)
 
 local function ls_crypto_sign_keypair()
   local pk = char_array(crypto_sign_PUBLICKEYBYTES)
@@ -259,25 +286,34 @@ local function ls_crypto_sign_verify_detached(sig,m,pk)
 end
 
 local function ls_crypto_sign_init()
-  local state = char_array(crypto_sign_STATEBYTES)
-  if tonumber(sodium_lib.crypto_sign_init(state)) == -1 then
+  local ls_state = ls_crypto_sign_state_t()
+  ls_state.state = ffi.gc(clib.malloc(crypto_sign_STATEBYTES),zerofree)
+  if tonumber(sodium_lib.crypto_sign_init(ls_state.state)) == -1 then
     return error('crypto_sign_init error')
   end
-  return state
+  return ls_state
 end
 
-local function ls_crypto_sign_update(state,m)
+local function ls_crypto_sign_update(ls_state,m)
   if not m then
     return error('requires 2 parameters')
   end
 
+  if not istype(ls_crypto_sign_state_t,ls_state) then
+    return error('invalid userdata')
+  end
+
   return tonumber(sodium_lib.crypto_sign_update(
-    state,m,string_len(m))) ~= -1
+    ls_state.state,m,string_len(m))) ~= -1
 end
 
-local function ls_crypto_sign_final_create(state,sk)
+local function ls_crypto_sign_final_create(ls_state,sk)
   if not sk then
     return error('requires 2 parameters')
+  end
+
+  if not istype(ls_crypto_sign_state_t,ls_state) then
+    return error('invalid userdata')
   end
 
   if string_len(sk) ~= crypto_sign_SECRETKEYBYTES then
@@ -289,7 +325,7 @@ local function ls_crypto_sign_final_create(state,sk)
   local siglen = ffi.new('size_t[1]')
 
   if tonumber(sodium_lib.crypto_sign_final_create(
-    state,sig,siglen,sk)) == -1 then
+    ls_state.state,sig,siglen,sk)) == -1 then
     return error('crypto_sign_final_create error')
   end
 
@@ -298,9 +334,13 @@ local function ls_crypto_sign_final_create(state,sk)
   return sig_str
 end
 
-local function ls_crypto_sign_final_verify(state,sig,pk)
+local function ls_crypto_sign_final_verify(ls_state,sig,pk)
   if not pk then
     return error('requires 3 parameters')
+  end
+
+  if not istype(ls_crypto_sign_state_t,ls_state) then
+    return error('invalid userdata')
   end
 
   if string_len(pk) ~= crypto_sign_PUBLICKEYBYTES then
@@ -309,7 +349,7 @@ local function ls_crypto_sign_final_verify(state,sig,pk)
   end
 
   return tonumber(sodium_lib.crypto_sign_final_verify(
-    state,sig,pk)) == 0
+    ls_state.state,sig,pk)) == 0
 end
 
 local function ls_crypto_sign_ed25519_sk_to_seed(sk)
@@ -343,6 +383,10 @@ local function ls_crypto_sign_ed25519_sk_to_pk(sk)
   sodium_lib.sodium_memzero(pk,crypto_sign_PUBLICKEYBYTES)
   return pk_str
 end
+
+crypto_sign_state_methods.update = ls_crypto_sign_update
+crypto_sign_state_methods.final_create = ls_crypto_sign_final_create
+crypto_sign_state_methods.final_verify = ls_crypto_sign_final_verify
 
 local M = {
   crypto_sign_keypair = ls_crypto_sign_keypair,

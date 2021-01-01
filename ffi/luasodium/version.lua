@@ -1,3 +1,3 @@
 return {
-  _VERSION = '0.0.8'
+  _VERSION = '0.0.9'
 }
