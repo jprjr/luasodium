@@ -131,6 +131,15 @@ test-jit:
 	cd ffi && luajit ../test-randombytes.lua
 	cd ffi && luajit ../test-utils.lua
 
+test-resty:
+	cd ffi && $(HOME)/openresty/bin/resty ../test-crypto_auth.lua
+	cd ffi && $(HOME)/openresty/bin/resty ../test-crypto_box.lua
+	cd ffi && $(HOME)/openresty/bin/resty ../test-crypto_scalarmult.lua
+	cd ffi && $(HOME)/openresty/bin/resty ../test-crypto_secretbox.lua
+	cd ffi && $(HOME)/openresty/bin/resty ../test-crypto_sign.lua
+	cd ffi && $(HOME)/openresty/bin/resty ../test-randombytes.lua
+	cd ffi && $(HOME)/openresty/bin/resty ../test-utils.lua
+
 release: $(LUASODIUM_FFI_IMPLEMENTATIONS) $(LUASODIUM_FFI_IMPLEMENTATIONS) README.md c/luasodium/ffi-function-loader.h c/luasodium/ffi-default-signatures.h
 	rm -rf luasodium-$(VERSION) dist/luasodium-$(VERSION)
 	rm -rf dist/luasodium-$(VERSION).tar.gz
