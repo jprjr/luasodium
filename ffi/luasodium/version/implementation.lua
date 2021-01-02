@@ -1,5 +1,5 @@
 local M = {
-  _VERSION = '0.0.10'
+  _VERSION = '0.0.9'
 }
 
 return function()
