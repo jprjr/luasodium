@@ -57,7 +57,7 @@ c/luasodium/%$(DLL): c/luasodium/%.o
 c/luasodium/%$(LIB): c/luasodium/%.o
 	ar rcs $@ $<
 
-c/luasodium/core.o: c/luasodium/core.c
+c/luasodium/core.o: c/luasodium/core.c $(LUASODIUM_FFI_IMPLEMENTATIONS) $(LUASODIUM_FFI_SIGNATURES)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 c/luasodium/ffi.o: c/luasodium/ffi.c $(LUASODIUM_FFI_IMPLEMENTATIONS) $(LUASODIUM_FFI_SIGNATURES) c/luasodium/ffi-function-loader.h c/luasodium/ffi-default-signatures.h
@@ -104,6 +104,7 @@ aux/bin2c: aux/bin2c.c
 
 clean:
 	rm -f $(LUASODIUM_DLLS) $(LUASODIUM_OBJS) $(LUASODIUM_LIBS)
+	rm -f c/luasodium/core.o c/luasodium/ffi.o
 	rm -f aux/bin2c $(LUASODIUM_FFI_IMPLEMENTATIONS) c/luasodium/ffi-function-loader.h c/luasodium/ffi-default-signatures.h
 	rm -f $(LUASODIUM_LOCAL_DLLS)
 	rm -f $(LUASODIUM_LOCAL_LIBS)

@@ -21,6 +21,8 @@ static const luasodium_function_t ls_crypto_box_functions[] = {
     LS_FUNC(crypto_box_open_easy_afternm),
     LS_FUNC(crypto_box_detached_afternm),
     LS_FUNC(crypto_box_open_detached_afternm),
+    LS_FUNC(crypto_box_afternm),
+    LS_FUNC(crypto_box_open_afternm),
     { NULL }
 };
 

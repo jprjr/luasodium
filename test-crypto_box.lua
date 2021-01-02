@@ -72,6 +72,9 @@ do
   decrypted = lib.crypto_box_open_easy_afternm(encrypted,nonce,k)
   assert(decrypted == message)
 
+  assert(lib.crypto_box_afternm(message,nonce,k) == encrypted)
+  assert(lib.crypto_box_open_afternm(encrypted,nonce,k) == message)
+
   decrypted = lib.crypto_box_open_easy_afternm(encrypted,nonce,ok)
   assert(decrypted == message)
 

@@ -16,6 +16,16 @@ local signatures = {
              unsigned long long clen, const unsigned char *n,
              const unsigned char *pk, const unsigned char *sk)
   ]],
+  ['crypto_box_afternm'] = [[
+      int %s(unsigned char *c, const unsigned char *m,
+             unsigned long long mlen, const unsigned char *n,
+             const unsigned char *k)
+  ]],
+  ['crypto_box_open_afternm'] = [[
+      int %s(unsigned char *m, const unsigned char *c,
+             unsigned long long clen, const unsigned char *n,
+             const unsigned char *p)
+  ]],
   ['crypto_box_easy'] = [[
       int %s(unsigned char *c, const unsigned char *m,
              unsigned long long mlen, const unsigned char *n,

@@ -470,6 +470,85 @@ return function(libs, constants)
     return pk_str, sk_str
   end
 
+  local function lua_crypto_box_afternm(m, nonce, k)
+    if not k then
+      return error('requires 3 arguments')
+    end
+
+    local mlen = string_len(m)
+    local clen = mlen + crypto_box_MACBYTES
+
+    if string_len(nonce) ~= crypto_box_NONCEBYTES then
+      return error(string_format('wrong nonce size, expected: %d',
+        crypto_box_NONCEBYTES))
+    end
+
+    if string_len(k) ~= crypto_box_BEFORENMBYTES then
+      return error(string_format('wrong key size, expected: %d',
+        crypto_box_BEFORENMBYTES))
+    end
+
+    local tmp_m = char_array(mlen + crypto_box_ZEROBYTES)
+    ffi.fill(tmp_m,crypto_box_ZEROBYTES,0)
+    ffi.copy(tmp_m+crypto_box_ZEROBYTES,m,mlen)
+
+    local c = char_array(clen + crypto_box_BOXZEROBYTES)
+    ffi.fill(c,crypto_box_BOXZEROBYTES,0)
+
+    if sodium_lib.crypto_box_afternm(
+      c,tmp_m,mlen+crypto_box_ZEROBYTES,
+      nonce,k) == -1  then
+      return error('crypto_box_afternm error')
+    end
+    local c_str = ffi_string(c + crypto_box_BOXZEROBYTES,clen)
+    sodium_lib.sodium_memzero(tmp_m,mlen + crypto_box_ZEROBYTES)
+    sodium_lib.sodium_memzero(c,clen + crypto_box_BOXZEROBYTES)
+    return c_str
+  end
+
+  local function lua_crypto_box_open_afternm(c, nonce, k)
+    if not k then
+      return error('requires 3 arguments')
+    end
+
+    local clen = string_len(c)
+
+    if clen <= crypto_box_MACBYTES then
+      return error(string.format('wrong c size, expected at least: %d',
+        crypto_box_MACBYTES))
+    end
+
+    if string_len(nonce) ~= crypto_box_NONCEBYTES then
+      return error(string_format('wrong nonce size, expected: %d',
+        crypto_box_NONCEBYTES))
+    end
+
+    if string_len(k) ~= crypto_box_BEFORENMBYTES then
+      return error(string_format('wrong key size, expected: %d',
+        crypto_box_BEFORENMBYTES))
+    end
+
+    local mlen = clen - crypto_box_MACBYTES
+
+    local tmp_c = char_array(clen + crypto_box_BOXZEROBYTES)
+    ffi.fill(tmp_c,crypto_box_BOXZEROBYTES,0)
+    ffi.copy(tmp_c+crypto_box_BOXZEROBYTES,c,clen)
+
+    local m = char_array(mlen + crypto_box_ZEROBYTES)
+    ffi.fill(m,crypto_box_ZEROBYTES,0)
+
+    if sodium_lib.crypto_box_open_afternm(
+      m,tmp_c,clen+crypto_box_BOXZEROBYTES,
+      nonce,k) == -1  then
+      return error('crypto_box_open error')
+    end
+
+    local m_str = ffi_string(m+crypto_box_ZEROBYTES,mlen)
+    sodium_lib.sodium_memzero(tmp_c,clen + crypto_box_BOXZEROBYTES)
+    sodium_lib.sodium_memzero(m,mlen + crypto_box_ZEROBYTES)
+    return m_str
+  end
+
 
   if sodium_lib.sodium_init() == -1 then
     return error('sodium_init error')
@@ -489,6 +568,8 @@ return function(libs, constants)
     crypto_box_open_detached_afternm = lua_crypto_box_open_detached_afternm,
     crypto_box_keypair = lua_crypto_box_keypair,
     crypto_box_seed_keypair = lua_crypto_box_seed_keypair,
+    crypto_box_afternm = lua_crypto_box_afternm,
+    crypto_box_open_afternm = lua_crypto_box_open_afternm,
   }
 
   for k,v in pairs(constants) do
