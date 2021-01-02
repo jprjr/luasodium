@@ -152,3 +152,22 @@ release: $(LUASODIUM_FFI_IMPLEMENTATIONS) $(LUASODIUM_FFI_IMPLEMENTATIONS) READM
 	gzip -k dist/luasodium-$(VERSION).tar
 	xz dist/luasodium-$(VERSION).tar
 	mv luasodium-$(VERSION) dist/luasodium-$(VERSION)
+
+github-release:
+	source $(HOME)/.github-token && github-release release \
+	  --user jprjr \
+	  --repo luasodium \
+	  --tag v$(VERSION)
+	source $(HOME)/.github-token && github-release upload \
+	  --user jprjr \
+	  --repo luasodium \
+	  --tag v$(VERSION) \
+	  --name luasodium-$(VERSION).tar.gz \
+	  --file dist/luasodium-$(VERSION).tar.gz
+	source $(HOME)/.github-token && github-release upload \
+	  --user jprjr \
+	  --repo luasodium \
+	  --tag v$(VERSION) \
+	  --name luasodium-$(VERSION).tar.xz \
+	  --file dist/luasodium-$(VERSION).tar.xz
+
