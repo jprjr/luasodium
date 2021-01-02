@@ -2,6 +2,7 @@ return function(libs, constants)
   local ffi = require'ffi'
   local string_len = string.len
   local ffi_string = ffi.string
+  local tonumber = tonumber
 
   local sodium_lib = libs.sodium
 

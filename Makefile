@@ -20,6 +20,7 @@ LUASODIUM_MODS := \
   crypto_secretbox \
   crypto_sign \
   crypto_auth \
+  crypto_hash \
   crypto_box \
   crypto_scalarmult \
   randombytes
@@ -105,7 +106,9 @@ aux/bin2c: aux/bin2c.c
 clean:
 	rm -f $(LUASODIUM_DLLS) $(LUASODIUM_OBJS) $(LUASODIUM_LIBS)
 	rm -f c/luasodium/core.o c/luasodium/ffi.o
-	rm -f aux/bin2c $(LUASODIUM_FFI_IMPLEMENTATIONS) c/luasodium/ffi-function-loader.h c/luasodium/ffi-default-signatures.h
+	rm -f aux/bin2c c/luasodium/ffi-function-loader.h c/luasodium/ffi-default-signatures.h
+	rm -f $(LUASODIUM_FFI_IMPLEMENTATIONS)
+	rm -f $(LUASODIUM_FFI_SIGNATURES)
 	rm -f $(LUASODIUM_LOCAL_DLLS)
 	rm -f $(LUASODIUM_LOCAL_LIBS)
 	rm -f $(LUASODIUM_STATICS)
