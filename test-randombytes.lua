@@ -4,10 +4,6 @@ if jit then
   assert(lib == require'luasodium.randombytes.ffi')
 end
 
-for k,v in pairs(lib) do
-  print(k,type(v))
-end
-
 for i=1,100 do
 
 do

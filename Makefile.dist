@@ -6,24 +6,9 @@ LUA = lua
 DLL=.so
 LIB=.a
 
-LUASODIUM_MODS := \
-  version \
-  utils \
-  crypto_secretbox \
-  crypto_sign \
-  crypto_auth \
-  crypto_box \
-  crypto_scalarmult \
-  randombytes
-
-LUASODIUM_CORES = $(foreach lib,$(LUASODIUM_MODS),$(addprefix $(lib)/,core ffi))
-
-LUASODIUM_LIB_DIRS = $(foreach lib,$(LUASODIUM_MODS),$(addprefix luasodium/,$(lib)))
-
-LUASODIUM_OBJS = $(addsuffix .o,$(addprefix c/luasodium/,$(LUASODIUM_CORES)))
-
-LUASODIUM_DLLS = $(addsuffix $(DLL),$(addprefix c/luasodium/,$(LUASODIUM_CORES)))
-LUASODIUM_LIBS = $(addsuffix $(LIB),$(addprefix c/luasodium/,$(LUASODIUM_CORES)))
+LUASODIUM_OBJS = c/luasodium/core.o c/luasodium/ffi.o
+LUASODIUM_DLLS = c/luasodium/core$(DLL) c/luasodium/ffi$(DLL)
+LUASODIUM_LIBS = c/luasodium/core$(LIB) c/luasodium/ffi$(LIB)
 
 CFLAGS  += $(shell $(PKGCONFIG) --cflags libsodium)
 LDFLAGS += $(shell $(PKGCONFIG) --libs libsodium)
@@ -33,23 +18,14 @@ CFLAGS += $(shell $(PKGCONFIG) --cflags $(LUA))
 
 all: $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
 
-c/luasodium/%$(DLL): c/luasodium/%.o
-	$(CC) -shared -o $@ $< $(LDFLAGS)
+%.o: %.c
+	$(CC) $(CFLAGS) -o $@ -c $^
 
-c/luasodium/%$(LIB): c/luasodium/%.o
-	ar rcs $@ $<
+%$(DLL): %.o
+	$(CC) -shared -o $@ $^
 
-c/luasodium/version/core.o: c/luasodium/version/core.c c/luasodium/version/core.luah
-	$(CC) $(CFLAGS) -o $@ -c $<
-
-c/luasodium/version/ffi.o: c/luasodium/version/ffi.c c/luasodium/version/core.luah
-	$(CC) $(CFLAGS) -o $@ -c $<
-
-%/core.o: %/core.c %/constants.h %/core.luah
-	$(CC) $(CFLAGS) -o $@ -c $<
-
-%/ffi.o: %/ffi.c %/constants.h %/core.luah
-	$(CC) $(CFLAGS) -o $@ -c $<
+%$(LIB): %.o
+	ar rcs $@ $^
 
 clean:
 	rm -f $(LUASODIUM_DLLS) $(LUASODIUM_OBJS) $(LUASODIUM_LIBS)

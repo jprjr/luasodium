@@ -1,51 +1,89 @@
-.PHONY: release directories test hmm
+.PHONY: all clean release directories test hmm
+.SUFFIXES:
 
 HOST_CC = cc
+PKGCONFIG = pkg-config
+LUA = lua
 
-LUASODIUM_LUAS = \
+DLL=.so
+LIB=.a
+
+CFLAGS  += $(shell $(PKGCONFIG) --cflags libsodium)
+LDFLAGS += $(shell $(PKGCONFIG) --libs libsodium)
+
+CFLAGS += -fPIC -Wall -Wextra -g -O2
+CFLAGS += $(shell $(PKGCONFIG) --cflags $(LUA))
+
+LUASODIUM_MODS := \
+  version \
+  utils \
+  crypto_secretbox \
+  crypto_sign \
+  crypto_auth \
+  crypto_box \
+  crypto_scalarmult \
+  randombytes
+
+LUASODIUM_LUAS := \
   luasodium.lua \
-  luasodium/core.lua \
-  luasodium/ffi.lua \
-  $(addsuffix,.lua,$(addprefix luasodium/,$(LUASODIUM_MODS)))
+  $(addsuffix .lua,$(addprefix luasodium/,$(LUASODIUM_MODS)))
 
-include Makefile.dist
+LUASODIUM_CORES = $(foreach lib,$(LUASODIUM_MODS),$(addprefix $(lib)/,core ffi))
+
+LUASODIUM_LIB_DIRS = $(foreach lib,$(LUASODIUM_MODS),$(addprefix luasodium/,$(lib)))
+
+LUASODIUM_OBJS = $(addsuffix .o,$(addprefix c/luasodium/,$(LUASODIUM_CORES)))
+
+LUASODIUM_DLLS = $(addsuffix $(DLL),$(addprefix c/luasodium/,$(LUASODIUM_CORES)))
+LUASODIUM_LIBS = $(addsuffix $(LIB),$(addprefix c/luasodium/,$(LUASODIUM_CORES)))
+
+LUASODIUM_FFI_IMPLEMENTATIONS = $(addsuffix /ffi-implementation.h,$(addprefix c/luasodium/,$(LUASODIUM_MODS)))
+LUASODIUM_FFI_SIGNATURES = $(addsuffix /ffi-signatures.h,$(addprefix c/luasodium/,$(LUASODIUM_MODS)))
 
 $(shell mkdir -p $(LUASODIUM_LIB_DIRS) luasodium)
 $(shell cp ffi/luasodium.lua luasodium.lua)
 
-LUASODIUM_LOCAL_DLLS = $(LUASODIUM_DLLS:c/%=%)
-LUASODIUM_LOCAL_LIBS = $(LUASODIUM_LIBS:c/%=%)
+LUASODIUM_LOCAL_DLLS = $(LUASODIUM_DLLS:c/%=%) luasodium/core$(DLL) luasodium/ffi$(DLL)
+LUASODIUM_LOCAL_LIBS = $(LUASODIUM_LIBS:c/%=%) luasodium/core$(LIB) luasodium/ffi$(LIB)
 
 LUASODIUM_TESTS = $(addprefix test-,$(LUASODIUM_MODS))
 LUASODIUM_STATICS = $(addsuffix .luastatic.c,$(LUASODIUM_TESTS))
 
-test: $(LUASODIUM_LUAS) $(LUASODIUM_DLLS) $(LUASODIUM_LIBS) $(LUASODIUM_LOCAL_DLLS) $(LUASODIUM_LOCAL_LIBS) $(LUASODIUM_TESTS)
-	$(LUA) test-crypto_auth.lua
-	$(LUA) test-crypto_box.lua
-	$(LUA) test-crypto_scalarmult.lua
-	$(LUA) test-crypto_secretbox.lua
-	$(LUA) test-crypto_sign.lua
-	$(LUA) test-randombytes.lua
-	$(LUA) test-utils.lua
-	./test-crypto_auth
-	./test-crypto_box
-	./test-crypto_scalarmult
-	./test-crypto_secretbox
-	./test-crypto_sign
-	./test-randombytes
-	./test-utils
+all: $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
+
+c/luasodium/%$(DLL): c/luasodium/%.o
+	$(CC) -shared -o $@ $< $(LDFLAGS)
+
+c/luasodium/%$(LIB): c/luasodium/%.o
+	ar rcs $@ $<
+
+c/luasodium/core.o: c/luasodium/core.c
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+c/luasodium/ffi.o: c/luasodium/ffi.c $(LUASODIUM_FFI_IMPLEMENTATIONS) $(LUASODIUM_FFI_SIGNATURES) c/luasodium/ffi-function-loader.h c/luasodium/ffi-default-signatures.h
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+c/luasodium/version/core.o: c/luasodium/version/core.c c/luasodium/version/core.h c/luasodium/version/ffi-implementation.h
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+c/luasodium/version/ffi.o: c/luasodium/version/ffi.c c/luasodium/version/core.h c/luasodium/version/ffi-implementation.h
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+%/core.o: %/core.c %/constants.h
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+%/ffi.o: %/ffi.c %/ffi.h %/constants.h %/ffi-implementation.h %/ffi-signatures.h c/luasodium/ffi-function-loader.h c/luasodium/ffi-default-signatures.h
+	$(CC) $(CFLAGS) -o $@ -c $<
 
 test-%: test-%.lua luasodium/%.lua luasodium/%/ffi.a luasodium/%/core.a
 	luastatic test-$(@:test-%=%).lua luasodium/$(@:test-%=%).lua /opt/luajit-2.1.0/lib/libluajit-5.1.a luasodium/$(@:test-%=%)/ffi.a luasodium/$(@:test-%=%)/core.a /usr/lib/libsodium.a -I/opt/luajit-2.1.0/include/luajit-2.1
 
-
 luasodium/%.lua: lua/luasodium/%.lua $(basename $@)
 	cp $< $@
 
-LUASODIUM_FFIS = $(addsuffix /core.luah,$(addprefix c/luasodium/,$(LUASODIUM_MODS)))
-
 hmm:
-	echo $(LUASODIUM_FFIS)
+	echo $(LUASODIUM_FFI_IMPLEMENTATIONS)
+	echo $(VERSION)
 
 luasodium/%$(DLL): c/luasodium/%$(DLL)
 	cp $< $@
@@ -53,32 +91,52 @@ luasodium/%$(DLL): c/luasodium/%$(DLL)
 luasodium/%$(LIB): c/luasodium/%$(LIB)
 	cp $< $@
 
-c/luasodium/%/core.luah: ffi/luasodium/%.lua aux/bin2c
-	./aux/bin2c $< $@ $(patsubst %.lua,%_lua,$(notdir $<))
+c/luasodium/ffi-function-loader.h: ffi/luasodium/_ffi/function_loader.lua aux/bin2c
+	./aux/bin2c $< $@ ffi_function_loader
+
+c/luasodium/ffi-default-signatures.h: ffi/luasodium/_ffi/default_signatures.lua aux/bin2c
+	./aux/bin2c $< $@ ffi_default_signatures
+
+c/luasodium/%/ffi-implementation.h: ffi/luasodium/%/implementation.lua aux/bin2c
+	./aux/bin2c $< $@ $(addsuffix _ffi_implementation,$(addprefix ls_,$(notdir $(patsubst %/,%,$(dir $<)))))
+
+c/luasodium/%/ffi-signatures.h: ffi/luasodium/%/signatures.lua aux/bin2c
+	./aux/bin2c $< $@ $(addsuffix _ffi_signatures,$(addprefix ls_,$(notdir $(patsubst %/,%,$(dir $<)))))
 
 aux/bin2c: aux/bin2c.c
 	$(HOST_CC) -o $@ $^
 
 clean:
-	$(MAKE) -f Makefile.dist clean
-	rm -f aux/bin2c $(LUASODIUM_FFIS)
+	rm -f $(LUASODIUM_DLLS) $(LUASODIUM_OBJS) $(LUASODIUM_LIBS)
+	rm -f aux/bin2c $(LUASODIUM_FFI_IMPLEMENTATIONS) c/luasodium/ffi-function-loader.h c/luasodium/ffi-default-signatures.h
 	rm -f $(LUASODIUM_LOCAL_DLLS)
 	rm -f $(LUASODIUM_LOCAL_LIBS)
 	rm -f $(LUASODIUM_STATICS)
 	rm -f $(LUASODIUM_TESTS)
+	rm -f $(LUASODIUM_LUAS)
 
 VERSION = $(shell $(LUA) aux/version.lua)
 
+test: $(LUASODIUM_LOCAL_DLLS) $(LUASODIUM_LOCAL_LIBS) $(LUASODIUM_LUAS)
+	$(LUA) test-crypto_auth.lua
+	$(LUA) test-crypto_box.lua
+	$(LUA) test-crypto_scalarmult.lua
+	$(LUA) test-crypto_secretbox.lua
+	$(LUA) test-crypto_sign.lua
+	$(LUA) test-randombytes.lua
+	$(LUA) test-utils.lua
 
-release: $(LUASODIUM_FFIS) README.md
+release: $(LUASODIUM_FFI_IMPLEMENTATIONS) $(LUASODIUM_FFI_IMPLEMENTATIONS) README.md c/luasodium/ffi-function-loader.h c/luasodium/ffi-default-signatures.h
 	rm -rf luasodium-$(VERSION) dist/luasodium-$(VERSION)
 	rm -rf dist/luasodium-$(VERSION).tar.gz
 	rm -rf dist/luasodium-$(VERSION).tar.xz
-	rm -f $(LUASODIUM_OBJS) $(LUASODIUM_DLLS)
+	rm -f $(LUASODIUM_OBJS) $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
 	mkdir -p dist
-	mkdir -p luasodium-$(VERSION)
-	cp -r c luasodium-$(VERSION)/
-	cp -r lua luasodium-$(VERSION)/
+	mkdir -p luasodium-$(VERSION)/c/luasodium
+	mkdir -p luasodium-$(VERSION)/lua
+	perl aux/amalgate.pl c/luasodium/core.c > luasodium-$(VERSION)/c/luasodium/core.c
+	perl aux/amalgate.pl c/luasodium/ffi.c > luasodium-$(VERSION)/c/luasodium/ffi.c
+	cp lua/luasodium.lua luasodium-$(VERSION)/lua/luasodium.lua
 	cp -r ffi luasodium-$(VERSION)/
 	cp README.md luasodium-$(VERSION)/README.md
 	cp LICENSE luasodium-$(VERSION)/LICENSE

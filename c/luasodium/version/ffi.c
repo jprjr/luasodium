@@ -1,19 +1,9 @@
-#include <lua.h>
-#include <lauxlib.h>
-#include "core.luah"
-
-/* some duplication here but it's minor */
+#include "core.h"
 
 int
-luaopen_luasodium_version_core(lua_State*L) {
-
-    if(luaL_loadbuffer(L,version_lua,version_lua_length - 1, "version.lua")) {
-        return lua_error(L);
-    }
-    if(lua_pcall(L,0,1,0)) {
-        return lua_error(L);
-    }
-
+luaopen_luasodium_version_ffi(lua_State*L) {
+    lua_newtable(L);
+    ls_version_core_setup(L);
     return 1;
 }
 

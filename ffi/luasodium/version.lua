@@ -1,3 +1,1 @@
-return {
-  _VERSION = '0.0.9'
-}
+return require'luasodium.version.implementation'()

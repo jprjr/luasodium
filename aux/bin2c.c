@@ -10,6 +10,7 @@
  */
 
 #include <stdio.h>
+#include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -27,6 +28,7 @@ main ( int argc, char* argv[] )
 {
     char *buf;
     char* ident;
+    char *upper_ident;
     unsigned int i, file_size, need_comma;
 
     FILE *f_input, *f_output;
@@ -89,8 +91,17 @@ main ( int argc, char* argv[] )
     }
 
     ident = argv[3];
+
+    upper_ident = (char *)malloc(strlen(ident)+1);
+    for(i=0; i<strlen(ident); ++i) {
+        upper_ident[i] = toupper(ident[i]);
+    }
+    upper_ident[i] = '\0';
     
     need_comma = 0;
+
+    fprintf (f_output,"#ifndef %s\n",upper_ident);
+    fprintf (f_output,"#define %s\n",upper_ident);
 
     fprintf (f_output, "static const char %s[%i] = {", ident, file_size);
     for (i = 0; i < file_size; ++i)
@@ -107,6 +118,8 @@ main ( int argc, char* argv[] )
 #ifdef USE_BZ2
     fprintf(f_output, "static const int %s_length_uncompressed = %i;\n", ident, uncompressed_size);
 #endif
+
+    fprintf (f_output,"#endif\n");
 
     fclose(f_output);
 
