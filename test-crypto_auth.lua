@@ -1,8 +1,4 @@
-local lib = require'luasodium.crypto_auth'
-
-if jit then
-  assert(lib == require'luasodium.crypto_auth.ffi')
-end
+local lib = require'luasodium'
 
 local expected = {
   36, 166, 137, 74, 84, 118, 157, 225,

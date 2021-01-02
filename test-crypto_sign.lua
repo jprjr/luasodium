@@ -1,8 +1,4 @@
-local lib = require'luasodium.crypto_sign'
-
-if jit then
-  assert(lib == require'luasodium.crypto_sign.ffi')
-end
+local lib = require'luasodium'
 
 local expected_pk = {
   59,106,39,188,206,182,164,45,

@@ -1,8 +1,4 @@
-local lib = require'luasodium.version'
-
-if jit then
-  assert(lib == require'luasodium.version.ffi')
-end
+local lib = require'luasodium'
 
 assert(type(lib._VERSION) == 'string')
 print('success')

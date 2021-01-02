@@ -1,8 +1,4 @@
-local lib   = require('luasodium.utils')
-
-if jit then
-  assert(lib == require'luasodium.utils.ffi')
-end
+local lib   = require'luasodium'
 
 for i=1,100 do
 do

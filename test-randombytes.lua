@@ -1,8 +1,4 @@
-local lib = require'luasodium.randombytes'
-
-if jit then
-  assert(lib == require'luasodium.randombytes.ffi')
-end
+local lib = require'luasodium'
 
 for i=1,100 do
 

@@ -3,14 +3,14 @@
 Bindings to [Libsodium](https://libsodium.gitbook.io/doc/), with support
 for the Lua C API as well as LuaJIT's FFI API.
 
-By default, all modules attempt to load the FFI API, then fallback
+By default, the module attempts to load the FFI API, then falls back
 to the C API. If you want more control over which version you're using,
-you can append `.core` to a module to load the C API, or `.ffi` to
+you can append `.core` to the module to load the C API, or `.ffi` to
 load the FFI API.
 
 The `.core` and `.ffi` variants don't exist in the OpenResty
 Package Manager version, since its FFI only. You just use
-regular module names in that case.
+regular module name in that case.
 
 Example:
 
@@ -78,11 +78,15 @@ that uses `sodium_malloc` and `sodium_free`.
 
 ## Installation
 
+### luarocks
+
 Available on [luarocks](https://luarocks.org/modules/jprjr/luasodium):
 
 ```bash
 luarocks install luasodium
 ```
+
+### OPM
 
 An FFI-only version is available on [OPM](https://opm.openresty.org/package/jprjr/luasodium/)
 
@@ -90,14 +94,18 @@ An FFI-only version is available on [OPM](https://opm.openresty.org/package/jprj
 opm install jprjr/luasodium
 ```
 
-Alternatively, if you'd like to build from source, grab
-one of the release tarballs (not the automatically-generated .tar.gz files).
-This will have pre-compiled Lua includes for the FFI portion of the library.
+### Source
+
+Release tarballs are available, with the sources amalgamated into
+two C files - `core.c` and `ffi.c`.
+
+If you'd like to build from source, grab
+one of the release tarballs, and run `make`
 
 ```bash
-wget https://github.com/jprjr/luasodium/releases/download/v0.0.5/luasodium-0.0.5.tar.gz
-tar xf luasodium-0.0.5.tar.gz
-cd luasodium-0.0.5
+wget https://github.com/jprjr/luasodium/releases/download/v0.0.10/luasodium-0.0.10.tar.gz
+tar xf luasodium-0.0.10.tar.gz
+cd luasodium-0.0.10
 make
 ```
 
@@ -189,11 +197,13 @@ local incremented = luasodium.sodium_increment(buf)
 
 ## Modules
 
-Luasodium is broken into sub-modules, based on function prefixes in
-the Libsodium API. For example, all the `randombytes` function are
-in a `luasodium.randombytes` module.
+The luasodium source is broken into submodules to make
+individual testing easier - if you clone this
+repo locally, the default Makefile will build a local
+tree to perform testing with.
 
-There's a global `luasodium` module that includes all submodules,
-you don't have to include each and every module.
+The release build just uses a single module. You just need to
+`require'luasodium'` and you'll have access to everything.
 
 Documentation on modules is available in [the wiki](https://github.com/jprjr/luasodium/wiki/Modules).
+

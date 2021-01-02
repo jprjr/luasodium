@@ -1,8 +1,4 @@
-local lib = require'luasodium.crypto_box'
-
-if jit then
-  assert(lib == require'luasodium.crypto_box.ffi')
-end
+local lib = require'luasodium'
 
 for i=1,10000 do
 

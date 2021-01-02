@@ -1,4 +1,4 @@
-.PHONY: all clean release directories test hmm
+.PHONY: all clean release directories test test-jit
 .SUFFIXES:
 
 HOST_CC = cc
@@ -41,7 +41,7 @@ LUASODIUM_FFI_IMPLEMENTATIONS = $(addsuffix /ffi-implementation.h,$(addprefix c/
 LUASODIUM_FFI_SIGNATURES = $(addsuffix /ffi-signatures.h,$(addprefix c/luasodium/,$(LUASODIUM_MODS)))
 
 $(shell mkdir -p $(LUASODIUM_LIB_DIRS) luasodium)
-$(shell cp ffi/luasodium.lua luasodium.lua)
+$(shell cp lua/luasodium.lua luasodium.lua)
 
 LUASODIUM_LOCAL_DLLS = $(LUASODIUM_DLLS:c/%=%) luasodium/core$(DLL) luasodium/ffi$(DLL)
 LUASODIUM_LOCAL_LIBS = $(LUASODIUM_LIBS:c/%=%) luasodium/core$(LIB) luasodium/ffi$(LIB)
@@ -81,10 +81,6 @@ test-%: test-%.lua luasodium/%.lua luasodium/%/ffi.a luasodium/%/core.a
 luasodium/%.lua: lua/luasodium/%.lua $(basename $@)
 	cp $< $@
 
-hmm:
-	echo $(LUASODIUM_FFI_IMPLEMENTATIONS)
-	echo $(VERSION)
-
 luasodium/%$(DLL): c/luasodium/%$(DLL)
 	cp $< $@
 
@@ -117,7 +113,7 @@ clean:
 
 VERSION = $(shell $(LUA) aux/version.lua)
 
-test: $(LUASODIUM_LOCAL_DLLS) $(LUASODIUM_LOCAL_LIBS) $(LUASODIUM_LUAS)
+test: $(LUASODIUM_LOCAL_DLLS) $(LUASODIUM_LOCAL_LIBS)
 	$(LUA) test-crypto_auth.lua
 	$(LUA) test-crypto_box.lua
 	$(LUA) test-crypto_scalarmult.lua
@@ -125,6 +121,15 @@ test: $(LUASODIUM_LOCAL_DLLS) $(LUASODIUM_LOCAL_LIBS) $(LUASODIUM_LUAS)
 	$(LUA) test-crypto_sign.lua
 	$(LUA) test-randombytes.lua
 	$(LUA) test-utils.lua
+
+test-jit:
+	cd ffi && luajit ../test-crypto_auth.lua
+	cd ffi && luajit ../test-crypto_box.lua
+	cd ffi && luajit ../test-crypto_scalarmult.lua
+	cd ffi && luajit ../test-crypto_secretbox.lua
+	cd ffi && luajit ../test-crypto_sign.lua
+	cd ffi && luajit ../test-randombytes.lua
+	cd ffi && luajit ../test-utils.lua
 
 release: $(LUASODIUM_FFI_IMPLEMENTATIONS) $(LUASODIUM_FFI_IMPLEMENTATIONS) README.md c/luasodium/ffi-function-loader.h c/luasodium/ffi-default-signatures.h
 	rm -rf luasodium-$(VERSION) dist/luasodium-$(VERSION)

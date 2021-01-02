@@ -1,6 +1,6 @@
-local implementation = require'luasodium.utiles.implementation'
-local constant_keys = require'luasodium.utiles.constants'
-local signatures = require'luasodium.utiles.signatures'
+local implementation = require'luasodium.utils.implementation'
+local constant_keys = require'luasodium.utils.constants'
+local signatures = require'luasodium.utils.signatures'
 
 local lib_loader = require'luasodium._ffi.lib_loader'
 local constant_loader = require'luasodium._ffi.constant_loader'

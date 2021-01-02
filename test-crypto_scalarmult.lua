@@ -1,8 +1,4 @@
-local lib = require'luasodium.crypto_scalarmult'
-
-if jit then
-  assert(lib == require'luasodium.crypto_scalarmult.ffi')
-end
+local lib = require'luasodium'
 
 do
   local n = string.rep('\0',lib.crypto_scalarmult_SCALARBYTES)
