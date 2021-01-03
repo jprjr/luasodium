@@ -812,7 +812,7 @@ static const struct luaL_Reg ls_crypto_box_functions[] = {
 
 static int
 ls_crypto_box_core_setup(lua_State *L) {
-    luasodium_set_constants(L,ls_crypto_box_constants);
+    luasodium_set_constants(L,ls_crypto_box_constants,lua_gettop(L));
     luaL_setfuncs(L,ls_crypto_box_functions,0);
     return 0;
 }

@@ -356,7 +356,7 @@ static const struct luaL_Reg ls_crypto_secretbox_funcs[] = {
 
 static int
 ls_crypto_secretbox_core_setup(lua_State *L) {
-    luasodium_set_constants(L,ls_crypto_secretbox_constants);
+    luasodium_set_constants(L,ls_crypto_secretbox_constants,lua_gettop(L));
     luaL_setfuncs(L,ls_crypto_secretbox_funcs,0);
     return 0;
 }

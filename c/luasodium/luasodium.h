@@ -24,11 +24,10 @@ typedef struct luasodium_function_s {
 #define LS_FUNC(x) { #x, (ls_func_ptr)x }
 
 static void
-luasodium_set_constants(lua_State *L, const luasodium_constant_t *c) {
+luasodium_set_constants(lua_State *L, const luasodium_constant_t *c,int index) {
     for(; c->name != NULL; c++) {
-        lua_pushstring(L,c->name);
         lua_pushinteger(L,c->value);
-        lua_settable(L,-3);
+        lua_setfield(L,index,c->name);
     }
 }
 

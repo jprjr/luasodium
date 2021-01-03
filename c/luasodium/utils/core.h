@@ -419,7 +419,7 @@ static const struct luaL_Reg ls_utils_functions[] = {
 
 static int
 ls_utils_core_setup(lua_State *L) {
-    luasodium_set_constants(L,ls_utils_constants);
+    luasodium_set_constants(L,ls_utils_constants,lua_gettop(L));
     luaL_setfuncs(L,ls_utils_functions,0);
     return 0;
 }

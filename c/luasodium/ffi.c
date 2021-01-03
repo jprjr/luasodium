@@ -26,15 +26,11 @@
     lua_pop(L,1);
 
 
-#define COPYDOWN_CONSTANTS_TABLE(x) \
-    luasodium_push_constants(L,ls_ ## x ## _constants); \
-    ls_copydown_table(L,constants_index,lua_gettop(L)); \
-    lua_pop(L,1);
+#define PUSH_CONSTANTS_TABLE(x) \
+    luasodium_push_constants(L,ls_ ## x ## _constants,lua_gettop(L));
 
-#define COPYDOWN_FUNC_TABLE(x) \
-    luasodium_push_functions(L,ls_ ## x ## _functions); \
-    ls_copydown_table(L,function_pointers_index,lua_gettop(L)); \
-    lua_pop(L,1);
+#define PUSH_FUNC_TABLE(x) \
+    luasodium_push_functions(L,ls_ ## x ## _functions,lua_gettop(L));
 
 #define COPYDOWN_SIG_TABLE(x) \
     if(luaL_loadbuffer(L,ls_ ## x ## _ffi_signatures,ls_ ## x ## _ffi_signatures_length - 1, "luasodium/" #x "/signatures.lua")) { \
@@ -113,15 +109,15 @@ luaopen_luasodium_ffi(lua_State *L) {
     assert(lua_gettop(L) == function_pointers_index);
 
     /* now load all the function pointers */
-    COPYDOWN_FUNC_TABLE(crypto_auth)
-    COPYDOWN_FUNC_TABLE(crypto_box)
-    COPYDOWN_FUNC_TABLE(crypto_hash)
-    COPYDOWN_FUNC_TABLE(crypto_scalarmult)
-    COPYDOWN_FUNC_TABLE(crypto_secretbox)
-    COPYDOWN_FUNC_TABLE(crypto_sign)
-    COPYDOWN_FUNC_TABLE(randombytes)
-    COPYDOWN_FUNC_TABLE(utils)
-    COPYDOWN_FUNC_TABLE(version)
+    PUSH_FUNC_TABLE(crypto_auth)
+    PUSH_FUNC_TABLE(crypto_box)
+    PUSH_FUNC_TABLE(crypto_hash)
+    PUSH_FUNC_TABLE(crypto_scalarmult)
+    PUSH_FUNC_TABLE(crypto_secretbox)
+    PUSH_FUNC_TABLE(crypto_sign)
+    PUSH_FUNC_TABLE(randombytes)
+    PUSH_FUNC_TABLE(utils)
+    PUSH_FUNC_TABLE(version)
 
     assert(lua_gettop(L) == function_pointers_index);
 
@@ -137,15 +133,15 @@ luaopen_luasodium_ffi(lua_State *L) {
     lua_newtable(L);
     constants_index = lua_gettop(L);
 
-    COPYDOWN_CONSTANTS_TABLE(crypto_auth)
-    COPYDOWN_CONSTANTS_TABLE(crypto_box)
-    COPYDOWN_CONSTANTS_TABLE(crypto_hash)
-    COPYDOWN_CONSTANTS_TABLE(crypto_scalarmult)
-    COPYDOWN_CONSTANTS_TABLE(crypto_secretbox)
-    COPYDOWN_CONSTANTS_TABLE(crypto_sign)
-    COPYDOWN_CONSTANTS_TABLE(randombytes)
-    COPYDOWN_CONSTANTS_TABLE(utils)
-    COPYDOWN_CONSTANTS_TABLE(version)
+    PUSH_CONSTANTS_TABLE(crypto_auth)
+    PUSH_CONSTANTS_TABLE(crypto_box)
+    PUSH_CONSTANTS_TABLE(crypto_hash)
+    PUSH_CONSTANTS_TABLE(crypto_scalarmult)
+    PUSH_CONSTANTS_TABLE(crypto_secretbox)
+    PUSH_CONSTANTS_TABLE(crypto_sign)
+    PUSH_CONSTANTS_TABLE(randombytes)
+    PUSH_CONSTANTS_TABLE(utils)
+    PUSH_CONSTANTS_TABLE(version)
 
     assert(lua_gettop(L) == constants_index);
 

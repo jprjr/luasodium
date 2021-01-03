@@ -33,12 +33,14 @@ int luaopen_luasodium_randombytes_ffi(lua_State *L) {
         return lua_error(L);
     }
 
-    luasodium_push_functions(L,ls_randombytes_functions);
+    lua_newtable(L);
+    luasodium_push_functions(L,ls_randombytes_functions,lua_gettop(L));
     if(lua_pcall(L,2,1,0)) {
         return lua_error(L);
     }
 
-    luasodium_push_constants(L,ls_randombytes_constants);
+    lua_newtable(L);
+    luasodium_push_constants(L,ls_randombytes_constants,lua_gettop(L));
 
     if(lua_pcall(L,2,1,0)) {
         return lua_error(L);

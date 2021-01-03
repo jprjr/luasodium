@@ -359,7 +359,7 @@ ls_crypto_hash_sha512_state_setup(lua_State *L) {
 
 static int
 ls_crypto_hash_core_setup(lua_State *L) {
-    luasodium_set_constants(L,ls_crypto_hash_constants);
+    luasodium_set_constants(L,ls_crypto_hash_constants,lua_gettop(L));
     luaL_setfuncs(L,ls_crypto_hash_functions,0);
     ls_crypto_hash_sha256_state_setup(L);
     ls_crypto_hash_sha512_state_setup(L);

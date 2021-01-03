@@ -69,7 +69,7 @@ static const luaL_Reg ls_crypto_scalarmult_functions[] = {
 
 static int
 ls_crypto_scalarmult_core_setup(lua_State *L) {
-    luasodium_set_constants(L,ls_crypto_scalarmult_constants);
+    luasodium_set_constants(L,ls_crypto_scalarmult_constants,lua_gettop(L));
     luaL_setfuncs(L,ls_crypto_scalarmult_functions,0);
     return 0;
 }

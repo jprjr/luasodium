@@ -33,12 +33,14 @@ int luaopen_luasodium_crypto_auth_ffi(lua_State *L) {
         return lua_error(L);
     }
 
-    luasodium_push_functions(L,ls_crypto_auth_functions);
+    lua_newtable(L);
+    luasodium_push_functions(L,ls_crypto_auth_functions,lua_gettop(L));
     if(lua_pcall(L,2,1,0)) {
         return lua_error(L);
     }
 
-    luasodium_push_constants(L,ls_crypto_auth_constants);
+    lua_newtable(L);
+    luasodium_set_constants(L,ls_crypto_auth_constants,lua_gettop(L));
     /* there's no STATEBYTES constants, we'll add one */
     lua_pushinteger(L,crypto_sign_statebytes());
     lua_setfield(L,-2,"crypto_sign_STATEBYTES");

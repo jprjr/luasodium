@@ -376,7 +376,7 @@ static const struct luaL_Reg ls_crypto_sign_state_functions[] = {
 
 static int
 ls_crypto_sign_core_setup(lua_State *L) {
-    luasodium_set_constants(L,ls_crypto_sign_constants);
+    luasodium_set_constants(L,ls_crypto_sign_constants,lua_gettop(L));
     luaL_setfuncs(L,ls_crypto_sign_functions,0);
 
     /* create our metatable for crypto_sign_state */
