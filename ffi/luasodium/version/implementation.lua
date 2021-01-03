@@ -1,4 +1,4 @@
-local _VERSION = '1.0.0'
+local _VERSION = '1.0.1'
 
 return function(libs)
   local M = {
