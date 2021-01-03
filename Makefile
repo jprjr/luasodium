@@ -61,16 +61,16 @@ INSTALL_LIBS = install-lib-core install-lib-ffi $(addprefix install-lib-,$(LUASO
 
 all: $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
 
-c/luasodium/ffi-function-loader.h: ffi/luasodium/_ffi/function_loader.lua aux/bin2c
+c/luasodium/ffi-function-loader.h: ffi/luasodium/_ffi/function_loader.lua | aux/bin2c
 	./aux/bin2c $< $@ ffi_function_loader
 
-c/luasodium/ffi-default-signatures.h: ffi/luasodium/_ffi/default_signatures.lua aux/bin2c
+c/luasodium/ffi-default-signatures.h: ffi/luasodium/_ffi/default_signatures.lua | aux/bin2c
 	./aux/bin2c $< $@ ffi_default_signatures
 
-c/luasodium/%/ffi-implementation.h: ffi/luasodium/%/implementation.lua aux/bin2c
+c/luasodium/%/ffi-implementation.h: ffi/luasodium/%/implementation.lua | aux/bin2c
 	./aux/bin2c $< $@ $(addsuffix _ffi_implementation,$(addprefix ls_,$(notdir $(patsubst %/,%,$(dir $<)))))
 
-c/luasodium/%/ffi-signatures.h: ffi/luasodium/%/signatures.lua aux/bin2c
+c/luasodium/%/ffi-signatures.h: ffi/luasodium/%/signatures.lua | aux/bin2c
 	./aux/bin2c $< $@ $(addsuffix _ffi_signatures,$(addprefix ls_,$(notdir $(patsubst %/,%,$(dir $<)))))
 
 c/luasodium/core.o: c/luasodium/core.c $(LUASODIUM_CORE_HEADERS) c/luasodium/version/ffi-implementation.h
