@@ -1,9 +1,16 @@
-.PHONY: all clean release test github-release
-.SUFFIXES:
-
 HOST_CC = cc
 PKGCONFIG = pkg-config
 LUA = lua
+
+# using the pkg-config variable names for our install paths
+INSTALL_LMOD = $(shell $(PKGCONFIG) --variable=INSTALL_LMOD $(LUA))
+INSTALL_CMOD = $(shell $(PKGCONFIG) --variable=INSTALL_CMOD $(LUA))
+
+CFLAGS  += $(shell $(PKGCONFIG) --cflags libsodium)
+LDFLAGS += $(shell $(PKGCONFIG) --libs libsodium)
+
+CFLAGS += -fPIC -Wall -Wextra -g -O2
+CFLAGS += $(shell $(PKGCONFIG) --cflags $(LUA))
 
 VERSION = $(shell $(LUA) aux/version.lua)
 
@@ -23,8 +30,8 @@ LUASODIUM_MODS := \
   randombytes
 
 LUASODIUM_LUAS := \
-  luasodium.lua \
-  $(addsuffix .lua,$(addprefix luasodium/,$(LUASODIUM_MODS)))
+  lua/luasodium.lua \
+  $(addsuffix .lua,$(addprefix lua/luasodium/,$(LUASODIUM_MODS)))
 
 LUASODIUM_CORES = $(foreach lib,$(LUASODIUM_MODS),$(addprefix $(lib)/,core ffi))
 LUASODIUM_TESTS = $(addprefix test-,$(LUASODIUM_MODS))
@@ -43,11 +50,8 @@ LUASODIUM_FFI_IMPLEMENTATIONS = $(addsuffix /ffi-implementation.h,$(addprefix c/
 LUASODIUM_FFI_DEFAULT_SIG = c/luasodium/ffi-default-signatures.h
 LUASODIUM_FFI_SIGNATURES  = $(addsuffix /ffi-signatures.h,$(addprefix c/luasodium/,$(LUASODIUM_MODS)))
 
-CFLAGS  += $(shell $(PKGCONFIG) --cflags libsodium)
-LDFLAGS += $(shell $(PKGCONFIG) --libs libsodium)
-
-CFLAGS += -fPIC -Wall -Wextra -g -O2
-CFLAGS += $(shell $(PKGCONFIG) --cflags $(LUA))
+.PHONY: all clean release test github-release install install-luas install-dlls install-libs
+.SUFFIXES:
 
 all: $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
 
@@ -157,4 +161,31 @@ github-release:
 	  --tag v$(VERSION) \
 	  --name luasodium-$(VERSION).tar.xz \
 	  --file dist/luasodium-$(VERSION).tar.xz
+
+define LUA_INSTALL
+install -Dm0644 lua/luasodium/$(1).lua $(DESTDIR)$(INSTALL_LMOD)/luasodium/$(1).lua ;
+endef
+
+define DLL_INSTALL
+install -Dm0755 c/luasodium/$(1)$(DLL) $(DESTDIR)$(INSTALL_CMOD)/luasodium/$(1)$(DLL) ;
+endef
+
+define LIB_INSTALL
+install -Dm0644 c/luasodium/$(1)$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium/$(1)$(LIB) ;
+endef
+
+install-luas:
+	install -Dm0644 lua/luasodium.lua $(DESTDIR)$(INSTALL_LMOD)/luasodium.lua
+	$(foreach mod,$(LUASODIUM_MODS),$(call LUA_INSTALL,$(mod)))
+
+
+install-dlls: $(LUASODIUM_DLLS)
+	$(foreach mod,$(LUASODIUM_MODS),$(call DLL_INSTALL,$(mod)/core))
+	$(foreach mod,$(LUASODIUM_MODS),$(call DLL_INSTALL,$(mod)/ffi))
+
+install-libs: $(LUASODIUM_LIBS)
+	$(foreach mod,$(LUASODIUM_MODS),$(call LIB_INSTALL,$(mod)/core))
+	$(foreach mod,$(LUASODIUM_MODS),$(call LIB_INSTALL,$(mod)/ffi))
+
+install: install-luas install-dlls install-libs
 
