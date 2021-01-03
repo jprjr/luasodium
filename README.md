@@ -109,14 +109,12 @@ If you'd like to build from source, grab
 one of the release tarballs, and run `make`
 
 ```bash
-wget https://github.com/jprjr/luasodium/releases/download/v0.0.10/luasodium-0.0.10.tar.gz
-tar xf luasodium-0.0.10.tar.gz
-cd luasodium-0.0.10
+wget https://github.com/jprjr/luasodium/releases/download/v1.0.0/luasodium-1.0.0.tar.gz
+tar xf luasodium-1.0.0.tar.gz
+cd luasodium-1.0.0
 make
+make install
 ```
-
-I still need to write a `make install` target, and
-update the Makefile for supporting Windows.
 
 ## Licensing
 
