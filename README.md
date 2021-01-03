@@ -98,6 +98,12 @@ An FFI-only version is available on [OPM](https://opm.openresty.org/package/jprj
 opm install jprjr/luasodium
 ```
 
+### Arch Linux
+
+Available on the AUR: [lua-luasodium](https://aur.archlinux.org/packages/lua-luasodium/).
+
+Builds packages for lua, lua-5.1, lua-5.2, and lua-5.3.
+
 ### Source
 
 Release tarballs are available, they include pre-generated headers
