@@ -82,9 +82,6 @@ c/luasodium/ffi.o: c/luasodium/ffi.c $(LUASODIUM_FFI_HEADERS) $(LUASODIUM_FFI_LO
 c/luasodium/version/core.o: c/luasodium/version/core.c c/luasodium/version/core.h c/luasodium/version/ffi-implementation.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-c/luasodium/version/ffi.o: c/luasodium/version/ffi.c c/luasodium/version/core.h c/luasodium/version/ffi-implementation.h
-	$(CC) $(CFLAGS) -o $@ -c $<
-
 %/core.o: %/core.c %/core.h %/constants.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 

@@ -35,27 +35,31 @@ it will use `ffi.load` to locate the `sodium` library.
 
 ## Status and roadmap
 
-I noticed that a lot of `libsodium` functions are pretty similar, so
-I initially tried using closures to encapsulate functions. This wound
-up creating a lot of overhead on my part - I created structures
-to track everything, and had closures referencing those structures.
+As of version `1.0.0`, this module covers:
 
-Now I just have a 1-to-1 mapping of a `libsodium` function
-to a Lua wrapper. I may revisit this and go with a simpler
-closure implementation in the future.
+* All original, high-level functions from [NaCl](http://nacl.cr.yp.to/index.html)
+(crypto\_box, crypto\_secretbox, and so on).
+* All of libsodium's additions to NaCl's high-level functions (crypto\_box\_easy,
+crypto\_secretbox\_easy).
+* All of libsodium's utility functions and random data generating functions.
 
-I don't plan to cover *all* the libsodium API, at least not for
-version `1.0.0`. There's a lot of low-level functions that
-libsodium [is planning to remove](https://github.com/jedisct1/libsodium/issues/1017),
-so I'm going to prioritize covering the high-level functions.
+It does not yet cover the entire libsodium API.
 
-I'll mark this as version `1.0.0` when I've covered all the original,
-high-level [NaCl](https://nacl.cr.yp.to/index.html) functions, and
-any equivalent "easy"/"detached" variants that `libsodium` has added.
-I think at that point, this library should be pretty usable.
+Details on what functions were implemented can be found under the
+[Version 1.0.0 Milestone](https://github.com/jprjr/luasodium/milestone/1?closed=1).
 
-The issues under the [Version 1.0.0 Milestone](https://github.com/jprjr/luasodium/milestone/1)
-list out all the functions that will be covered in a 1.0.0 release.
+Upcoming releases will (likely) cover:
+
+### Version 1.1
+
+* All original lower-level functions from NaCl (crypto\_box\_curve25519xsalsa20poly1305,
+crypto\_secretbox\_xsalsa20poly1305).
+
+### Version 1.2
+
+* The libsodium `crypto_generichash` API.
+* The libsodium `crypto_secretstream` API.
+
 
 ## Caveats
 

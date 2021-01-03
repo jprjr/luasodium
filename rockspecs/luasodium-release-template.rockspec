@@ -172,9 +172,15 @@ build = {
     },
     ["luasodium.version.core"] = {
       sources = { "c/luasodium/version/core.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
     },
     ["luasodium.version.ffi"] = {
       sources = { "c/luasodium/version/ffi.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
     },
   },
 }
