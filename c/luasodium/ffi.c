@@ -153,6 +153,14 @@ luaopen_luasodium_ffi(lua_State *L) {
     lua_pushinteger(L,crypto_sign_statebytes());
     lua_setfield(L,-2,"crypto_sign_STATEBYTES");
 
+    /* deviation - there's no crypto_hash_sha256_STATEBYTES in libsodium */
+    lua_pushinteger(L,crypto_hash_sha256_statebytes());
+    lua_setfield(L,-2,"crypto_hash_sha256_STATEBYTES");
+
+    /* deviation - there's no crypto_hash_sha512_STATEBYTES in libsodium */
+    lua_pushinteger(L,crypto_hash_sha512_statebytes());
+    lua_setfield(L,-2,"crypto_hash_sha512_STATEBYTES");
+
     COPYDOWN_FFI_IMPLEMENTATION(crypto_auth)
     COPYDOWN_FFI_IMPLEMENTATION(crypto_box)
     COPYDOWN_FFI_IMPLEMENTATION(crypto_hash)
