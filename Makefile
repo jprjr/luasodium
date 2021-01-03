@@ -50,7 +50,11 @@ LUASODIUM_FFI_IMPLEMENTATIONS = $(addsuffix /ffi-implementation.h,$(addprefix c/
 LUASODIUM_FFI_DEFAULT_SIG = c/luasodium/ffi-default-signatures.h
 LUASODIUM_FFI_SIGNATURES  = $(addsuffix /ffi-signatures.h,$(addprefix c/luasodium/,$(LUASODIUM_MODS)))
 
-.PHONY: all clean release test github-release install install-luas install-dlls install-libs
+INSTALL_LUAS = install-lua-luasodium $(addprefix install-lua-,$(LUASODIUM_MODS))
+INSTALL_DLLS = install-dll-core install-dll-ffi $(addprefix install-dll-,$(LUASODIUM_MODS))
+INSTALL_LIBS = install-lib-core install-lib-ffi $(addprefix install-lib-,$(LUASODIUM_MODS))
+
+.PHONY: all clean release test github-release install install-lua-luasodium $(INSTALL_LUAS) $(INSTALL_DLLS) $(INSTALL_LIBS)
 .SUFFIXES:
 
 all: $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
@@ -163,29 +167,47 @@ github-release:
 	  --file dist/luasodium-$(VERSION).tar.xz
 
 define LUA_INSTALL
-install -Dm0644 lua/luasodium/$(1).lua $(DESTDIR)$(INSTALL_LMOD)/luasodium/$(1).lua ;
+install-lua-$(1):
+	install -Dm0644 lua/luasodium/$(1).lua $(DESTDIR)$(INSTALL_LMOD)/luasodium/$(1).lua
 endef
 
 define DLL_INSTALL
-install -Dm0755 c/luasodium/$(1)$(DLL) $(DESTDIR)$(INSTALL_CMOD)/luasodium/$(1)$(DLL) ;
+install-dll-$(1): c/luasodium/$(1)/core$(DLL) c/luasodium/$(1)/ffi$(DLL)
+	install -Dm0755 c/luasodium/$(1)/core$(DLL) $(DESTDIR)$(INSTALL_CMOD)/luasodium/$(1)/core$(DLL)
+	install -Dm0755 c/luasodium/$(1)/ffi$(DLL) $(DESTDIR)$(INSTALL_CMOD)/luasodium/$(1)/ffi$(DLL)
 endef
 
 define LIB_INSTALL
-install -Dm0644 c/luasodium/$(1)$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium/$(1)$(LIB) ;
+install-lib-$(1): c/luasodium/$(1)/core$(LIB) c/luasodium/$(1)/ffi$(LIB)
+	install -Dm0755 c/luasodium/$(1)/core$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium/$(1)/core$(LIB)
+	install -Dm0755 c/luasodium/$(1)/ffi$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium/$(1)/ffi$(LIB)
 endef
 
-install-luas:
+install-lib-core: c/luasodium/core$(LIB)
+	install -Dm0755 c/luasodium/core$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium/core$(LIB)
+
+install-lib-ffi: c/luasodium/ffi$(LIB)
+	install -Dm0755 c/luasodium/ffi$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium/ffi$(LIB)
+
+install-dll-core: c/luasodium/core$(DLL)
+	install -Dm0755 c/luasodium/core$(DLL) $(DESTDIR)$(INSTALL_CMOD)/luasodium/core$(DLL)
+
+install-dll-ffi: c/luasodium/ffi$(DLL)
+	install -Dm0755 c/luasodium/ffi$(DLL) $(DESTDIR)$(INSTALL_CMOD)/luasodium/ffi$(DLL)
+
+install-lua-luasodium:
 	install -Dm0644 lua/luasodium.lua $(DESTDIR)$(INSTALL_LMOD)/luasodium.lua
-	$(foreach mod,$(LUASODIUM_MODS),$(call LUA_INSTALL,$(mod)))
 
+$(foreach mod,$(LUASODIUM_MODS),$(eval $(call LUA_INSTALL,$(mod))))
+$(foreach mod,$(LUASODIUM_MODS),$(eval $(call DLL_INSTALL,$(mod))))
+$(foreach mod,$(LUASODIUM_MODS),$(eval $(call LIB_INSTALL,$(mod))))
 
-install-dlls: $(LUASODIUM_DLLS)
-	$(foreach mod,$(LUASODIUM_MODS),$(call DLL_INSTALL,$(mod)/core))
-	$(foreach mod,$(LUASODIUM_MODS),$(call DLL_INSTALL,$(mod)/ffi))
+install-luas: $(INSTALL_LUAS)
 
-install-libs: $(LUASODIUM_LIBS)
-	$(foreach mod,$(LUASODIUM_MODS),$(call LIB_INSTALL,$(mod)/core))
-	$(foreach mod,$(LUASODIUM_MODS),$(call LIB_INSTALL,$(mod)/ffi))
+install-dlls: $(INSTALL_DLLS)
+
+install-libs: $(INSTALL_LIBS)
 
 install: install-luas install-dlls install-libs
+
 
