@@ -17,6 +17,7 @@ LUASODIUM_MODS := \
   crypto_sign \
   crypto_auth \
   crypto_hash \
+  crypto_stream \
   crypto_box \
   crypto_scalarmult \
   randombytes

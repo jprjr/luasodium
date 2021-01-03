@@ -6,6 +6,7 @@
 #include "crypto_scalarmult/ffi.h"
 #include "crypto_secretbox/ffi.h"
 #include "crypto_sign/ffi.h"
+#include "crypto_stream/ffi.h"
 #include "randombytes/ffi.h"
 #include "utils/ffi.h"
 #include "version/ffi.h"
@@ -94,6 +95,7 @@ luaopen_luasodium_ffi(lua_State *L) {
     COPYDOWN_SIG_TABLE(crypto_scalarmult)
     COPYDOWN_SIG_TABLE(crypto_secretbox)
     COPYDOWN_SIG_TABLE(crypto_sign)
+    COPYDOWN_SIG_TABLE(crypto_stream)
     COPYDOWN_SIG_TABLE(randombytes)
     COPYDOWN_SIG_TABLE(utils)
     COPYDOWN_SIG_TABLE(version)
@@ -115,6 +117,7 @@ luaopen_luasodium_ffi(lua_State *L) {
     PUSH_FUNC_TABLE(crypto_scalarmult)
     PUSH_FUNC_TABLE(crypto_secretbox)
     PUSH_FUNC_TABLE(crypto_sign)
+    PUSH_FUNC_TABLE(crypto_stream)
     PUSH_FUNC_TABLE(randombytes)
     PUSH_FUNC_TABLE(utils)
     PUSH_FUNC_TABLE(version)
@@ -139,6 +142,7 @@ luaopen_luasodium_ffi(lua_State *L) {
     PUSH_CONSTANTS_TABLE(crypto_scalarmult)
     PUSH_CONSTANTS_TABLE(crypto_secretbox)
     PUSH_CONSTANTS_TABLE(crypto_sign)
+    PUSH_CONSTANTS_TABLE(crypto_stream)
     PUSH_CONSTANTS_TABLE(randombytes)
     PUSH_CONSTANTS_TABLE(utils)
     PUSH_CONSTANTS_TABLE(version)
@@ -163,6 +167,7 @@ luaopen_luasodium_ffi(lua_State *L) {
     COPYDOWN_FFI_IMPLEMENTATION(crypto_scalarmult)
     COPYDOWN_FFI_IMPLEMENTATION(crypto_secretbox)
     COPYDOWN_FFI_IMPLEMENTATION(crypto_sign)
+    COPYDOWN_FFI_IMPLEMENTATION(crypto_stream)
     COPYDOWN_FFI_IMPLEMENTATION(randombytes)
     COPYDOWN_FFI_IMPLEMENTATION(utils)
     COPYDOWN_FFI_IMPLEMENTATION(version)

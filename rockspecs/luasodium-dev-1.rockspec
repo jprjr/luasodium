@@ -21,6 +21,7 @@ build = {
     ["luasodium.crypto_scalarmult"] = "lua/luasodium/crypto_scalarmult.lua",
     ["luasodium.crypto_secretbox"] = "lua/luasodium/crypto_secretbox.lua",
     ["luasodium.crypto_sign"] = "lua/luasodium/crypto_sign.lua",
+    ["luasodium.crypto_stream"] = "lua/luasodium/crypto_stream.lua",
     ["luasodium.randombytes"] = "lua/luasodium/randombytes.lua",
     ["luasodium.utils"] = "lua/luasodium/utils.lua",
     ["luasodium.core"] = {
@@ -103,6 +104,18 @@ build = {
     },
     ["luasodium.crypto_sign.ffi"] = {
       sources = { "c/luasodium/crypto_sign/ffi.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
+    },
+    ["luasodium.crypto_stream.core"] = {
+      sources = { "c/luasodium/crypto_stream/core.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
+    },
+    ["luasodium.crypto_stream.ffi"] = {
+      sources = { "c/luasodium/crypto_stream/ffi.c" },
       libdirs = "$(SODIUM_LIBDIR)",
       incdirs = "$(SODIUM_INCDIR)",
       libraries = "sodium",
