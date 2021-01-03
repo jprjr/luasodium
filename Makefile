@@ -74,10 +74,10 @@ c/luasodium/version/core.o: c/luasodium/version/core.c c/luasodium/version/core.
 c/luasodium/version/ffi.o: c/luasodium/version/ffi.c c/luasodium/version/core.h c/luasodium/version/ffi-implementation.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-%/core.o: %/core.c %/constants.h
+%/core.o: %/core.c %/core.h %/constants.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-%/ffi.o: %/ffi.c %/constants.h %/ffi-implementation.h %/ffi-signatures.h $(LUASODIUM_FFI_LOADER) $(LUASODIUM_FFI_DEFAULT_SIG)
+%/ffi.o: %/ffi.c %/ffi.h %/constants.h %/ffi-implementation.h %/ffi-signatures.h $(LUASODIUM_FFI_LOADER) $(LUASODIUM_FFI_DEFAULT_SIG)
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 %$(DLL): %.o
