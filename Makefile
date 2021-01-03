@@ -133,6 +133,7 @@ release: $(LUASODIUM_FFI_IMPLEMENTATIONS) $(LUASODIUM_FFI_SIGNATURES) README.md 
 	rsync -a dist.ini luasodium-$(VERSION)/dist.ini
 	rsync -a test-*.lua luasodium-$(VERSION)/
 	sed 's/@VERSION@/$(VERSION)/g' < rockspecs/luasodium-release-template.rockspec > luasodium-$(VERSION)/rockspecs/luasodium-$(VERSION)-1.rockspec
+	sed 's/@VERSION@/$(VERSION)/g' < dist.ini > luasodium-$(VERSION)/dist.ini
 	tar cvf dist/luasodium-$(VERSION).tar luasodium-$(VERSION)
 	gzip -k dist/luasodium-$(VERSION).tar
 	xz dist/luasodium-$(VERSION).tar
