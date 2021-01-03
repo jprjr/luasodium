@@ -68,7 +68,7 @@ static int
 ls_crypto_hash_sha256_init(lua_State *L) {
     crypto_hash_sha256_state *state = NULL;
     state = (crypto_hash_sha256_state *)lua_newuserdata(L,
-      sizeof(crypto_hash_sha256_state));
+      crypto_hash_sha256_statebytes());
 
     if(state == NULL) {
         return luaL_error(L,"out of memory");
@@ -146,7 +146,7 @@ static int
 ls_crypto_hash_sha512_init(lua_State *L) {
     crypto_hash_sha512_state *state = NULL;
     state = (crypto_hash_sha512_state *)lua_newuserdata(L,
-      sizeof(crypto_hash_sha512_state));
+      crypto_hash_sha512_statebytes());
 
     if(state == NULL) {
         return luaL_error(L,"out of memory");
@@ -223,14 +223,14 @@ ls_crypto_hash_sha512_final(lua_State *L) {
 static int
 ls_crypto_hash_sha256_state__gc(lua_State *L) {
     crypto_hash_sha256_state *state = (crypto_hash_sha256_state *)lua_touserdata(L,1);
-    sodium_memzero(state,sizeof(crypto_hash_sha256_state));
+    sodium_memzero(state,crypto_hash_sha256_statebytes());
     return 0;
 }
 
 static int
 ls_crypto_hash_sha512_state__gc(lua_State *L) {
     crypto_hash_sha512_state *state = (crypto_hash_sha512_state *)lua_touserdata(L,1);
-    sodium_memzero(state,sizeof(crypto_hash_sha512_state));
+    sodium_memzero(state,crypto_hash_sha512_statebytes());
     return 0;
 }
 

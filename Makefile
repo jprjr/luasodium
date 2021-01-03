@@ -99,7 +99,7 @@ test-jit:
 	cd ffi && luajit ../test-randombytes.lua
 	cd ffi && luajit ../test-utils.lua
 
-test-%: c/luasodium/%/core$(DLL)
+test-%: c/luasodium/%/core$(DLL) c/luasodium/%/ffi$(DLL)
 	$(LUA) -l aux.set_paths $@.lua
 
 test: $(LUASODIUM_TESTS)

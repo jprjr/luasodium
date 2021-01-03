@@ -40,6 +40,14 @@ int luaopen_luasodium_crypto_hash_ffi(lua_State *L) {
 
     luasodium_push_constants(L,ls_crypto_hash_constants);
 
+    /* deviation - there's no crypto_hash_sha256_STATEBYTES in libsodium */
+    lua_pushinteger(L,crypto_hash_sha256_statebytes());
+    lua_setfield(L,-2,"crypto_hash_sha256_STATEBYTES");
+
+    /* deviation - there's no crypto_hash_sha512_STATEBYTES in libsodium */
+    lua_pushinteger(L,crypto_hash_sha512_statebytes());
+    lua_setfield(L,-2,"crypto_hash_sha512_STATEBYTES");
+
     if(lua_pcall(L,2,1,0)) {
         return lua_error(L);
     }
