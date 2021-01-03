@@ -5,6 +5,8 @@ use warnings;
 use File::Spec;
 
 my $defines = {};
+my $includes = {};
+my @includes_order = ();
 my @stack;
 
 sub slurpfile {
@@ -81,6 +83,15 @@ sub processline {
     my $line = shift;
     my $linenum = shift;
 
+    if($line =~ /^#include\s+</) {
+        my ($includename) = ($line =~ /^#include\s+<([^>]+)>/);
+        if(not exists($includes->{$includename})) {
+            push(@includes_order,$includename);
+            $includes->{$includename} = 1;
+        }
+        return '';
+    }
+
     if($line !~ /^#include\s+"/) {
         return $line;
     }
@@ -109,4 +120,10 @@ foreach my $file (@ARGV) {
     $output .= processfile($file,undef,@lines);
 }
 
+my $inc = '';
+foreach my $i (@includes_order) {
+    $inc .= '#include <' . $i . ">\n";
+}
+
+print $inc;
 print $output;

@@ -27,8 +27,8 @@ be linked to `libsodium` and have references to the needed functions).
 
 If you're in an environment where building a C module is difficult,
 but using the FFI API is fine, you can also just use the modules under
-the `ffi/` folder directly. They detect if they're being loaded
-from the C module, or if they're being loaded as regular modules.
+the `ffi/` folder directly. They're able to be loaded as regular
+modules by LuaJIT.
 This is how the version on [OPM](https://opm.openresty.org/package/jprjr/luasodium/)
 is published, since OPM doesn't allow C modules. In this case,
 it will use `ffi.load` to locate the `sodium` library.
@@ -96,8 +96,10 @@ opm install jprjr/luasodium
 
 ### Source
 
-Release tarballs are available, with the sources amalgamated into
-two C files - `core.c` and `ffi.c`.
+Release tarballs are available, they include pre-generated headers
+for the ffi modules. They also include amalgamated versions of
+the main `luasodium` module, in case you want something easy to
+integrate into your own build system.
 
 If you'd like to build from source, grab
 one of the release tarballs, and run `make`
@@ -197,13 +199,11 @@ local incremented = luasodium.sodium_increment(buf)
 
 ## Modules
 
-The luasodium source is broken into submodules to make
-individual testing easier - if you clone this
-repo locally, the default Makefile will build a local
-tree to perform testing with.
-
-The release build just uses a single module. You just need to
-`require'luasodium'` and you'll have access to everything.
+Luasodium is broken into submodules, though these are mostly used
+for testing and verification - the recommended approach is to
+just require `luasodium`. This will return a module with
+all functions and constants from the submodules in a single
+table.
 
 Documentation on modules is available in [the wiki](https://github.com/jprjr/luasodium/wiki/Modules).
 

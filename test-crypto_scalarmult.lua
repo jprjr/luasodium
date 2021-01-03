@@ -1,4 +1,4 @@
-local lib = require'luasodium'
+local lib = require'luasodium.crypto_scalarmult'
 
 do
   local n = string.rep('\0',lib.crypto_scalarmult_SCALARBYTES)

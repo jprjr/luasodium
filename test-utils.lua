@@ -1,4 +1,4 @@
-local lib   = require'luasodium'
+local lib   = require'luasodium.utils'
 
 for i=1,100 do
 do

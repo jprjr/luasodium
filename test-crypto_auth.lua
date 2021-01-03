@@ -1,4 +1,4 @@
-local lib = require'luasodium'
+local lib = require'luasodium.crypto_auth'
 
 local expected = {
   36, 166, 137, 74, 84, 118, 157, 225,

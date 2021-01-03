@@ -1,4 +1,4 @@
-local lib = require'luasodium'
+local lib = require'luasodium.crypto_secretbox'
 
 local nonce = string.rep('\0',lib.crypto_secretbox_NONCEBYTES)
 local key = string.rep('\0',lib.crypto_secretbox_KEYBYTES)

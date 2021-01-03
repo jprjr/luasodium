@@ -14,6 +14,27 @@ description = {
 build = {
   type = "builtin",
   modules = {
+    ["luasodium"] = "ffi/luasodium.lua",
+    ["luasodium.crypto_auth"] = "lua/luasodium/crypto_auth.lua",
+    ["luasodium.crypto_box"] = "lua/luasodium/crypto_box.lua",
+    ["luasodium.crypto_hash"] = "lua/luasodium/crypto_hash.lua",
+    ["luasodium.crypto_scalarmult"] = "lua/luasodium/crypto_scalarmult.lua",
+    ["luasodium.crypto_secretbox"] = "lua/luasodium/crypto_secretbox.lua",
+    ["luasodium.crypto_sign"] = "lua/luasodium/crypto_sign.lua",
+    ["luasodium.randombytes"] = "lua/luasodium/randombytes.lua",
+    ["luasodium.utils"] = "lua/luasodium/utils.lua",
+    ["luasodium.core"] = {
+      sources = { "c/luasodium/core.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
+    },
+    ["luasodium.ffi"] = {
+      sources = { "c/luasodium/ffi.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
+    },
     ["luasodium.crypto_auth.core"] = {
       sources = { "c/luasodium/crypto_auth/core.c" },
       libdirs = "$(SODIUM_LIBDIR)",
@@ -34,6 +55,18 @@ build = {
     },
     ["luasodium.crypto_box.ffi"] = {
       sources = { "c/luasodium/crypto_box/ffi.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
+    },
+    ["luasodium.crypto_hash.core"] = {
+      sources = { "c/luasodium/crypto_hash/core.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
+    },
+    ["luasodium.crypto_hash.ffi"] = {
+      sources = { "c/luasodium/crypto_hash/ffi.c" },
       libdirs = "$(SODIUM_LIBDIR)",
       incdirs = "$(SODIUM_INCDIR)",
       libraries = "sodium",
@@ -104,16 +137,6 @@ build = {
     ["luasodium.version.ffi"] = {
       sources = { "c/luasodium/version/ffi.c" },
     },
-    ["luasodium"] = "ffi/luasodium.lua",
-    ["luasodium.core"] = "lua/luasodium/core.lua",
-    ["luasodium.ffi"] = "lua/luasodium/ffi.lua",
-    ["luasodium.crypto_auth"] = "lua/luasodium/crypto_auth.lua",
-    ["luasodium.crypto_box"] = "lua/luasodium/crypto_box.lua",
-    ["luasodium.crypto_scalarmult"] = "lua/luasodium/crypto_scalarmult.lua",
-    ["luasodium.crypto_secretbox"] = "lua/luasodium/crypto_secretbox.lua",
-    ["luasodium.crypto_sign"] = "lua/luasodium/crypto_sign.lua",
-    ["luasodium.randombytes"] = "lua/luasodium/randombytes.lua",
-    ["luasodium.utils"] = "lua/luasodium/utils.lua",
   },
 }
 

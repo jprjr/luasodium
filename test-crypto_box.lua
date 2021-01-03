@@ -1,4 +1,4 @@
-local lib = require'luasodium'
+local lib = require'luasodium.crypto_box'
 
 for i=1,10000 do
 
