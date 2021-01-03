@@ -29,6 +29,12 @@ local signatures = {
   ['crypto_hash_sha512_final'] = [[
     int %s(void *state, unsigned char *h)
   ]],
+  ['crypto_hash_sha256_statebytes'] = [[
+    size_t %s(void)
+  ]],
+  ['crypto_hash_sha512_statebytes'] = [[
+    size_t %s(void)
+  ]],
 }
 
 return signatures

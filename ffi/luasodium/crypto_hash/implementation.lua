@@ -19,8 +19,8 @@ return function(libs, constants)
   local crypto_hash_BYTES = constants.crypto_hash_BYTES
   local crypto_hash_sha256_BYTES = constants.crypto_hash_sha256_BYTES
   local crypto_hash_sha512_BYTES = constants.crypto_hash_sha512_BYTES
-  local crypto_hash_sha256_STATEBYTES = constants.crypto_hash_sha256_STATEBYTES
-  local crypto_hash_sha512_STATEBYTES = constants.crypto_hash_sha512_STATEBYTES
+  local crypto_hash_sha256_STATEBYTES = tonumber(sodium_lib.crypto_hash_sha256_statebytes())
+  local crypto_hash_sha512_STATEBYTES = tonumber(sodium_lib.crypto_hash_sha512_statebytes())
 
   local function ls_sha256_free(state)
    sodium_lib.sodium_memzero(state,crypto_hash_sha256_STATEBYTES)
@@ -46,7 +46,7 @@ return function(libs, constants)
 
   local function ls_crypto_hash(message)
     if not message then
-      return error('requires 2 arguments')
+      return error('requires 1 arguments')
     end
 
     local hash = char_array(crypto_hash_BYTES)

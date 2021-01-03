@@ -18,17 +18,18 @@ DLL=.so
 LIB=.a
 
 LUASODIUM_MODS := \
-  version \
-  utils \
+  crypto_auth \
+  crypto_box \
+  crypto_hash \
+  crypto_onetimeauth \
+  crypto_scalarmult \
   crypto_secretbox \
   crypto_sign \
-  crypto_auth \
-  crypto_hash \
   crypto_stream \
-  crypto_box \
-  crypto_scalarmult \
   crypto_verify \
-  randombytes
+  randombytes \
+  utils \
+  version
 
 LUASODIUM_LUAS := \
   lua/luasodium.lua \

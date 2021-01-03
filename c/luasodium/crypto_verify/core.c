@@ -9,5 +9,3 @@ int luaopen_luasodium_crypto_verify_core(lua_State *L) {
     return 1;
 }
 
-
-

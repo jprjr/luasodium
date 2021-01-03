@@ -18,6 +18,7 @@ build = {
     ["luasodium.crypto_auth"] = "lua/luasodium/crypto_auth.lua",
     ["luasodium.crypto_box"] = "lua/luasodium/crypto_box.lua",
     ["luasodium.crypto_hash"] = "lua/luasodium/crypto_hash.lua",
+    ["luasodium.crypto_onetimeauth"] = "lua/luasodium/crypto_onetimeauth.lua",
     ["luasodium.crypto_scalarmult"] = "lua/luasodium/crypto_scalarmult.lua",
     ["luasodium.crypto_secretbox"] = "lua/luasodium/crypto_secretbox.lua",
     ["luasodium.crypto_sign"] = "lua/luasodium/crypto_sign.lua",
@@ -69,6 +70,18 @@ build = {
     },
     ["luasodium.crypto_hash.ffi"] = {
       sources = { "c/luasodium/crypto_hash/ffi.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
+    },
+    ["luasodium.crypto_onetimeauth.core"] = {
+      sources = { "c/luasodium/crypto_onetimeauth/core.c" },
+      libdirs = "$(SODIUM_LIBDIR)",
+      incdirs = "$(SODIUM_INCDIR)",
+      libraries = "sodium",
+    },
+    ["luasodium.crypto_onetimeauth.ffi"] = {
+      sources = { "c/luasodium/crypto_onetimeauth/ffi.c" },
       libdirs = "$(SODIUM_LIBDIR)",
       incdirs = "$(SODIUM_INCDIR)",
       libraries = "sodium",

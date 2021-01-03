@@ -3,6 +3,7 @@
 #include "crypto_auth/ffi.h"
 #include "crypto_box/ffi.h"
 #include "crypto_hash/ffi.h"
+#include "crypto_onetimeauth/ffi.h"
 #include "crypto_scalarmult/ffi.h"
 #include "crypto_secretbox/ffi.h"
 #include "crypto_sign/ffi.h"
@@ -93,6 +94,7 @@ luaopen_luasodium_ffi(lua_State *L) {
     COPYDOWN_SIG_TABLE(crypto_auth)
     COPYDOWN_SIG_TABLE(crypto_box)
     COPYDOWN_SIG_TABLE(crypto_hash)
+    COPYDOWN_SIG_TABLE(crypto_onetimeauth)
     COPYDOWN_SIG_TABLE(crypto_scalarmult)
     COPYDOWN_SIG_TABLE(crypto_secretbox)
     COPYDOWN_SIG_TABLE(crypto_sign)
@@ -116,6 +118,7 @@ luaopen_luasodium_ffi(lua_State *L) {
     PUSH_FUNC_TABLE(crypto_auth)
     PUSH_FUNC_TABLE(crypto_box)
     PUSH_FUNC_TABLE(crypto_hash)
+    PUSH_FUNC_TABLE(crypto_onetimeauth)
     PUSH_FUNC_TABLE(crypto_scalarmult)
     PUSH_FUNC_TABLE(crypto_secretbox)
     PUSH_FUNC_TABLE(crypto_sign)
@@ -142,6 +145,7 @@ luaopen_luasodium_ffi(lua_State *L) {
     PUSH_CONSTANTS_TABLE(crypto_auth)
     PUSH_CONSTANTS_TABLE(crypto_box)
     PUSH_CONSTANTS_TABLE(crypto_hash)
+    PUSH_CONSTANTS_TABLE(crypto_onetimeauth)
     PUSH_CONSTANTS_TABLE(crypto_scalarmult)
     PUSH_CONSTANTS_TABLE(crypto_secretbox)
     PUSH_CONSTANTS_TABLE(crypto_sign)
@@ -168,6 +172,7 @@ luaopen_luasodium_ffi(lua_State *L) {
     COPYDOWN_FFI_IMPLEMENTATION(crypto_auth)
     COPYDOWN_FFI_IMPLEMENTATION(crypto_box)
     COPYDOWN_FFI_IMPLEMENTATION(crypto_hash)
+    COPYDOWN_FFI_IMPLEMENTATION(crypto_onetimeauth)
     COPYDOWN_FFI_IMPLEMENTATION(crypto_scalarmult)
     COPYDOWN_FFI_IMPLEMENTATION(crypto_secretbox)
     COPYDOWN_FFI_IMPLEMENTATION(crypto_sign)

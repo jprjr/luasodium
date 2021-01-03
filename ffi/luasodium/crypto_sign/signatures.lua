@@ -46,6 +46,9 @@ local signatures = {
   ['crypto_sign_ed25519_sk_to_pk'] = [[
     int %s(unsigned char *pk, const unsigned char *sk)
   ]],
+  ['crypto_sign_statebytes'] = [[
+    size_t %s(void)
+  ]],
 }
 
 return signatures

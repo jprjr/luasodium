@@ -19,7 +19,7 @@ return function(libs, constants)
   local crypto_sign_SECRETKEYBYTES = constants.crypto_sign_SECRETKEYBYTES
   local crypto_sign_BYTES          = constants.crypto_sign_BYTES
   local crypto_sign_SEEDBYTES      = constants.crypto_sign_SEEDBYTES
-  local crypto_sign_STATEBYTES     = constants.crypto_sign_STATEBYTES
+  local crypto_sign_STATEBYTES     = tonumber(sodium_lib.crypto_sign_statebytes())
 
   local function zerofree(state)
     sodium_lib.sodium_memzero(state,crypto_sign_STATEBYTES)
