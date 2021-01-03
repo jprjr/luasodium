@@ -5,6 +5,7 @@
 #include "crypto_secretbox/core.h"
 #include "crypto_sign/core.h"
 #include "crypto_stream/core.h"
+#include "crypto_verify/core.h"
 #include "randombytes/core.h"
 #include "utils/core.h"
 #include "version/core.h"
@@ -21,6 +22,7 @@ luaopen_luasodium_core(lua_State *L) {
     ls_crypto_secretbox_core_setup(L);
     ls_crypto_sign_core_setup(L);
     ls_crypto_stream_core_setup(L);
+    ls_crypto_verify_core_setup(L);
     ls_randombytes_core_setup(L);
     ls_utils_core_setup(L);
     ls_version_core_setup(L);

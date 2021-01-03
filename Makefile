@@ -27,6 +27,7 @@ LUASODIUM_MODS := \
   crypto_stream \
   crypto_box \
   crypto_scalarmult \
+  crypto_verify \
   randombytes
 
 LUASODIUM_LUAS := \
