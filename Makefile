@@ -178,15 +178,15 @@ endef
 
 define LIB_INSTALL
 install-lib-$(1): c/luasodium/$(1)/core$(LIB) c/luasodium/$(1)/ffi$(LIB)
-	install -Dm0755 c/luasodium/$(1)/core$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium/$(1)/core$(LIB)
-	install -Dm0755 c/luasodium/$(1)/ffi$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium/$(1)/ffi$(LIB)
+	install -Dm0644 c/luasodium/$(1)/core$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium/$(1)/core$(LIB)
+	install -Dm0644 c/luasodium/$(1)/ffi$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium/$(1)/ffi$(LIB)
 endef
 
 install-lib-core: c/luasodium/core$(LIB)
-	install -Dm0755 c/luasodium/core$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium/core$(LIB)
+	install -Dm0644 c/luasodium/core$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium/core$(LIB)
 
 install-lib-ffi: c/luasodium/ffi$(LIB)
-	install -Dm0755 c/luasodium/ffi$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium/ffi$(LIB)
+	install -Dm0644 c/luasodium/ffi$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium/ffi$(LIB)
 
 install-dll-core: c/luasodium/core$(DLL)
 	install -Dm0755 c/luasodium/core$(DLL) $(DESTDIR)$(INSTALL_CMOD)/luasodium/core$(DLL)
