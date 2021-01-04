@@ -13,7 +13,9 @@
 
 int
 luaopen_luasodium_core(lua_State *L) {
+    /* LCOV_EXCL_START */
     LUASODIUM_INIT(L);
+    /* LCOV_EXCL_STOP */
     lua_newtable(L);
 
     ls_crypto_auth_core_setup(L);

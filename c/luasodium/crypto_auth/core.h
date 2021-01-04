@@ -22,9 +22,12 @@ ls_crypto_auth(lua_State *L) {
         return luaL_error(L,"wrong key size, expected: %d", crypto_auth_KEYBYTES);
     }
 
+    /* LCOV_EXCL_START */
     if(crypto_auth(out,in,inlen,k) == -1) {
         return luaL_error(L,"crypto_auth error");
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pushlstring(L,(const char *)out,crypto_auth_BYTES);
     sodium_memzero(out,crypto_auth_BYTES);
     return 1;
