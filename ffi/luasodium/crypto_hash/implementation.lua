@@ -41,8 +41,8 @@ return function(libs, constants)
     __index = ls_crypto_hash_sha512_methods,
   }
 
-  local ls_crypto_hash_sha256_state_t = ffi.metatype('ls_crypto_hash_sha256_state_t',ls_crypto_hash_sha256_mt)
-  local ls_crypto_hash_sha512_state_t = ffi.metatype('ls_crypto_hash_sha512_state_t',ls_crypto_hash_sha512_mt)
+  local ls_crypto_hash_sha256_state_t
+  local ls_crypto_hash_sha512_state_t
 
   local function ls_crypto_hash(message)
     if not message then
@@ -180,6 +180,9 @@ return function(libs, constants)
   ls_crypto_hash_sha256_methods.final = ls_crypto_hash_sha256_final
   ls_crypto_hash_sha512_methods.update = ls_crypto_hash_sha512_update
   ls_crypto_hash_sha512_methods.final = ls_crypto_hash_sha512_final
+
+  ls_crypto_hash_sha256_state_t = ffi.metatype('ls_crypto_hash_sha256_state_t',ls_crypto_hash_sha256_mt)
+  ls_crypto_hash_sha512_state_t = ffi.metatype('ls_crypto_hash_sha512_state_t',ls_crypto_hash_sha512_mt)
 
   local M = {
     crypto_hash = ls_crypto_hash,

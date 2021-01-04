@@ -37,10 +37,13 @@ LUASODIUM_LUAS := \
 
 LUASODIUM_CORES = $(foreach lib,$(LUASODIUM_MODS),$(addprefix $(lib)/,core ffi))
 LUASODIUM_TESTS = $(addprefix test-,$(LUASODIUM_MODS))
-LUASODIUM_TESTS_FFI = $(addsuffix -ffi,$(LUASODIUM_TESTS))
+LUASODIUM_TESTS_FFI = $(addprefix ffitest-,$(LUASODIUM_MODS))
 
 LUASODIUM_OBJS = c/luasodium/core.o c/luasodium/ffi.o
 LUASODIUM_OBJS += $(addsuffix .o,$(addprefix c/luasodium/,$(LUASODIUM_CORES)))
+
+LUASODIUM_GCNO = $(LUASODIUM_OBJS:%.o=%.gcno)
+LUASODIUM_GCDA = $(LUASODIUM_OBJS:%.o=%.gcda)
 
 LUASODIUM_CORE_HEADERS = $(addsuffix /core.h,$(addprefix c/luasodium/,$(LUASODIUM_MODS)))
 LUASODIUM_FFI_HEADERS = $(addsuffix /ffi.h,$(addprefix c/luasodium/,$(LUASODIUM_MODS)))
@@ -57,7 +60,7 @@ INSTALL_LUAS = install-lua-luasodium $(addprefix install-lua-,$(LUASODIUM_MODS))
 INSTALL_DLLS = install-dll-core install-dll-ffi $(addprefix install-dll-,$(LUASODIUM_MODS))
 INSTALL_LIBS = install-lib-core install-lib-ffi $(addprefix install-lib-,$(LUASODIUM_MODS))
 
-.PHONY: all clean release test github-release install install-lua-luasodium $(INSTALL_LUAS) $(INSTALL_DLLS) $(INSTALL_LIBS)
+.PHONY: all clean release test github-release coverage install install-lua-luasodium $(INSTALL_LUAS) $(INSTALL_DLLS) $(INSTALL_LIBS)
 .SUFFIXES:
 
 all: $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
@@ -98,11 +101,11 @@ c/luasodium/version/core.o: c/luasodium/version/core.c c/luasodium/version/core.
 aux/bin2c: aux/bin2c.c
 	$(HOST_CC) -o $@ $^
 
-test-%-ffi:
-	luajit -l aux.set_paths_ffi $(@:%-ffi=%).lua
+ffitest-%:
+	busted --lua="$(shell which luajit)" --lpath 'ffi/?.lua' --verbose spec/$(@:ffitest-%=%)_spec.lua
 
-test-%: c/luasodium/%/core$(DLL) c/luasodium/%/ffi$(DLL)
-	$(LUA) -l aux.set_paths $@.lua
+test-%: c/luasodium/core$(DLL) c/luasodium/ffi$(DLL) c/luasodium/%/core$(DLL) c/luasodium/%/ffi$(DLL)
+	busted --lua="$(shell which $(LUA))" --lpath 'lua/?.lua' --cpath 'c/?.so' --verbose spec/$(@:test-%=%)_spec.lua
 
 ffitest:
 	luajit -l aux.set_paths_ffi aux/verify-ffi.lua $(LUASODIUM_MODS)
@@ -117,6 +120,8 @@ clean:
 	rm -f $(LUASODIUM_FFI_IMPLEMENTATIONS)
 	rm -f $(LUASODIUM_FFI_DEFAULT_SIG)
 	rm -f $(LUASODIUM_FFI_SIGNATURES)
+	rm -f $(LUASODIUM_GCDA)
+	rm -f $(LUASODIUM_GCNO)
 
 release: $(LUASODIUM_FFI_IMPLEMENTATIONS) $(LUASODIUM_FFI_SIGNATURES) README.md c/luasodium/ffi-function-loader.h c/luasodium/ffi-default-signatures.h
 	rm -rf luasodium-$(VERSION) dist/luasodium-$(VERSION)
@@ -206,4 +211,27 @@ install-libs: $(INSTALL_LIBS)
 
 install: install-luas install-dlls install-libs
 
+coverage:
+	$(MAKE) -f Makefile clean
+	$(MAKE) -f Makefile LDFLAGS="--coverage $(shell $(PKGCONFIG) --libs libsodium)" CFLAGS="-fPIC -Wall -Wextra -g -O0 -fprofile-arcs -ftest-coverage --coverage $(shell $(PKGCONFIG) --cflags $(LUA)) $(shell $(PKGCONFIG) --libs libsodium)" LUA=$(LUA)
+	busted --lua="$(shell which $(LUA))" --lpath 'lua/?.lua' --cpath 'c/?.so' --verbose
+	gcovr -r . --html -o coverage.html
 
+coverage-jit:
+	$(MAKE) -f Makefile clean
+	$(MAKE) -f Makefile LDFLAGS="--coverage $(shell $(PKGCONFIG) --libs libsodium)" CFLAGS="-fPIC -Wall -Wextra -g -O0 -fprofile-arcs -ftest-coverage --coverage $(shell $(PKGCONFIG) --cflags luajit) $(shell $(PKGCONFIG) --libs libsodium)" LUA=luajit
+	busted --lua="$(shell which luajit)" --lpath 'lua/?.lua' --cpath 'c/?.so' --verbose
+	gcovr -r . --html -o coverage.html
+
+# for some reason, running busted with ffi path + luajit + spec test folder gives an error
+# but running an individual spec doesn't
+
+define FFI_COVERAGE
+coverage-ffi-$(1):
+	busted --lua="$(shell which luajit)" --lpath 'ffi/?.lua' --verbose spec/$(1)_spec.lua
+endef
+$(foreach mod,$(LUASODIUM_MODS),$(eval $(call FFI_COVERAGE,$(mod))))
+
+FFI_COVERAGES = $(addprefix coverage-ffi-,$(LUASODIUM_MODS))
+
+coverage-ffi: $(FFI_COVERAGES)

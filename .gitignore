@@ -1,4 +1,6 @@
 /aux/bin2c
+*.gcda
+*.gcno
 *.o
 *.so
 *.a

@@ -30,8 +30,7 @@ return function(libs, constants)
     __index = ls_crypto_onetimeauth_methods,
   }
 
-  local ls_crypto_onetimeauth_state_t = ffi.metatype('ls_crypto_onetimeauth_state_t',
-    ls_crypto_onetimeauth_mt)
+  local ls_crypto_onetimeauth_state_t
 
   local function ls_crypto_onetimeauth(message,key)
     if not key then
@@ -139,6 +138,9 @@ return function(libs, constants)
 
   ls_crypto_onetimeauth_methods.update = ls_crypto_onetimeauth_update
   ls_crypto_onetimeauth_methods.final = ls_crypto_onetimeauth_final
+
+  ls_crypto_onetimeauth_state_t = ffi.metatype('ls_crypto_onetimeauth_state_t',
+    ls_crypto_onetimeauth_mt)
 
   local M = {
     crypto_onetimeauth = ls_crypto_onetimeauth,

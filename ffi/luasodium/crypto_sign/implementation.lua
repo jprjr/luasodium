@@ -31,7 +31,7 @@ return function(libs, constants)
     __index = crypto_sign_state_methods,
   }
 
-  local ls_crypto_sign_state_t = ffi.metatype('ls_crypto_sign_state_t',crypto_sign_state_mt)
+  local ls_crypto_sign_state_t
 
   local function ls_crypto_sign_keypair()
     local pk = char_array(crypto_sign_PUBLICKEYBYTES)
@@ -264,6 +264,8 @@ return function(libs, constants)
   crypto_sign_state_methods.update = ls_crypto_sign_update
   crypto_sign_state_methods.final_create = ls_crypto_sign_final_create
   crypto_sign_state_methods.final_verify = ls_crypto_sign_final_verify
+
+  ls_crypto_sign_state_t = ffi.metatype('ls_crypto_sign_state_t',crypto_sign_state_mt)
 
   local M = {
     crypto_sign_keypair = ls_crypto_sign_keypair,
