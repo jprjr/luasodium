@@ -45,6 +45,7 @@ for m,lib in pairs(libs) do
       local n = string.rep('\0',lib.crypto_scalarmult_SCALARBYTES)
       local q = lib.crypto_scalarmult_base(n)
       assert(string.len(q) == lib.crypto_scalarmult_BYTES)
+      local p = lib.crypto_scalarmult(n,q)
     end)
   end)
 end

@@ -46,7 +46,7 @@ ls_crypto_scalarmult(lua_State *L) {
           crypto_scalarmult_SCALARBYTES);
     }
 
-    p = (const unsigned char *)lua_tolstring(L,1,&p_len);
+    p = (const unsigned char *)lua_tolstring(L,2,&p_len);
     if(p_len != crypto_scalarmult_BYTES) {
         return luaL_error(L,"wrong scalar length, expected: %d",
           crypto_scalarmult_BYTES);
