@@ -463,11 +463,9 @@ ls_crypto_box_open_detached(lua_State *L) {
 
     lua_pop(L,1);
 
-    /* LCOV_EXCL_START */
     if(crypto_box_open_detached(m,c,mac,clen,n,pk,sk) == -1) {
         return luaL_error(L,"crypto_box_open_detached error");
     }
-    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)m,clen);
 

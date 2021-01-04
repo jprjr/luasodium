@@ -51,6 +51,21 @@ for m,lib in pairs(libs) do
       assert(pcall(lib.crypto_box_open_easy,string.rep('\0',lib.crypto_box_MACBYTES+1),string.rep('\0',lib.crypto_box_NONCEBYTES),'','') == false)
       assert(pcall(lib.crypto_box_open_easy,string.rep('\0',lib.crypto_box_MACBYTES+1),string.rep('\0',lib.crypto_box_NONCEBYTES),string.rep('\0',lib.crypto_box_PUBLICKEYBYTES),'') == false)
 
+      assert(pcall(lib.crypto_box_detached) == false)
+      assert(pcall(lib.crypto_box_detached,'','','','') == false)
+      assert(pcall(lib.crypto_box_detached,'',string.rep('\0',lib.crypto_box_NONCEBYTES),'','') == false)
+      assert(pcall(lib.crypto_box_detached,'',string.rep('\0',lib.crypto_box_NONCEBYTES),string.rep('\0',lib.crypto_box_PUBLICKEYBYTES),'') == false)
+
+      assert(pcall(lib.crypto_box_open_detached) == false)
+      assert(pcall(lib.crypto_box_open_detached,'','','','','') == false)
+      assert(pcall(lib.crypto_box_open_detached,'',string.rep('\0',lib.crypto_box_MACBYTES),'','','') == false)
+      assert(pcall(lib.crypto_box_open_detached,'',string.rep('\0',lib.crypto_box_MACBYTES),string.rep('\0',lib.crypto_box_NONCEBYTES),'','') == false)
+      assert(pcall(lib.crypto_box_open_detached,'',string.rep('\0',lib.crypto_box_MACBYTES),string.rep('\0',lib.crypto_box_NONCEBYTES),string.rep('\0',lib.crypto_box_PUBLICKEYBYTES),'') == false)
+
+      assert(pcall(lib.crypto_box_beforenm) == false)
+      assert(pcall(lib.crypto_box_beforenm,'','') == false)
+      assert(pcall(lib.crypto_box_beforenm,string.rep('\0',lib.crypto_box_PUBLICKEYBYTES),'') == false)
+
     end)
 
     it('keypair tests', function()
@@ -113,6 +128,8 @@ for m,lib in pairs(libs) do
         local encrypted, mac = lib.crypto_box_detached(message,nonce,receiver_pk,sender_sk)
         local decrypted = lib.crypto_box_open_detached(encrypted,mac,nonce,sender_pk,receiver_sk)
         assert(decrypted == message)
+        assert(pcall(lib.crypto_box_open_detached,encrypted,string.rep('\0',lib.crypto_box_MACBYTES),nonce,sender_pk,receiver_sk)
+          == false)
       end)
 
       it('should encrypt/decrypt before/afternm messages', function()
