@@ -102,10 +102,10 @@ aux/bin2c: aux/bin2c.c
 	$(HOST_CC) -o $@ $^
 
 ffitest-%:
-	busted --lua="$(shell which luajit)" --lpath 'ffi/?.lua' --verbose spec/$(@:ffitest-%=%)_spec.lua
+	luajit -l aux.set_paths_ffi -l aux.try_luacov spec/$(@:ffitest-%=%)_spec.lua
 
 test-%: c/luasodium/core$(DLL) c/luasodium/ffi$(DLL) c/luasodium/%/core$(DLL) c/luasodium/%/ffi$(DLL)
-	busted --lua="$(shell which $(LUA))" --lpath 'lua/?.lua' --cpath 'c/?.so' --verbose spec/$(@:test-%=%)_spec.lua
+	$(LUA) -l aux.set_paths -l aux.try_luacov spec/$(@:test-%=%)_spec.lua
 
 ffitest: $(LUASODIUM_TESTS_FFI)
 	luajit -l aux.set_paths_ffi aux/verify-ffi.lua $(LUASODIUM_MODS)
@@ -213,12 +213,23 @@ install-libs: $(INSTALL_LIBS)
 
 install: install-luas install-dlls install-libs
 
-coverage:
+fficoverage-%:
+	rm -f luacov.stats.out
+	luajit -l aux.set_paths_ffi -l aux.try_luacov spec/$(@:fficoverage-%=%)_spec.lua
+	luacov -r gcovr
+	mv luacov.report.out $@.json
+
+FFICOVERAGES = $(addprefix fficoverage-,$(LUASODIUM_MODS))
+
+coverage-c:
 	$(MAKE) -f Makefile clean
 	$(MAKE) -f Makefile LDFLAGS="--coverage $(shell $(PKGCONFIG) --libs libsodium)" CFLAGS="-fPIC -Wall -Wextra -g -O0 -fprofile-arcs -ftest-coverage --coverage $(shell $(PKGCONFIG) --cflags $(LUA)) $(shell $(PKGCONFIG) --libs libsodium)" LUA=$(LUA)
 	busted --lua="$(shell which $(LUA))" --lpath 'lua/?.lua' --cpath 'c/?.so' --verbose
-	gcovr -e '(.+/)?ffi\.c' -r . --html-details -o coverage.html
-	gcovr -e '(.+/)?ffi\.c' -r . --json-pretty -o coverage.json
+	gcovr -e '(.+/)?ffi\.c' -r . --json-pretty -o c-coverage.json
+
+coverage: coverage-c $(FFICOVERAGES)
+	mkdir -p coverage
+	gcovr --html-details coverage/index.html --add-tracefile c-coverage.json $(addprefix --add-tracefile fficoverage-,$(addsuffix .json,$(LUASODIUM_MODS)))
 
 coverage-jit:
 	$(MAKE) -f Makefile coverage LUA=luajit

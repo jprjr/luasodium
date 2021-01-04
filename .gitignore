@@ -1,4 +1,5 @@
 /aux/bin2c
+*.json
 *.gcda
 *.gcno
 *.o

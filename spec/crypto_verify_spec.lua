@@ -1,5 +1,25 @@
 local libs = {}
 
+local function describe_stub(_,cb)
+  cb()
+end
+
+local function it_stub(_,cb)
+  cb()
+end
+
+do
+  local ok, runner = pcall(require,'busted.runner')
+  if ok then
+    runner()
+  end
+end
+
+if not describe then
+  describe = describe_stub
+  it = it_stub
+end
+
 -- these should always load, regardless of Lua interpreter
 do
   local lib = require'luasodium'
