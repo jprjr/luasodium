@@ -11,6 +11,7 @@
 *.tar.xz
 *.src.rock
 *.luastatic.c
+*.html
 c/luasodium/*/ffi-implementation.h
 c/luasodium/*/ffi-signatures.h
 c/luasodium/ffi-default-signatures.h

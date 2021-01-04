@@ -215,13 +215,10 @@ coverage:
 	$(MAKE) -f Makefile clean
 	$(MAKE) -f Makefile LDFLAGS="--coverage $(shell $(PKGCONFIG) --libs libsodium)" CFLAGS="-fPIC -Wall -Wextra -g -O0 -fprofile-arcs -ftest-coverage --coverage $(shell $(PKGCONFIG) --cflags $(LUA)) $(shell $(PKGCONFIG) --libs libsodium)" LUA=$(LUA)
 	busted --lua="$(shell which $(LUA))" --lpath 'lua/?.lua' --cpath 'c/?.so' --verbose
-	gcovr -r . --html -o coverage.html
+	gcovr -r . --html-details -o coverage.html
 
 coverage-jit:
-	$(MAKE) -f Makefile clean
-	$(MAKE) -f Makefile LDFLAGS="--coverage $(shell $(PKGCONFIG) --libs libsodium)" CFLAGS="-fPIC -Wall -Wextra -g -O0 -fprofile-arcs -ftest-coverage --coverage $(shell $(PKGCONFIG) --cflags luajit) $(shell $(PKGCONFIG) --libs libsodium)" LUA=luajit
-	busted --lua="$(shell which luajit)" --lpath 'lua/?.lua' --cpath 'c/?.so' --verbose
-	gcovr -r . --html -o coverage.html
+	$(MAKE) -f Makefile coverage LUA=luajit
 
 # for some reason, running busted with ffi path + luajit + spec test folder gives an error
 # but running an individual spec doesn't
