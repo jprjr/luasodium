@@ -85,7 +85,7 @@ ls_crypto_onetimeauth_init(lua_State *L) {
     k = (const unsigned char *)lua_tolstring(L,1,&klen);
 
     if(klen != crypto_onetimeauth_KEYBYTES) {
-        return luaL_error(L,"wrong key size, expected: %s",
+        return luaL_error(L,"wrong key size, expected: %d",
           crypto_onetimeauth_KEYBYTES);
     }
 
