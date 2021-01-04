@@ -60,7 +60,7 @@ INSTALL_LUAS = install-lua-luasodium $(addprefix install-lua-,$(LUASODIUM_MODS))
 INSTALL_DLLS = install-dll-core install-dll-ffi $(addprefix install-dll-,$(LUASODIUM_MODS))
 INSTALL_LIBS = install-lib-core install-lib-ffi $(addprefix install-lib-,$(LUASODIUM_MODS))
 
-.PHONY: all clean release test github-release coverage install install-lua-luasodium $(INSTALL_LUAS) $(INSTALL_DLLS) $(INSTALL_LIBS)
+.PHONY: all clean release test ffitest github-release coverage install install-lua-luasodium $(INSTALL_LUAS) $(INSTALL_DLLS) $(INSTALL_LIBS)
 .SUFFIXES:
 
 all: $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
@@ -107,10 +107,10 @@ ffitest-%:
 test-%: c/luasodium/core$(DLL) c/luasodium/ffi$(DLL) c/luasodium/%/core$(DLL) c/luasodium/%/ffi$(DLL)
 	busted --lua="$(shell which $(LUA))" --lpath 'lua/?.lua' --cpath 'c/?.so' --verbose spec/$(@:test-%=%)_spec.lua
 
-ffitest:
+ffitest: $(LUASODIUM_TESTS_FFI)
 	luajit -l aux.set_paths_ffi aux/verify-ffi.lua $(LUASODIUM_MODS)
 
-test: $(LUASODIUM_TESTS) $(LUASODIUM_TESTS_FFI) ffitest
+test: $(LUASODIUM_TESTS)
 
 clean:
 	rm -f $(LUASODIUM_DLLS)
@@ -128,6 +128,8 @@ release: $(LUASODIUM_FFI_IMPLEMENTATIONS) $(LUASODIUM_FFI_SIGNATURES) README.md 
 	rm -rf dist/luasodium-$(VERSION).tar.gz
 	rm -rf dist/luasodium-$(VERSION).tar.xz
 	rm -f $(LUASODIUM_OBJS) $(LUASODIUM_DLLS) $(LUASODIUM_LIBS) aux/bin2c
+	rm -f $(LUASODIUM_GCNO)
+	rm -f $(LUASODIUM_GCDA)
 	mkdir -p dist
 	mkdir -p luasodium-$(VERSION)/
 	rsync -a aux luasodium-$(VERSION)/
@@ -216,16 +218,16 @@ coverage:
 	$(MAKE) -f Makefile LDFLAGS="--coverage $(shell $(PKGCONFIG) --libs libsodium)" CFLAGS="-fPIC -Wall -Wextra -g -O0 -fprofile-arcs -ftest-coverage --coverage $(shell $(PKGCONFIG) --cflags $(LUA)) $(shell $(PKGCONFIG) --libs libsodium)" LUA=$(LUA)
 	busted --lua="$(shell which $(LUA))" --lpath 'lua/?.lua' --cpath 'c/?.so' --verbose
 	gcovr -e '(.+/)?ffi\.c' -r . --html-details -o coverage.html
+	gcovr -e '(.+/)?ffi\.c' -r . --json-pretty -o coverage.json
 
 coverage-jit:
 	$(MAKE) -f Makefile coverage LUA=luajit
 
 # for some reason, running busted with ffi path + luajit + spec test folder gives an error
 # but running an individual spec doesn't
-
 define FFI_COVERAGE
 coverage-ffi-$(1):
-	busted --lua="$(shell which luajit)" --lpath 'ffi/?.lua' --verbose spec/$(1)_spec.lua
+	busted --coverage --lua="$(shell which luajit)" --lpath 'ffi/?.lua' --verbose spec/$(1)_spec.lua
 endef
 $(foreach mod,$(LUASODIUM_MODS),$(eval $(call FFI_COVERAGE,$(mod))))
 
