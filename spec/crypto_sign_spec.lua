@@ -121,6 +121,7 @@ for name,lib in pairs(libs) do
       end
 
       assert(lib.crypto_sign_open(sm,pk) == m)
+      assert(lib.crypto_sign_open(sm,string.rep('\1',lib.crypto_sign_PUBLICKEYBYTES)) == nil)
 
       local sig = lib.crypto_sign_detached(m,sk)
 
@@ -152,6 +153,41 @@ for name,lib in pairs(libs) do
       state = lib.crypto_sign_init()
       state:update(m)
       assert(state:final_verify(ph_sig,pk) == true)
+    end)
+
+    it('should reject bad calls', function()
+      assert(pcall(lib.crypto_sign_seed_keypair) == false)
+      assert(pcall(lib.crypto_sign_seed_keypair,'') == false)
+
+      assert(pcall(lib.crypto_sign) == false)
+      assert(pcall(lib.crypto_sign,'','') == false)
+
+      assert(pcall(lib.crypto_sign_open) == false)
+      assert(pcall(lib.crypto_sign_open,'','') == false)
+
+      assert(pcall(lib.crypto_sign_detached) == false)
+      assert(pcall(lib.crypto_sign_detached,'','') == false)
+
+      assert(pcall(lib.crypto_sign_verify_detached) == false)
+      assert(pcall(lib.crypto_sign_verify_detached,'','','') == false)
+
+      local state = lib.crypto_sign_init()
+
+      assert(pcall(lib.crypto_sign_update) == false)
+      assert(pcall(lib.crypto_sign_update,'','') == false)
+
+      assert(pcall(lib.crypto_sign_final_create) == false)
+      assert(pcall(lib.crypto_sign_final_create,'','') == false)
+      assert(pcall(lib.crypto_sign_final_create,state,'') == false)
+
+      assert(pcall(lib.crypto_sign_final_verify) == false)
+      assert(pcall(lib.crypto_sign_final_verify,'','','') == false)
+      assert(pcall(lib.crypto_sign_final_verify,state,'','') == false)
+
+      assert(pcall(lib.crypto_sign_ed25519_sk_to_seed) == false)
+      assert(pcall(lib.crypto_sign_ed25519_sk_to_pk) == false)
+      assert(pcall(lib.crypto_sign_ed25519_sk_to_seed,'') == false)
+      assert(pcall(lib.crypto_sign_ed25519_sk_to_pk,'') == false)
     end)
 
   end)

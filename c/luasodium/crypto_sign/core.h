@@ -6,9 +6,11 @@ ls_crypto_sign_keypair(lua_State *L) {
     unsigned char pk[crypto_sign_PUBLICKEYBYTES];
     unsigned char sk[crypto_sign_SECRETKEYBYTES];
 
+    /* LCOV_EXCL_START */
     if(crypto_sign_keypair(pk,sk) == -1) {
         return luaL_error(L,"crypto_sign_keypair error");
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)pk,crypto_sign_PUBLICKEYBYTES);
     lua_pushlstring(L,(const char *)sk,crypto_sign_SECRETKEYBYTES);
@@ -37,9 +39,11 @@ ls_crypto_sign_seed_keypair(lua_State *L) {
           crypto_sign_SEEDBYTES);
     }
 
+    /* LCOV_EXCL_START */
     if(crypto_sign_seed_keypair(pk,sk,seed) == -1) {
         return luaL_error(L,"crypto_sign_keypair error");
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)pk,crypto_sign_PUBLICKEYBYTES);
     lua_pushlstring(L,(const char *)sk,crypto_sign_SECRETKEYBYTES);
@@ -75,14 +79,20 @@ ls_crypto_sign(lua_State *L) {
     smlen_a = mlen + crypto_sign_BYTES;
 
     sm = lua_newuserdata(L,smlen_a);
+
+    /* LCOV_EXCL_START */
     if(sm == NULL) {
         return luaL_error(L,"out of memory");
     }
+    /* LCOV_EXCL_STOP */
     lua_pop(L,1);
 
+    /* LCOV_EXCL_START */
     if(crypto_sign(sm,&smlen,m,mlen,sk) == -1) {
         return luaL_error(L,"crypto_sign error");
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pushlstring(L,(const char *)sm,smlen);
     sodium_memzero(sm,smlen_a);
     return 1;
@@ -110,10 +120,12 @@ ls_crypto_sign_open(lua_State *L) {
           crypto_sign_PUBLICKEYBYTES);
     }
 
+    /* LCOV_EXCL_START */
     m = lua_newuserdata(L,smlen);
     if(sm == NULL) {
         return luaL_error(L,"out of memory");
     }
+    /* LCOV_EXCL_STOP */
     lua_pop(L,1);
 
     if(crypto_sign_open(m,&mlen,sm,smlen,pk) == 0) {
@@ -145,9 +157,12 @@ ls_crypto_sign_detached(lua_State *L) {
           crypto_sign_SECRETKEYBYTES);
     }
 
+    /* LCOV_EXCL_START */
     if(crypto_sign_detached(sig,&siglen,m,mlen,sk) == -1) {
         return luaL_error(L,"crypto_sign_detached error");
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pushlstring(L,(const char *)sig,siglen);
     sodium_memzero(sig,crypto_sign_BYTES);
     return 1;
@@ -177,6 +192,7 @@ ls_crypto_sign_verify_detached(lua_State *L) {
 
     lua_pushboolean(L,crypto_sign_verify_detached(
       sig,m,mlen,pk) == 0);
+
     return 1;
 }
 
@@ -186,10 +202,13 @@ ls_crypto_sign_init(lua_State *L) {
 
     state = (crypto_sign_state *)lua_newuserdata(L,
       crypto_sign_statebytes());
+
+    /* LCOV_EXCL_START */
     if(crypto_sign_init(state) == -1) {
         lua_pop(L,1);
         return luaL_error(L,"crypto_sign_init error");
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushvalue(L,lua_upvalueindex(1));
     lua_setmetatable(L,-2);
@@ -253,9 +272,11 @@ ls_crypto_sign_final_create(lua_State *L) {
           crypto_sign_SECRETKEYBYTES);
     }
 
+    /* LCOV_EXCL_START */
     if(crypto_sign_final_create(state,sig,&siglen,sk) == -1) {
         return luaL_error(L,"crypto_sign_final_create error");
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)sig,siglen);
     sodium_memzero(sig,siglen);
@@ -314,9 +335,12 @@ ls_crypto_sign_ed25519_sk_to_seed(lua_State *L) {
           crypto_sign_SECRETKEYBYTES);
     }
 
+    /* LCOV_EXCL_START */
     if(crypto_sign_ed25519_sk_to_seed(seed,sk) == -1) {
         return luaL_error(L,"crypto_sign_ed25519_sk_to_seed error");
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pushlstring(L,(const char *)seed,crypto_sign_SEEDBYTES);
     sodium_memzero(seed,crypto_sign_SEEDBYTES);
     return 1;
@@ -339,9 +363,12 @@ ls_crypto_sign_ed25519_sk_to_pk(lua_State *L) {
           crypto_sign_SECRETKEYBYTES);
     }
 
+    /* LCOV_EXCL_START */
     if(crypto_sign_ed25519_sk_to_pk(pk,sk) == -1) {
         return luaL_error(L,"crypto_sign_ed25519_sk_to_pk error");
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pushlstring(L,(const char *)pk,crypto_sign_PUBLICKEYBYTES);
     sodium_memzero(pk,crypto_sign_PUBLICKEYBYTES);
     return 1;

@@ -221,7 +221,7 @@ return function(libs, constants)
     end
 
     if string_len(pk) ~= crypto_sign_PUBLICKEYBYTES then
-      return error(string_format('wrong secret key size, expected: %d',
+      return error(string_format('wrong public key size, expected: %d',
         crypto_sign_PUBLICKEYBYTES))
     end
 
@@ -232,6 +232,11 @@ return function(libs, constants)
   local function ls_crypto_sign_ed25519_sk_to_seed(sk)
     if not sk then
       return error('requires 1 parameter')
+    end
+
+    if string_len(sk) ~= crypto_sign_SECRETKEYBYTES then
+      return error(string.format('wrong secret key size, expected: %d',
+        crypto_sign_SECRETKEYBYTES))
     end
 
     local seed = char_array(crypto_sign_SEEDBYTES)
@@ -248,6 +253,11 @@ return function(libs, constants)
   local function ls_crypto_sign_ed25519_sk_to_pk(sk)
     if not sk then
       return error('requires 1 parameter')
+    end
+
+    if string_len(sk) ~= crypto_sign_SECRETKEYBYTES then
+      return error(string.format('wrong secret key size, expected: %d',
+        crypto_sign_SECRETKEYBYTES))
     end
 
     local pk = char_array(crypto_sign_PUBLICKEYBYTES)
