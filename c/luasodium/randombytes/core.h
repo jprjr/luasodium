@@ -77,11 +77,13 @@ ls_randombytes_buf_deterministic(lua_State *L) {
     return 1;
 }
 
+/* LCOV_EXCL_START */
 static int
 ls_randombytes_close(lua_State *L) {
     lua_pushboolean(L,randombytes_close() == 0);
     return 1;
 }
+/* LCOV_EXCL_STOP */
 
 static int
 ls_randombytes_stir(lua_State *L) {
