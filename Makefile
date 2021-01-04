@@ -215,7 +215,7 @@ coverage:
 	$(MAKE) -f Makefile clean
 	$(MAKE) -f Makefile LDFLAGS="--coverage $(shell $(PKGCONFIG) --libs libsodium)" CFLAGS="-fPIC -Wall -Wextra -g -O0 -fprofile-arcs -ftest-coverage --coverage $(shell $(PKGCONFIG) --cflags $(LUA)) $(shell $(PKGCONFIG) --libs libsodium)" LUA=$(LUA)
 	busted --lua="$(shell which $(LUA))" --lpath 'lua/?.lua' --cpath 'c/?.so' --verbose
-	gcovr -r . --html-details -o coverage.html
+	gcovr -e '(.+/)?ffi\.c' -r . --html-details -o coverage.html
 
 coverage-jit:
 	$(MAKE) -f Makefile coverage LUA=luajit
