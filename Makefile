@@ -225,11 +225,13 @@ coverage-c:
 	$(MAKE) -f Makefile clean
 	$(MAKE) -f Makefile LDFLAGS="--coverage $(shell $(PKGCONFIG) --libs libsodium)" CFLAGS="-fPIC -Wall -Wextra -g -O0 -fprofile-arcs -ftest-coverage --coverage $(shell $(PKGCONFIG) --cflags $(LUA)) $(shell $(PKGCONFIG) --libs libsodium)" LUA=$(LUA)
 	busted --lua="$(shell which $(LUA))" --lpath 'lua/?.lua' --cpath 'c/?.so' --verbose
-	gcovr -e '(.+/)?ffi\.c' -r . --json-pretty -o c-coverage.json
+	gcovr -e '(.+/)?ffi\.c' -r . --json -o c-coverage.json
 
 coverage: coverage-c $(FFICOVERAGES)
 	mkdir -p coverage
 	gcovr --html-details coverage/index.html --add-tracefile c-coverage.json $(addprefix --add-tracefile fficoverage-,$(addsuffix .json,$(LUASODIUM_MODS)))
+	gcovr --xml coverage/index.xml --add-tracefile c-coverage.json $(addprefix --add-tracefile fficoverage-,$(addsuffix .json,$(LUASODIUM_MODS)))
+	gcovr --add-tracefile c-coverage.json $(addprefix --add-tracefile fficoverage-,$(addsuffix .json,$(LUASODIUM_MODS)))
 
 coverage-jit:
 	$(MAKE) -f Makefile coverage LUA=luajit
