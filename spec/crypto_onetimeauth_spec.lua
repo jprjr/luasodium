@@ -68,6 +68,13 @@ for m,lib in pairs(libs) do
       for i=1,lib.crypto_onetimeauth_BYTES do
         assert(string.byte(auth,i) == expected_auth[i])
       end
+      assert(lib.crypto_onetimeauth_verify(auth,message,key) == true)
+      assert(lib.crypto_onetimeauth_verify(string.rep('\0',lib.crypto_onetimeauth_BYTES),message,key) == false)
+    end)
+
+    it('should generate keys', function()
+      local key = lib.crypto_onetimeauth_keygen()
+      assert(string.len(key) == lib.crypto_onetimeauth_KEYBYTES)
     end)
 
     it('should support chunked auth tags', function()
@@ -82,6 +89,28 @@ for m,lib in pairs(libs) do
       local state2 = lib.crypto_onetimeauth_init(key)
       assert(state2:update(message) == true)
       assert(state2:final() == auth)
+    end)
+
+    it('should reject invalid calls', function()
+      assert(pcall(lib.crypto_onetimeauth) == false)
+      assert(pcall(lib.crypto_onetimeauth_verify) == false)
+      assert(pcall(lib.crypto_onetimeauth_init) == false)
+      assert(pcall(lib.crypto_onetimeauth_update) == false)
+      assert(pcall(lib.crypto_onetimeauth_final) == false)
+
+      assert(pcall(lib.crypto_onetimeauth,'','') == false)
+      assert(pcall(lib.crypto_onetimeauth,'',string.rep('\0',lib.crypto_onetimeauth_KEYBYTES)) == true)
+
+      assert(pcall(lib.crypto_onetimeauth_verify,'','','') == false)
+      assert(pcall(lib.crypto_onetimeauth_verify,string.rep('\0',lib.crypto_onetimeauth_BYTES),'','') == false)
+      assert(pcall(lib.crypto_onetimeauth_verify,string.rep('\0',lib.crypto_onetimeauth_BYTES),'',string.rep('\0',lib.crypto_onetimeauth_KEYBYTES)) == true)
+
+      assert(pcall(lib.crypto_onetimeauth_init,'') == false)
+
+      assert(pcall(lib.crypto_onetimeauth_update,'') == false)
+      assert(pcall(lib.crypto_onetimeauth_update,'','') == false)
+      assert(pcall(lib.crypto_onetimeauth_final,'') == false)
+
     end)
   end)
 end
