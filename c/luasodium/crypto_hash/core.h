@@ -13,9 +13,11 @@ ls_crypto_hash(lua_State *L) {
 
     m = (const unsigned char *)lua_tolstring(L,1,&mlen);
 
+    /* LCOV_EXCL_START */
     if(crypto_hash(h,m,mlen) == -1) {
         return luaL_error(L,"crypto_hash error");
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)h,crypto_hash_BYTES);
     sodium_memzero(h,crypto_hash_BYTES);
@@ -34,9 +36,11 @@ ls_crypto_hash_sha256(lua_State *L) {
 
     m = (const unsigned char *)lua_tolstring(L,1,&mlen);
 
+    /* LCOV_EXCL_START */
     if(crypto_hash_sha256(h,m,mlen) == -1) {
         return luaL_error(L,"crypto_hash error");
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)h,crypto_hash_sha256_BYTES);
     sodium_memzero(h,crypto_hash_sha256_BYTES);
@@ -55,9 +59,11 @@ ls_crypto_hash_sha512(lua_State *L) {
 
     m = (const unsigned char *)lua_tolstring(L,1,&mlen);
 
+    /* LCOV_EXCL_START */
     if(crypto_hash_sha512(h,m,mlen) == -1) {
         return luaL_error(L,"crypto_hash error");
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)h,crypto_hash_sha512_BYTES);
     sodium_memzero(h,crypto_hash_sha512_BYTES);
@@ -70,14 +76,18 @@ ls_crypto_hash_sha256_init(lua_State *L) {
     state = (crypto_hash_sha256_state *)lua_newuserdata(L,
       crypto_hash_sha256_statebytes());
 
+    /* LCOV_EXCL_START */
     if(state == NULL) {
         return luaL_error(L,"out of memory");
     }
+    /* LCOV_EXCL_STOP */
 
+    /* LCOV_EXCL_START */
     if(crypto_hash_sha256_init(state) == -1) {
         lua_pop(L,1);
         return luaL_error(L,"crypto_hash_sha256_init error");
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushvalue(L,lua_upvalueindex(1));
     lua_setmetatable(L,-2);
@@ -107,8 +117,12 @@ ls_crypto_hash_sha256_update(lua_State *L) {
     state = (crypto_hash_sha256_state *)lua_touserdata(L,1);
     m   = (const unsigned char *)lua_tolstring(L,2,&mlen);
 
-    lua_pushboolean(L,crypto_hash_sha256_update(
-      state,m,mlen) != -1);
+    lua_pushboolean(L,
+    /* LCOV_EXCL_START */
+      (crypto_hash_sha256_update(
+      state,m,mlen) != -1)
+    /* LCOV_EXCL_STOP */
+    );
     return 1;
 }
 
@@ -132,9 +146,11 @@ ls_crypto_hash_sha256_final(lua_State *L) {
 
     state = (crypto_hash_sha256_state *)lua_touserdata(L,1);
 
+    /* LCOV_EXCL_START */
     if(crypto_hash_sha256_final(state,h) == -1) {
         return luaL_error(L,"crypto_hash_sha256_final error");
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)h,crypto_hash_sha256_BYTES);
     sodium_memzero(h,crypto_hash_sha256_BYTES);
@@ -148,14 +164,18 @@ ls_crypto_hash_sha512_init(lua_State *L) {
     state = (crypto_hash_sha512_state *)lua_newuserdata(L,
       crypto_hash_sha512_statebytes());
 
+    /* LCOV_EXCL_START */
     if(state == NULL) {
         return luaL_error(L,"out of memory");
     }
+    /* LCOV_EXCL_STOP */
 
+    /* LCOV_EXCL_START */
     if(crypto_hash_sha512_init(state) == -1) {
         lua_pop(L,1);
         return luaL_error(L,"crypto_hash_sha512_init error");
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushvalue(L,lua_upvalueindex(1));
     lua_setmetatable(L,-2);
@@ -185,8 +205,12 @@ ls_crypto_hash_sha512_update(lua_State *L) {
     state = (crypto_hash_sha512_state *)lua_touserdata(L,1);
     m   = (const unsigned char *)lua_tolstring(L,2,&mlen);
 
-    lua_pushboolean(L,crypto_hash_sha512_update(
-      state,m,mlen) != -1);
+    lua_pushboolean(L,
+    /* LCOV_EXCL_START */
+    (crypto_hash_sha512_update(
+      state,m,mlen) != -1)
+    /* LCOV_EXCL_STOP */
+    );
     return 1;
 }
 
@@ -210,9 +234,11 @@ ls_crypto_hash_sha512_final(lua_State *L) {
 
     state = (crypto_hash_sha512_state *)lua_touserdata(L,1);
 
+    /* LCOV_EXCL_START */
     if(crypto_hash_sha512_final(state,h) == -1) {
         return luaL_error(L,"crypto_hash_sha512_final error");
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)h,crypto_hash_sha512_BYTES);
     sodium_memzero(h,crypto_hash_sha512_BYTES);
