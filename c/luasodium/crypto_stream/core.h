@@ -29,14 +29,18 @@ ls_crypto_stream(lua_State *L) {
     }
 
     c = lua_newuserdata(L,clen);
+    /* LCOV_EXCL_START */
     if(c == NULL) {
         return luaL_error(L,"out of memory");
     }
+    /* LCOV_EXCL_STOP */
     lua_pop(L,1);
 
+    /* LCOV_EXCL_START */
     if(crypto_stream(c,clen,n,k) == -1) {
         return luaL_error(L,"crypto_stream error");
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)c,clen);
     sodium_memzero(c,clen);
@@ -72,14 +76,18 @@ ls_crypto_stream_xor(lua_State *L) {
     }
 
     c = lua_newuserdata(L,mlen);
+    /* LCOV_EXCL_START */
     if(c == NULL) {
         return luaL_error(L,"out of memory");
     }
+    /* LCOV_EXCL_STOP */
     lua_pop(L,1);
 
+    /* LCOV_EXCL_START */
     if(crypto_stream_xor(c,m,mlen,n,k) == -1) {
         return luaL_error(L,"crypto_stream_xor error");
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)c,mlen);
     sodium_memzero(c,mlen);

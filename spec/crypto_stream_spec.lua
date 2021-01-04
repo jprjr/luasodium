@@ -60,8 +60,19 @@ for m,lib in pairs(libs) do
       local x = lib.crypto_stream_xor('message',nonce,key)
       assert(string.len(x) == string.len('message'))
       assert(lib.crypto_stream_xor(x,nonce,key) == 'message')
+
+      local k = lib.crypto_stream_keygen()
+      assert(string.len(k) == lib.crypto_stream_KEYBYTES)
+    end)
+
+    it('should reject bad calls', function()
+      assert(pcall(lib.crypto_stream) == false)
+      assert(pcall(lib.crypto_stream,0,'','') == false)
+      assert(pcall(lib.crypto_stream,0,string.rep('\0',lib.crypto_stream_NONCEBYTES),'') == false)
+      assert(pcall(lib.crypto_stream_xor) == false)
+      assert(pcall(lib.crypto_stream_xor,'','','') == false)
+      assert(pcall(lib.crypto_stream_xor,'',string.rep('\0',lib.crypto_stream_NONCEBYTES),'') == false)
     end)
   end)
-
 end
 
