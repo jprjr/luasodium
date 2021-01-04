@@ -47,6 +47,16 @@ for m,lib in pairs(libs) do
       assert(string.len(q) == lib.crypto_scalarmult_BYTES)
       local p = lib.crypto_scalarmult(n,q)
     end)
+
+    it('should reject invalid input', function()
+      assert(pcall(lib.crypto_scalarmult) == false)
+      assert(pcall(lib.crypto_scalarmult_base) == false)
+
+      assert(pcall(lib.crypto_scalarmult,'','') == false)
+      assert(pcall(lib.crypto_scalarmult_base,'') == false)
+
+      assert(pcall(lib.crypto_scalarmult,string.rep('\0',lib.crypto_scalarmult_SCALARBYTES),'') == false)
+    end)
   end)
 end
 

@@ -18,9 +18,11 @@ ls_crypto_scalarmult_base(lua_State *L) {
           crypto_scalarmult_SCALARBYTES);
     }
 
+    /* LCOV_EXCL_START */
     if(crypto_scalarmult_base(q,n) == -1) {
         return luaL_error(L,"crypto_scalarmult_base error");
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)q,crypto_scalarmult_BYTES);
     sodium_memzero(q,crypto_scalarmult_BYTES);
@@ -52,9 +54,11 @@ ls_crypto_scalarmult(lua_State *L) {
           crypto_scalarmult_BYTES);
     }
 
+    /* LCOV_EXCL_START */
     if(crypto_scalarmult(q,n,p) == -1) {
         return luaL_error(L,"crypto_scalarmult error");
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)q,crypto_scalarmult_BYTES);
     sodium_memzero(q,crypto_scalarmult_BYTES);
