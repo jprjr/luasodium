@@ -135,13 +135,13 @@ release: $(LUASODIUM_FFI_IMPLEMENTATIONS) $(LUASODIUM_FFI_SIGNATURES) README.md 
 	rsync -a lua luasodium-$(VERSION)/
 	rsync -a ffi luasodium-$(VERSION)/
 	rsync -a rockspecs luasodium-$(VERSION)/
+	rsync -a spec luasodium-$(VERSION)/
 	perl aux/amalgate.pl c/luasodium/core.c > luasodium-$(VERSION)/c/luasodium-amalgamated-core.c
 	perl aux/amalgate.pl c/luasodium/ffi.c > luasodium-$(VERSION)/c/luasodium-amalgamated-ffi.c
 	rsync -a README.md luasodium-$(VERSION)/README.md
 	rsync -a LICENSE luasodium-$(VERSION)/LICENSE
 	rsync -a Makefile luasodium-$(VERSION)/Makefile
 	rsync -a dist.ini luasodium-$(VERSION)/dist.ini
-	rsync -a test-*.lua luasodium-$(VERSION)/
 	sed 's/@VERSION@/$(VERSION)/g' < rockspecs/luasodium-release-template.rockspec > luasodium-$(VERSION)/rockspecs/luasodium-$(VERSION)-1.rockspec
 	sed 's/@VERSION@/$(VERSION)/g' < dist.ini > luasodium-$(VERSION)/dist.ini
 	tar cvf dist/luasodium-$(VERSION).tar luasodium-$(VERSION)
