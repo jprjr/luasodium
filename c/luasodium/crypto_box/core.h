@@ -333,11 +333,9 @@ ls_crypto_box_open_easy(lua_State *L) {
 
     lua_pop(L,1);
 
-    /* LCOV_EXCL_START */
     if(crypto_box_open_easy(m,c,clen,n,pk,sk) == -1) {
         return luaL_error(L,"crypto_box_open_easy error");
     }
-    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)m,mlen);
     sodium_memzero(m,mlen);
@@ -614,11 +612,9 @@ ls_crypto_box_open_easy_afternm(lua_State *L) {
 
     lua_pop(L,1);
 
-    /* LCOV_EXCL_START */
     if(crypto_box_open_easy_afternm(m,c,clen,n,k) == -1) {
         return luaL_error(L,"crypto_box_open_easy_afternm error");
     }
-    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)m,mlen);
     sodium_memzero(m,mlen);
@@ -870,11 +866,9 @@ ls_crypto_box_open_afternm(lua_State *L) {
 
     memcpy(&tmp_c[crypto_box_BOXZEROBYTES],c,clen);
 
-    /* LCOV_EXCL_START */
     if(crypto_box_open_afternm(m,tmp_c,clen+crypto_box_BOXZEROBYTES,nonce,k) == -1) {
         return luaL_error(L,"crypto_box_open_afternm error");
     }
-    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)&m[crypto_box_ZEROBYTES],mlen);
     sodium_memzero(tmp_c,clen + crypto_box_BOXZEROBYTES);

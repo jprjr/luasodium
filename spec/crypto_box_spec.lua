@@ -87,6 +87,34 @@ for m,lib in pairs(libs) do
       assert(pcall(lib.crypto_box_beforenm,'','') == false)
       assert(pcall(lib.crypto_box_beforenm,string.rep('\0',lib.crypto_box_PUBLICKEYBYTES),'') == false)
 
+      assert(pcall(lib.crypto_box_easy_afternm) == false)
+      assert(pcall(lib.crypto_box_easy_afternm,'','','') == false)
+      assert(pcall(lib.crypto_box_easy_afternm,'',string.rep('\0',lib.crypto_box_NONCEBYTES),'') == false)
+
+      assert(pcall(lib.crypto_box_afternm) == false)
+      assert(pcall(lib.crypto_box_afternm,'','','') == false)
+      assert(pcall(lib.crypto_box_afternm,'',string.rep('\0',lib.crypto_box_NONCEBYTES),'') == false)
+
+      assert(pcall(lib.crypto_box_open_easy_afternm) == false)
+      assert(pcall(lib.crypto_box_open_easy_afternm,'','','') == false)
+      assert(pcall(lib.crypto_box_open_easy_afternm,string.rep('\0',lib.crypto_box_MACBYTES+1),'','') == false)
+      assert(pcall(lib.crypto_box_open_easy_afternm,string.rep('\0',lib.crypto_box_MACBYTES+1),string.rep('\0',lib.crypto_box_NONCEBYTES),'') == false)
+
+      assert(pcall(lib.crypto_box_open_afternm) == false)
+      assert(pcall(lib.crypto_box_open_afternm,'','','') == false)
+      assert(pcall(lib.crypto_box_open_afternm,string.rep('\0',lib.crypto_box_MACBYTES+1),'','') == false)
+      assert(pcall(lib.crypto_box_open_afternm,string.rep('\0',lib.crypto_box_MACBYTES+1),string.rep('\0',lib.crypto_box_NONCEBYTES),'') == false)
+
+      assert(pcall(lib.crypto_box_detached_afternm) == false)
+      assert(pcall(lib.crypto_box_detached_afternm,'','','','','') == false)
+      assert(pcall(lib.crypto_box_detached_afternm,'',string.rep('\0',lib.crypto_box_NONCEBYTES),'') == false)
+
+      assert(pcall(lib.crypto_box_open_detached_afternm) == false)
+      assert(pcall(lib.crypto_box_open_detached_afternm,'','','','') == false)
+      assert(pcall(lib.crypto_box_open_detached_afternm,'',string.rep('\0',lib.crypto_box_MACBYTES),'','') == false)
+      assert(pcall(lib.crypto_box_open_detached_afternm,'',string.rep('\0',lib.crypto_box_MACBYTES),string.rep('\0',lib.crypto_box_NONCEBYTES),'') == false)
+
+
     end)
 
     it('keypair tests', function()
@@ -142,6 +170,7 @@ for m,lib in pairs(libs) do
         local em = string.sub(encrypted,lib.crypto_box_MACBYTES+1)
         assert(string.len(em) == string.len(message))
         assert(pcall(lib.crypto_box_open,string.rep('\0',lib.crypto_box_MACBYTES) .. em,nonce, sender_pk,receiver_pk) == false)
+        assert(pcall(lib.crypto_box_open_easy,string.rep('\0',lib.crypto_box_MACBYTES) .. em,nonce, sender_pk,receiver_pk) == false)
       end)
 
       it('should encrypt/decrypt detached messages', function()
@@ -172,6 +201,9 @@ for m,lib in pairs(libs) do
         decrypted = lib.crypto_box_open_easy_afternm(encrypted,nonce,ok)
         assert(decrypted == message)
 
+        assert(pcall(lib.crypto_box_open_afternm,encrypted,nonce,string.rep('\0',lib.crypto_box_BEFORENMBYTES)) == false)
+        assert(pcall(lib.crypto_box_open_easy_afternm,encrypted,nonce,string.rep('\0',lib.crypto_box_BEFORENMBYTES)) == false)
+
         encrypted, mac = lib.crypto_box_detached_afternm(message,nonce,k)
 
         decrypted = lib.crypto_box_open_detached(encrypted,mac,nonce,sender_pk,receiver_sk)
@@ -179,6 +211,7 @@ for m,lib in pairs(libs) do
 
         decrypted = lib.crypto_box_open_detached_afternm(encrypted,mac,nonce,ok)
         assert(decrypted == message)
+
 
       end)
     end)
