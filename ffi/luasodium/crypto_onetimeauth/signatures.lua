@@ -26,6 +26,10 @@ local signatures = {
 
   ]],
 
+  ['crypto_onetimeauth_keygen'] = [[
+    void %s(unsigned char *out)
+  ]],
+
   ['crypto_onetimeauth_statebytes'] = [[
     size_t %s(void)
   ]],
