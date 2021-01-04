@@ -50,15 +50,22 @@ ls_crypto_secretbox(lua_State *L) {
     clen = mlen + crypto_secretbox_MACBYTES;
 
     tmp_m = (unsigned char *)lua_newuserdata(L,mlen + crypto_secretbox_ZEROBYTES);
+    /* LCOV_EXCL_START */
     if(tmp_m == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
+
     c = (unsigned char *)lua_newuserdata(L,clen + crypto_secretbox_BOXZEROBYTES);
+
+    /* LCOV_EXCL_START */
     if(c == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pop(L,2);
 
     sodium_memzero(tmp_m,crypto_secretbox_ZEROBYTES);
@@ -66,9 +73,11 @@ ls_crypto_secretbox(lua_State *L) {
 
     memcpy(&tmp_m[crypto_secretbox_ZEROBYTES],m,mlen);
 
+    /* LCOV_EXCL_START */
     if(crypto_secretbox(c,tmp_m,mlen+crypto_secretbox_ZEROBYTES,nonce,key) == -1) {
         return luaL_error(L,"crypto_secretbox error");
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)&c[crypto_secretbox_BOXZEROBYTES],clen);
     sodium_memzero(tmp_m,mlen + crypto_secretbox_ZEROBYTES);
@@ -115,15 +124,23 @@ ls_crypto_secretbox_open(lua_State *L) {
     mlen = clen - crypto_secretbox_MACBYTES;
 
     tmp_c = (unsigned char *)lua_newuserdata(L,clen + crypto_secretbox_BOXZEROBYTES);
+
+    /* LCOV_EXCL_START */
     if(tmp_c == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
+
     m = (unsigned char *)lua_newuserdata(L,mlen + crypto_secretbox_ZEROBYTES);
+
+    /* LCOV_EXCL_START */
     if(m == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pop(L,2);
 
     sodium_memzero(tmp_c,crypto_secretbox_BOXZEROBYTES);
@@ -174,15 +191,21 @@ ls_crypto_secretbox_easy(lua_State *L) {
     outputlen = inputlen + crypto_secretbox_MACBYTES;
 
     output = (unsigned char *)lua_newuserdata(L,outputlen);
+
+    /* LCOV_EXCL_START */
     if(output == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pop(L,1);
 
+    /* LCOV_EXCL_START */
     if(crypto_secretbox_easy(output,input,inputlen,nonce,key) == -1) {
         return luaL_error(L,"crypto_secretbox_easy error");
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)output,outputlen);
     sodium_memzero(output,outputlen);
@@ -226,10 +249,14 @@ ls_crypto_secretbox_open_easy(lua_State *L) {
     outputlen = inputlen - crypto_secretbox_MACBYTES;
 
     output = (unsigned char *)lua_newuserdata(L,outputlen);
+
+    /* LCOV_EXCL_START */
     if(output == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pop(L,1);
 
     if(crypto_secretbox_open_easy(output,input,inputlen,nonce,key) == -1) {
@@ -272,15 +299,21 @@ ls_crypto_secretbox_detached(lua_State *L) {
     }
 
     output = lua_newuserdata(L,inputlen);
+
+    /* LCOV_EXCL_START */
     if(output == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pop(L,1);
 
+    /* LCOV_EXCL_START */
     if(crypto_secretbox_detached(output,mac,input,inputlen,nonce,key) == -1) {
         return luaL_error(L,"crypto_secretbox_detached error");
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)output,inputlen);
     lua_pushlstring(L,(const char *)mac,crypto_secretbox_MACBYTES);
@@ -327,10 +360,13 @@ ls_crypto_secretbox_open_detached(lua_State *L) {
     }
 
     output = lua_newuserdata(L,inputlen);
+
+    /* LCOV_EXCL_START */
     if(output == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pop(L,1);
 

@@ -116,10 +116,49 @@ for m,lib in pairs(libs) do
       end
 
       assert(lib.crypto_secretbox_open_detached(encrypted,mac,nonce,key) == 'yay')
+      assert(lib.crypto_secretbox_open_easy(mac .. encrypted,nonce,key) == 'yay')
+      assert(lib.crypto_secretbox_open(mac .. encrypted,nonce,key) == 'yay')
+
+      local badmac = string.rep('\0',lib.crypto_secretbox_MACBYTES)
+      assert(pcall(lib.crypto_secretbox_open_detached,encrypted,badmac,nonce,key) == false)
+
+      assert(pcall(lib.crypto_secretbox_open_easy,badmac .. encrypted,nonce,key) == false)
+      assert(pcall(lib.crypto_secretbox_open,badmac .. encrypted,nonce,key) == false)
     end)
 
     it('should generate random keys', function()
       assert(string.len(lib.crypto_secretbox_keygen()) == lib.crypto_secretbox_KEYBYTES)
+    end)
+
+    it('should reject invalid calls', function()
+      assert(pcall(lib.crypto_secretbox) == false)
+      assert(pcall(lib.crypto_secretbox_open) == false)
+      assert(pcall(lib.crypto_secretbox_easy) == false)
+      assert(pcall(lib.crypto_secretbox_open_easy) == false)
+      assert(pcall(lib.crypto_secretbox_detached) == false)
+      assert(pcall(lib.crypto_secretbox_open_detached) == false)
+
+      assert(pcall(lib.crypto_secretbox,'','','') == false)
+      assert(pcall(lib.crypto_secretbox,'',string.rep('\0',lib.crypto_secretbox_NONCEBYTES),'') == false)
+
+      assert(pcall(lib.crypto_secretbox_easy,'','','') == false)
+      assert(pcall(lib.crypto_secretbox_easy,'',string.rep('\0',lib.crypto_secretbox_NONCEBYTES),'') == false)
+
+      assert(pcall(lib.crypto_secretbox_detached,'','','') == false)
+      assert(pcall(lib.crypto_secretbox_detached,'',string.rep('\0',lib.crypto_secretbox_NONCEBYTES),'') == false)
+
+      assert(pcall(lib.crypto_secretbox_open,'','','') == false)
+      assert(pcall(lib.crypto_secretbox_open,string.rep('\0',lib.crypto_secretbox_MACBYTES+1),'','') == false)
+      assert(pcall(lib.crypto_secretbox_open,string.rep('\0',lib.crypto_secretbox_MACBYTES+1),string.rep('\0',lib.crypto_secretbox_NONCEBYTES),'') == false)
+
+      assert(pcall(lib.crypto_secretbox_open_easy,'','','') == false)
+      assert(pcall(lib.crypto_secretbox_open_easy,string.rep('\0',lib.crypto_secretbox_MACBYTES+1),'','') == false)
+      assert(pcall(lib.crypto_secretbox_open_easy,string.rep('\0',lib.crypto_secretbox_MACBYTES+1),string.rep('\0',lib.crypto_secretbox_NONCEBYTES),'') == false)
+
+      assert(pcall(lib.crypto_secretbox_open_detached,'','','','') == false)
+      assert(pcall(lib.crypto_secretbox_open_detached,'',string.rep('\0',lib.crypto_secretbox_MACBYTES),'','') == false)
+      assert(pcall(lib.crypto_secretbox_open_detached,'',string.rep('\0',lib.crypto_secretbox_MACBYTES),string.rep('\0',lib.crypto_secretbox_NONCEBYTES),'') == false)
+
     end)
 
   end)
