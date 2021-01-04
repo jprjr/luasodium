@@ -37,6 +37,7 @@ LUASODIUM_LUAS := \
 
 LUASODIUM_CORES = $(foreach lib,$(LUASODIUM_MODS),$(addprefix $(lib)/,core ffi))
 LUASODIUM_TESTS = $(addprefix test-,$(LUASODIUM_MODS))
+LUASODIUM_TESTS_FFI = $(addsuffix -ffi,$(LUASODIUM_TESTS))
 
 LUASODIUM_OBJS = c/luasodium/core.o c/luasodium/ffi.o
 LUASODIUM_OBJS += $(addsuffix .o,$(addprefix c/luasodium/,$(LUASODIUM_CORES)))
@@ -97,20 +98,16 @@ c/luasodium/version/core.o: c/luasodium/version/core.c c/luasodium/version/core.
 aux/bin2c: aux/bin2c.c
 	$(HOST_CC) -o $@ $^
 
-test-jit:
-	cd ffi && luajit ../test-crypto_auth.lua
-	cd ffi && luajit ../test-crypto_box.lua
-	cd ffi && luajit ../test-crypto_hash.lua
-	cd ffi && luajit ../test-crypto_scalarmult.lua
-	cd ffi && luajit ../test-crypto_secretbox.lua
-	cd ffi && luajit ../test-crypto_sign.lua
-	cd ffi && luajit ../test-randombytes.lua
-	cd ffi && luajit ../test-utils.lua
+test-%-ffi:
+	luajit -l aux.set_paths_ffi $(@:%-ffi=%).lua
 
 test-%: c/luasodium/%/core$(DLL) c/luasodium/%/ffi$(DLL)
 	$(LUA) -l aux.set_paths $@.lua
 
-test: $(LUASODIUM_TESTS)
+ffitest:
+	luajit -l aux.set_paths_ffi aux/verify-ffi.lua $(LUASODIUM_MODS)
+
+test: $(LUASODIUM_TESTS) $(LUASODIUM_TESTS_FFI) ffitest
 
 clean:
 	rm -f $(LUASODIUM_DLLS)
