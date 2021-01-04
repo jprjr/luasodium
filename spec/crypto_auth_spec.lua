@@ -32,6 +32,18 @@ for m,lib in pairs(libs) do
       assert(type(lib) == 'table')
     end)
 
+    it('should throw errors', function()
+      assert(pcall(lib.crypto_auth) == false)
+      assert(pcall(lib.crypto_auth,1) == false)
+      assert(pcall(lib.crypto_auth,1,2) == false)
+      assert(pcall(lib.crypto_auth_verify) == false)
+      assert(pcall(lib.crypto_auth_verify,1) == false)
+      assert(pcall(lib.crypto_auth_verify,1,2) == false)
+      assert(pcall(lib.crypto_auth_verify,1,2,3) == false)
+      assert(pcall(lib.crypto_auth_verify,'','','') == false)
+      assert(pcall(lib.crypto_auth_verify,string.rep('\0',lib.crypto_auth_BYTES),'','') == false)
+    end)
+
     describe('zero-byte key tests', function()
       local key = string.rep('\0',lib.crypto_auth_KEYBYTES)
       it('should generate the correct authentication tag', function()

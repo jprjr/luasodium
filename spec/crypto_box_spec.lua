@@ -25,6 +25,34 @@ for m,lib in pairs(libs) do
       assert(type(lib) == 'table')
     end)
 
+    it('should throw errors on invalid calls', function()
+      assert(pcall(lib.crypto_box_seed_keypair) == false)
+      assert(pcall(lib.crypto_box_seed_keypair,'') == false)
+
+      assert(pcall(lib.crypto_box) == false)
+      assert(pcall(lib.crypto_box,'','','','') == false)
+      assert(pcall(lib.crypto_box,'',string.rep('\0',lib.crypto_box_NONCEBYTES),'','') == false)
+      assert(pcall(lib.crypto_box,'',string.rep('\0',lib.crypto_box_NONCEBYTES),string.rep('\0',lib.crypto_box_PUBLICKEYBYTES),'') == false)
+
+      assert(pcall(lib.crypto_box_open) == false)
+      assert(pcall(lib.crypto_box_open,'','','','') == false)
+      assert(pcall(lib.crypto_box_open,string.rep('\0',lib.crypto_box_MACBYTES+1),'','','') == false)
+      assert(pcall(lib.crypto_box_open,string.rep('\0',lib.crypto_box_MACBYTES+1),string.rep('\0',lib.crypto_box_NONCEBYTES),'','') == false)
+      assert(pcall(lib.crypto_box_open,string.rep('\0',lib.crypto_box_MACBYTES+1),string.rep('\0',lib.crypto_box_NONCEBYTES),string.rep('\0',lib.crypto_box_PUBLICKEYBYTES),'') == false)
+
+      assert(pcall(lib.crypto_box_easy) == false)
+      assert(pcall(lib.crypto_box_easy,'','','','') == false)
+      assert(pcall(lib.crypto_box_easy,'',string.rep('\0',lib.crypto_box_NONCEBYTES),'','') == false)
+      assert(pcall(lib.crypto_box_easy,'',string.rep('\0',lib.crypto_box_NONCEBYTES),string.rep('\0',lib.crypto_box_PUBLICKEYBYTES),'') == false)
+
+      assert(pcall(lib.crypto_box_open_easy) == false)
+      assert(pcall(lib.crypto_box_open_easy,'','','','') == false)
+      assert(pcall(lib.crypto_box_open_easy,string.rep('\0',lib.crypto_box_MACBYTES+1),'','','') == false)
+      assert(pcall(lib.crypto_box_open_easy,string.rep('\0',lib.crypto_box_MACBYTES+1),string.rep('\0',lib.crypto_box_NONCEBYTES),'','') == false)
+      assert(pcall(lib.crypto_box_open_easy,string.rep('\0',lib.crypto_box_MACBYTES+1),string.rep('\0',lib.crypto_box_NONCEBYTES),string.rep('\0',lib.crypto_box_PUBLICKEYBYTES),'') == false)
+
+    end)
+
     it('keypair tests', function()
       local pk, sk = lib.crypto_box_keypair()
       assert(string.len(pk) == lib.crypto_box_PUBLICKEYBYTES)
@@ -75,6 +103,9 @@ for m,lib in pairs(libs) do
         assert(decrypted == message)
         assert(lib.crypto_box(message,nonce,receiver_pk,sender_sk) == encrypted)
         assert(lib.crypto_box_open(encrypted,nonce,sender_pk,receiver_sk) == message)
+        local em = string.sub(encrypted,lib.crypto_box_MACBYTES+1)
+        assert(string.len(em) == string.len(message))
+        assert(pcall(lib.crypto_box_open,string.rep('\0',lib.crypto_box_MACBYTES) .. em,nonce, sender_pk,receiver_pk) == false)
       end)
 
       it('should encrypt/decrypt detached messages', function()
