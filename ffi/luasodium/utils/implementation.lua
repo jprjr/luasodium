@@ -154,6 +154,9 @@ return function(libs)
   end
 
   local function luasodium_increment(n)
+    if not n then
+      return error('requires 1 argument')
+    end
     local nlen = string_len(n)
     local tmp_n = char_array(nlen)
     ffi.copy(tmp_n,n,nlen)
@@ -164,6 +167,9 @@ return function(libs)
   end
 
   local function luasodium_add(a,b)
+    if not b then
+      return error('requires 2 arguments')
+    end
     local alen = string_len(a)
     local blen = string_len(b)
     if alen ~= blen then
@@ -179,6 +185,9 @@ return function(libs)
   end
 
   local function luasodium_sub(a,b)
+    if not b then
+      return error('requires 2 arguments')
+    end
     local alen = string_len(a)
     local blen = string_len(b)
     if alen ~= blen then
@@ -194,6 +203,9 @@ return function(libs)
   end
 
   local function luasodium_compare(a,b)
+    if not b then
+      return error('requires 2 arguments')
+    end
     local alen = string_len(a)
     local blen = string_len(b)
     if alen ~= blen then

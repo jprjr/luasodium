@@ -5,10 +5,12 @@
 
 static int
 ls_sodium_init(lua_State *L) {
+    /* LCOV_EXCL_START */
     if(sodium_init() == -1) {
         lua_pushliteral(L,"sodium_init error");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
     lua_pushboolean(L,1);
     return 1;
 }
@@ -51,10 +53,14 @@ ls_sodium_bin2hex(lua_State *L) {
     bin = lua_tolstring(L,1,&bin_len);
     hex_len = (bin_len * 2);
     hex = lua_newuserdata(L,hex_len + 1);
+
+    /* LCOV_EXCL_START */
     if(hex == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pop(L,1);
     sodium_bin2hex(hex,hex_len+1,(const unsigned char *)bin,bin_len);
     lua_pushstring(L,hex);
@@ -92,12 +98,17 @@ ls_sodium_hex2bin(lua_State *L) {
     }
 
     bin = lua_newuserdata(L,bin_len);
+
+    /* LCOV_EXCL_START */
     if(bin == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pop(L,1);
 
+    /* LCOV_EXCL_START */
     if(sodium_hex2bin(
         bin,bin_len,
         hex,hex_len,
@@ -106,6 +117,7 @@ ls_sodium_hex2bin(lua_State *L) {
         lua_pushliteral(L,"error in hex2bin");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)bin,out_bin_len);
     if(hex_end < hex + hex_len) {
@@ -146,10 +158,14 @@ ls_sodium_bin2base64(lua_State *L) {
 
     b64_len = sodium_base64_encoded_len(bin_len,variant);
     b64 = lua_newuserdata(L,b64_len);
+
+    /* LCOV_EXCL_START */
     if(b64 == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pop(L,1);
 
     sodium_bin2base64(b64,b64_len,
@@ -197,16 +213,21 @@ ls_sodium_base642bin(lua_State *L) {
     bin_len = base64_len;
 
     if(lua_isstring(L,3)) {
-        ignore = lua_tostring(L,4);
+        ignore = lua_tostring(L,3);
     }
 
     bin = lua_newuserdata(L,bin_len);
+
+    /* LCOV_EXCL_START */
     if(bin == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pop(L,1);
 
+    /* LCOV_EXCL_START */
     if(sodium_base642bin(
         bin,bin_len,
         base64,base64_len,
@@ -215,6 +236,7 @@ ls_sodium_base642bin(lua_State *L) {
         lua_pushliteral(L,"error in base642bin");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)bin,out_bin_len);
     if(base64_end < base64 + base64_len) {
@@ -231,12 +253,21 @@ ls_sodium_increment(lua_State *L) {
     char *r = NULL;
     size_t nlen = 0;
 
+    if(lua_isnoneornil(L,1)) {
+        lua_pushliteral(L,"requires 1 argument");
+        return lua_error(L);
+    }
+
     n = lua_tolstring(L,1,&nlen);
     r = lua_newuserdata(L,nlen);
+
+    /* LCOV_EXCL_START */
     if(r == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pop(L,1);
 
     memcpy(r,n,nlen);
@@ -255,6 +286,11 @@ ls_sodium_add(lua_State *L) {
     size_t alen = 0;
     size_t blen = 0;
 
+    if(lua_isnoneornil(L,2)) {
+        lua_pushliteral(L,"requires 2 arguments");
+        return lua_error(L);
+    }
+
     a = lua_tolstring(L,1,&alen);
     b = lua_tolstring(L,2,&blen);
 
@@ -264,10 +300,14 @@ ls_sodium_add(lua_State *L) {
     }
 
     r = lua_newuserdata(L,alen);
+
+    /* LCOV_EXCL_START */
     if(r == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pop(L,1);
 
     memcpy(r,a,alen);
@@ -285,6 +325,11 @@ ls_sodium_sub(lua_State *L) {
     size_t alen = 0;
     size_t blen = 0;
 
+    if(lua_isnoneornil(L,2)) {
+        lua_pushliteral(L,"requires 2 arguments");
+        return lua_error(L);
+    }
+
     a = lua_tolstring(L,1,&alen);
     b = lua_tolstring(L,2,&blen);
 
@@ -294,10 +339,14 @@ ls_sodium_sub(lua_State *L) {
     }
 
     r = lua_newuserdata(L,alen);
+
+    /* LCOV_EXCL_START */
     if(r == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pop(L,1);
 
     memcpy(r,a,alen);
@@ -363,19 +412,26 @@ ls_sodium_pad(lua_State *L) {
     rounded = nlen + (blocksize - rem);
 
     r = lua_newuserdata(L,rounded);
+
+    /* LCOV_EXCL_START */
     if(r == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pop(L,1);
     memcpy(r,n,nlen);
 
+    /* LCOV_EXCL_START */
     if(sodium_pad(&outlen,(unsigned char *)r,
         nlen,blocksize,rounded) != 0) {
         sodium_memzero(r,rounded);
         lua_pushliteral(L,"sodium_pad error");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
+
     lua_pushlstring(L,r,outlen);
     sodium_memzero(r,rounded);
     return 1;
