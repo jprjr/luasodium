@@ -143,6 +143,7 @@ release: $(LUASODIUM_FFI_IMPLEMENTATIONS) $(LUASODIUM_FFI_SIGNATURES) README.md 
 	rsync -a README.md luasodium-$(VERSION)/README.md
 	rsync -a LICENSE luasodium-$(VERSION)/LICENSE
 	rsync -a Makefile luasodium-$(VERSION)/Makefile
+	rsync -a CMakeLists.txt luasodium-$(VERSION)/CMakeLists.txt
 	rsync -a dist.ini luasodium-$(VERSION)/dist.ini
 	sed 's/@VERSION@/$(VERSION)/g' < rockspecs/luasodium-release-template.rockspec > luasodium-$(VERSION)/rockspecs/luasodium-$(VERSION)-1.rockspec
 	sed 's/@VERSION@/$(VERSION)/g' < dist.ini > luasodium-$(VERSION)/dist.ini
