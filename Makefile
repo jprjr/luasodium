@@ -133,6 +133,7 @@ release: $(LUASODIUM_FFI_IMPLEMENTATIONS) $(LUASODIUM_FFI_SIGNATURES) README.md 
 	mkdir -p dist
 	mkdir -p luasodium-$(VERSION)/
 	rsync -a c luasodium-$(VERSION)/
+	rsync -a cmake luasodium-$(VERSION)/
 	rsync -a lua luasodium-$(VERSION)/
 	rsync -a ffi luasodium-$(VERSION)/
 	rsync -a rockspecs luasodium-$(VERSION)/
