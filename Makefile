@@ -12,7 +12,7 @@ LDFLAGS += $(shell $(PKGCONFIG) --libs libsodium)
 CFLAGS += -fPIC -Wall -Wextra -g -O2
 CFLAGS += $(shell $(PKGCONFIG) --cflags $(LUA))
 
-VERSION = $(shell $(LUA) aux/version.lua)
+VERSION = $(shell $(LUA) tools/version.lua)
 
 DLL=.so
 LIB=.a
@@ -65,17 +65,17 @@ INSTALL_LIBS = install-lib-core install-lib-ffi $(addprefix install-lib-,$(LUASO
 
 all: $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
 
-c/luasodium/ffi-function-loader.h: ffi/luasodium/_ffi/function_loader.lua | aux/bin2c
-	./aux/bin2c $< $@ ffi_function_loader
+c/luasodium/ffi-function-loader.h: ffi/luasodium/_ffi/function_loader.lua | tools/bin2c
+	./tools/bin2c $< $@ ffi_function_loader
 
-c/luasodium/ffi-default-signatures.h: ffi/luasodium/_ffi/default_signatures.lua | aux/bin2c
-	./aux/bin2c $< $@ ffi_default_signatures
+c/luasodium/ffi-default-signatures.h: ffi/luasodium/_ffi/default_signatures.lua | tools/bin2c
+	./tools/bin2c $< $@ ffi_default_signatures
 
-c/luasodium/%/ffi-implementation.h: ffi/luasodium/%/implementation.lua | aux/bin2c
-	./aux/bin2c $< $@ $(addsuffix _ffi_implementation,$(addprefix ls_,$(notdir $(patsubst %/,%,$(dir $<)))))
+c/luasodium/%/ffi-implementation.h: ffi/luasodium/%/implementation.lua | tools/bin2c
+	./tools/bin2c $< $@ $(addsuffix _ffi_implementation,$(addprefix ls_,$(notdir $(patsubst %/,%,$(dir $<)))))
 
-c/luasodium/%/ffi-signatures.h: ffi/luasodium/%/signatures.lua | aux/bin2c
-	./aux/bin2c $< $@ $(addsuffix _ffi_signatures,$(addprefix ls_,$(notdir $(patsubst %/,%,$(dir $<)))))
+c/luasodium/%/ffi-signatures.h: ffi/luasodium/%/signatures.lua | tools/bin2c
+	./tools/bin2c $< $@ $(addsuffix _ffi_signatures,$(addprefix ls_,$(notdir $(patsubst %/,%,$(dir $<)))))
 
 c/luasodium/core.o: c/luasodium/core.c $(LUASODIUM_CORE_HEADERS) c/luasodium/version/ffi-implementation.h
 	$(CC) $(CFLAGS) -o $@ -c $<
@@ -98,17 +98,17 @@ c/luasodium/version/core.o: c/luasodium/version/core.c c/luasodium/version/core.
 %$(LIB): %.o
 	ar rcs $@ $^
 
-aux/bin2c: aux/bin2c.c
+tools/bin2c: tools/bin2c.c
 	$(HOST_CC) -o $@ $^
 
 ffitest-%:
-	luajit -l aux.set_paths_ffi -l aux.try_luacov spec/$(@:ffitest-%=%)_spec.lua
+	luajit -l tools.set_paths_ffi -l tools.try_luacov spec/$(@:ffitest-%=%)_spec.lua
 
 test-%: c/luasodium/core$(DLL) c/luasodium/ffi$(DLL) c/luasodium/%/core$(DLL) c/luasodium/%/ffi$(DLL)
-	$(LUA) -l aux.set_paths -l aux.try_luacov spec/$(@:test-%=%)_spec.lua
+	$(LUA) -l tools.set_paths -l tools.try_luacov spec/$(@:test-%=%)_spec.lua
 
 ffitest: $(LUASODIUM_TESTS_FFI)
-	luajit -l aux.set_paths_ffi aux/verify-ffi.lua $(LUASODIUM_MODS)
+	luajit -l tools.set_paths_ffi tools/verify-ffi.lua $(LUASODIUM_MODS)
 
 test: $(LUASODIUM_TESTS)
 
@@ -127,19 +127,19 @@ release: $(LUASODIUM_FFI_IMPLEMENTATIONS) $(LUASODIUM_FFI_SIGNATURES) README.md 
 	rm -rf luasodium-$(VERSION) dist/luasodium-$(VERSION)
 	rm -rf dist/luasodium-$(VERSION).tar.gz
 	rm -rf dist/luasodium-$(VERSION).tar.xz
-	rm -f $(LUASODIUM_OBJS) $(LUASODIUM_DLLS) $(LUASODIUM_LIBS) aux/bin2c
+	rm -f $(LUASODIUM_OBJS) $(LUASODIUM_DLLS) $(LUASODIUM_LIBS) tools/bin2c
 	rm -f $(LUASODIUM_GCNO)
 	rm -f $(LUASODIUM_GCDA)
 	mkdir -p dist
 	mkdir -p luasodium-$(VERSION)/
-	rsync -a aux luasodium-$(VERSION)/
 	rsync -a c luasodium-$(VERSION)/
 	rsync -a lua luasodium-$(VERSION)/
 	rsync -a ffi luasodium-$(VERSION)/
 	rsync -a rockspecs luasodium-$(VERSION)/
 	rsync -a spec luasodium-$(VERSION)/
-	perl aux/amalgate.pl c/luasodium/core.c > luasodium-$(VERSION)/c/luasodium-amalgamated-core.c
-	perl aux/amalgate.pl c/luasodium/ffi.c > luasodium-$(VERSION)/c/luasodium-amalgamated-ffi.c
+	rsync -a tools luasodium-$(VERSION)/
+	perl tools/amalgate.pl c/luasodium/core.c > luasodium-$(VERSION)/c/luasodium-amalgamated-core.c
+	perl tools/amalgate.pl c/luasodium/ffi.c > luasodium-$(VERSION)/c/luasodium-amalgamated-ffi.c
 	rsync -a README.md luasodium-$(VERSION)/README.md
 	rsync -a LICENSE luasodium-$(VERSION)/LICENSE
 	rsync -a Makefile luasodium-$(VERSION)/Makefile
@@ -215,7 +215,7 @@ install: install-luas install-dlls install-libs
 
 fficoverage-%:
 	rm -f luacov.stats.out
-	luajit -l aux.set_paths_ffi -l aux.try_luacov spec/$(@:fficoverage-%=%)_spec.lua
+	luajit -l tools.set_paths_ffi -l tools.try_luacov spec/$(@:fficoverage-%=%)_spec.lua
 	luacov -r gcovr
 	mv luacov.report.out $@.json
 
