@@ -42,11 +42,16 @@ if(NOT LUA_INCLUDE_DIR)
       find_package(Lua ${LUA_VERSION} EXACT REQUIRED)
     else()
       find_package(Lua REQUIRED)
+      set(LUA_VERSION "${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}")
     endif()
 endif()
 
-set(CMODULE_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib/lua/${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}")
-set(LUAMODULE_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/share/lua/${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}")
+if(NOT LUA_VERSION)
+    message(FATAL_ERROR "Unable to determine lua version, please set LUA_VERSION")
+endif()
+
+set(CMODULE_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib/lua/${LUA_VERSION}")
+set(LUAMODULE_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/share/lua/${LUA_VERSION}")
 
 set(bin2c_cmdline_ffi_default_signatures
   "-DOUTPUT_C=${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/ffi-default-signatures.h"
