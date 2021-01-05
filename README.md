@@ -1,5 +1,7 @@
 # luasodium
 
+[![codecov](https://codecov.io/gh/jprjr/luasodium/branch/main/graph/badge.svg?token=5vQm3fchNl)](https://codecov.io/gh/jprjr/luasodium)
+
 Bindings to [Libsodium](https://libsodium.gitbook.io/doc/), with support
 for the Lua C API as well as LuaJIT's FFI API.
 
