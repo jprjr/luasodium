@@ -39,6 +39,7 @@ static int
 ls_version_core_setup(lua_State *L) {
     int target = lua_gettop(L);
 
+    /* LCOV_EXCL_START */
     if(luaL_loadbuffer(L,ls_version_ffi_implementation,ls_version_ffi_implementation_length - 1, "version.lua")) {
         return lua_error(L);
     }
@@ -48,6 +49,7 @@ ls_version_core_setup(lua_State *L) {
     if(lua_pcall(L,0,1,0)) {
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
 
     ls_version_copydown_table(L,target,lua_gettop(L));
     lua_pop(L,1);
