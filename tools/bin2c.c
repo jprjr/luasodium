@@ -19,10 +19,6 @@
 #define _CRT_SECURE_NO_DEPRECATE 1
 #endif
 
-#ifdef USE_BZ2
-#include <bzlib.h>
-#endif
-
 int
 main ( int argc, char* argv[] )
 {
@@ -32,11 +28,6 @@ main ( int argc, char* argv[] )
     unsigned int i, file_size, need_comma;
 
     FILE *f_input, *f_output;
-
-#ifdef USE_BZ2
-    char *bz2_buf;
-    unsigned int uncompressed_size, bz2_size;
-#endif
 
     if (argc < 4) {
         fprintf(stderr, "Usage: %s binary_file output_file array_name\n", argv[0]);
@@ -53,35 +44,12 @@ main ( int argc, char* argv[] )
     fseek(f_input, 0, SEEK_END);
     file_size = ftell(f_input);
     fseek(f_input, 0, SEEK_SET);
-    file_size++;
 
     buf = (char *)malloc(file_size);
     assert(buf);   
 
     fread(buf, file_size, 1, f_input);
     fclose(f_input);
-
-#ifdef USE_BZ2
-    // allocate for bz2.
-    bz2_size = ((file_size) * 1.01) + 600; // as per the documentation
-
-    bz2_buf = (char *)malloc(bz2_size);
-    assert(bz2_buf);
-
-    // compress the data
-    int status = BZ2_bzBuffToBuffCompress(bz2_buf, &bz2_size, buf, file_size, 9, 1, 0);
-
-    if(status != BZ_OK) {
-        fprintf(stderr, "Failed to compress data: error %i\n", status);
-        return -1;
-    }
-
-    // and be very lazy
-    free(buf);
-    uncompressed_size = file_size;
-    file_size = bz2_size;
-    buf = bz2_buf;
-#endif
 
     f_output = fopen(argv[2], "w");
     if (f_output == NULL)

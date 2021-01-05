@@ -14,7 +14,7 @@
 #include "version/ffi.h"
 
 #define COPYDOWN_FFI_IMPLEMENTATION(x) \
-    if(luaL_loadbuffer(L,ls_ ## x ## _ffi_implementation,ls_ ## x ## _ffi_implementation_length - 1, "luasodium/" #x "/implementation.lua")) { \
+    if(luaL_loadbuffer(L,ls_ ## x ## _ffi_implementation,ls_ ## x ## _ffi_implementation_length, "luasodium/" #x "/implementation.lua")) { \
         return lua_error(L); \
     } \
     if(lua_pcall(L,0,1,0)) { \
@@ -36,7 +36,7 @@
     luasodium_push_functions(L,ls_ ## x ## _functions,lua_gettop(L));
 
 #define COPYDOWN_SIG_TABLE(x) \
-    if(luaL_loadbuffer(L,ls_ ## x ## _ffi_signatures,ls_ ## x ## _ffi_signatures_length - 1, "luasodium/" #x "/signatures.lua")) { \
+    if(luaL_loadbuffer(L,ls_ ## x ## _ffi_signatures,ls_ ## x ## _ffi_signatures_length, "luasodium/" #x "/signatures.lua")) { \
         return lua_error(L); \
     } \
     if(lua_pcall(L,0,1,0)) { \
@@ -68,7 +68,7 @@ luaopen_luasodium_ffi(lua_State *L) {
     lua_newtable(L);
     table_index = lua_gettop(L);
 
-    if(luaL_loadbuffer(L,ffi_default_signatures,ffi_default_signatures_length - 1, "luasodium/_ffi/default_signatures.lua")) {
+    if(luaL_loadbuffer(L,ffi_default_signatures,ffi_default_signatures_length, "luasodium/_ffi/default_signatures.lua")) {
         return lua_error(L);
     }
     if(lua_pcall(L,0,1,0)) {
@@ -76,7 +76,7 @@ luaopen_luasodium_ffi(lua_State *L) {
     }
     default_signatures_index = lua_gettop(L);
 
-    if(luaL_loadbuffer(L,ffi_function_loader,ffi_function_loader_length - 1, "luasodium/_ffi/function_loader.lua")) {
+    if(luaL_loadbuffer(L,ffi_function_loader,ffi_function_loader_length, "luasodium/_ffi/function_loader.lua")) {
         return lua_error(L);
     }
     if(lua_pcall(L,0,1,0)) {
