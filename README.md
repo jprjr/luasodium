@@ -113,16 +113,31 @@ for the ffi modules. They also include amalgamated versions of
 the main `luasodium` module, in case you want something easy to
 integrate into your own build system.
 
+Currently migrating to a CMake build system. Building and installing
+the library with cmake works, I have not yet moved running tests, generating
+release tarballs, etc into cmake.
+
 If you'd like to build from source, grab
-one of the release tarballs, and run `make`
+one of the release tarballs, and then build with cmake:
 
 ```bash
-wget https://github.com/jprjr/luasodium/releases/download/v1.0.0/luasodium-1.0.0.tar.gz
-tar xf luasodium-1.0.0.tar.gz
-cd luasodium-1.0.0
+wget https://github.com/jprjr/luasodium/releases/download/v1.0.4/luasodium-1.0.4.tar.gz
+tar xf luasodium-1.0.4.tar.gz
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=/usr ../luasodium-1.0.4
 make
 make install
 ```
+
+CMake should find libsodium and Lua automatically. Or you can specify some flags:
+
+* `-DLUA_VERSION=5.1` (or whichever version of Lua you want to build against.
+* `-DLIBSODIUM_INCLUDEDIR=/path/to/includedir -DLIBSODIUM_LIBRARIES=/path/to/libsodium.so`
+* `-DLUA_INCLUDEDIR=/path/to/includedir`
+
+If you set LUA_INCLUDEDIR, you'll need to also set LUA_VERSION. If you're building with
+any version of LuaJIT, set it to `5.1`.
 
 ## Licensing
 

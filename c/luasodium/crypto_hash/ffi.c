@@ -1,28 +1,28 @@
 #include "ffi.h"
 
 int luaopen_luasodium_crypto_hash_ffi(lua_State *L) {
-    if(luaL_loadbuffer(L,ls_crypto_hash_ffi_implementation,ls_crypto_hash_ffi_implementation_length - 1,"crypto_hash.lua") ) {
+    if(luaL_loadbuffer(L,ls_crypto_hash_ffi_implementation,ls_crypto_hash_ffi_implementation_length,"crypto_hash.lua") ) {
         return lua_error(L);
     }
     if(lua_pcall(L,0,1,0)) {
         return lua_error(L);
     }
 
-    if(luaL_loadbuffer(L,ffi_function_loader,ffi_function_loader_length - 1,"luasodium/_ffi/function_loader.lua")) {
+    if(luaL_loadbuffer(L,ffi_function_loader,ffi_function_loader_length,"luasodium/_ffi/function_loader.lua")) {
         return lua_error(L);
     }
     if(lua_pcall(L,0,1,0)) {
         return lua_error(L);
     }
 
-    if(luaL_loadbuffer(L,ffi_default_signatures,ffi_default_signatures_length - 1, "luasodium/_ffi/default_signatures.lua")) {
+    if(luaL_loadbuffer(L,ffi_default_signatures,ffi_default_signatures_length, "luasodium/_ffi/default_signatures.lua")) {
         return lua_error(L);
     }
     if(lua_pcall(L,0,1,0)) {
         return lua_error(L);
     }
 
-    if(luaL_loadbuffer(L,ls_crypto_hash_ffi_signatures,ls_crypto_hash_ffi_signatures_length - 1,"luasodium/crypto_hash/signatures.lua")) {
+    if(luaL_loadbuffer(L,ls_crypto_hash_ffi_signatures,ls_crypto_hash_ffi_signatures_length,"luasodium/crypto_hash/signatures.lua")) {
         return lua_error(L);
     }
     if(lua_pcall(L,0,1,0)) {
