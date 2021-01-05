@@ -61,6 +61,11 @@ for m,lib in pairs(libs) do
       assert(lib.crypto_verify_32(test1_32,test2_32) == true)
       assert(lib.crypto_verify_32(test1_32,test3_32) == false)
 
+    end)
+
+    it('should reject bad calls',function()
+      assert(pcall(lib.crypto_verify_16) == false)
+      assert(pcall(lib.crypto_verify_16,test1_16,test2_24) == false)
       assert(pcall(lib.crypto_verify_16,test1_24,test2_24) == false)
     end)
   end)

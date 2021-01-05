@@ -68,6 +68,13 @@ for m,lib in pairs(libs) do
       end
       lib.randombytes_stir()
     end)
+
+    it('should reject bad calls', function()
+      assert(pcall(lib.randombytes_uniform) == false)
+      assert(pcall(lib.randombytes_buf) == false)
+      assert(pcall(lib.randombytes_buf_deterministic) == false)
+      assert(pcall(lib.randombytes_buf_deterministic,10,'') == false)
+    end)
   end)
 end
 

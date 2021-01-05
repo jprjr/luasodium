@@ -30,10 +30,13 @@ ls_randombytes_buf(lua_State *L) {
 
     s = lua_tointeger(L,1);
     buf = lua_newuserdata(L,s);
+
+    /* LCOV_EXCL_START */
     if(buf == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
     lua_pop(L,1);
 
     randombytes_buf(buf,s);
@@ -63,10 +66,12 @@ ls_randombytes_buf_deterministic(lua_State *L) {
     }
 
     buf = lua_newuserdata(L,s);
+    /* LCOV_EXCL_START */
     if(buf == NULL) {
         lua_pushliteral(L,"out of memory");
         return lua_error(L);
     }
+    /* LCOV_EXCL_STOP */
     lua_pop(L,1);
 
     randombytes_buf_deterministic(buf,s,(const unsigned char *)seed);
