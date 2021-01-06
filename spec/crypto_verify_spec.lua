@@ -30,12 +30,12 @@ do
   libs['luasodium.crypto_verify'] = lib
 end
 
--- these won't load in the ffi-only mode
--- and regular lua won't load the ffi versions
-for _,m in ipairs({'luasodium.core', 'luasodium.ffi', 'luasodium.crypto_verify.core', 'luasodium.crypto_verify.ffi'}) do
-  local ok, lib = pcall(require,m)
-  if ok then
-    libs[m] = lib
+for _,t in ipairs({'core','ffi','pureffi'}) do
+  for _,m in ipairs({'luasodium.' .. t, 'luasodium.crypto_crypto_verify.' .. t}) do
+    local ok, lib = pcall(require,m)
+    if ok then
+      libs[m] = lib
+    end
   end
 end
 

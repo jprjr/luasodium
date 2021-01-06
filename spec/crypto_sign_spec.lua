@@ -30,14 +30,15 @@ do
   libs['luasodium.crypto_sign'] = lib
 end
 
--- these won't load in the ffi-only mode
--- and regular lua won't load the ffi versions
-for _,m in ipairs({'luasodium.core', 'luasodium.ffi', 'luasodium.crypto_sign.core', 'luasodium.crypto_sign.ffi'}) do
-  local ok, lib = pcall(require,m)
-  if ok then
-    libs[m] = lib
+for _,t in ipairs({'core','ffi','pureffi'}) do
+  for _,m in ipairs({'luasodium.' .. t, 'luasodium.crypto_sign.' .. t}) do
+    local ok, lib = pcall(require,m)
+    if ok then
+      libs[m] = lib
+    end
   end
 end
+
 
 local expected_pk = {
   59,106,39,188,206,182,164,45,
