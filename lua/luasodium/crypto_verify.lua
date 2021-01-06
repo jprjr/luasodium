@@ -1,4 +1,13 @@
-local ok, lib = pcall(require,'luasodium.crypto_verify.ffi')
-if ok then return lib end
+local ok, mod
 
-return require'luasodium.crypto_verify.core'
+ok, mod = pcall(require,'luasodium.crypto_verify.ffi')
+if ok then
+  return mod
+end
+
+ok, mod = pcall(require,'luasodium.crypto_verify.core')
+if ok then
+  return mod
+end
+
+return require'luasodium.crypto_verify.pureffi'

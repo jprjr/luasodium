@@ -1,4 +1,5 @@
 -- returns a 'libs' table
+-- used by the ffi-in-a-c-module
 return function(signatures,pointers)
 
   local ffi = require'ffi'

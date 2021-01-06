@@ -1,6 +1,13 @@
-local ok, mod = pcall(require,'luasodium.crypto_secretbox.ffi')
+local ok, mod
+
+ok, mod = pcall(require,'luasodium.crypto_secretbox.ffi')
 if ok then
   return mod
 end
 
-return require'luasodium.crypto_secretbox.core'
+ok, mod = pcall(require,'luasodium.crypto_secretbox.core')
+if ok then
+  return mod
+end
+
+return require'luasodium.crypto_secretbox.pureffi'

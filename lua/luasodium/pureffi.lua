@@ -16,7 +16,7 @@ local modules = {
 }
 
 for _,m in ipairs(modules) do
-  local mod = require('luasodium.' .. m)
+  local mod = require('luasodium.' .. m .. '.pureffi')
   for k,v in pairs(mod) do
     M[k] = v
   end

@@ -1,6 +1,13 @@
-local ok, lib = pcall(require,'luasodium.ffi')
+local ok, lib
+
+ok, lib = pcall(require,'luasodium.ffi')
 if ok then
   return lib
 end
 
-return require'luasodium.core'
+ok, lib = pcall(require,'luasodium.core')
+if ok then
+  return lib
+end
+
+return require'luasodium.pureffi'

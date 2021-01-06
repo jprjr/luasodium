@@ -1,7 +1,14 @@
-local ok, mod = pcall(require,'luasodium.crypto_stream.ffi')
+local ok, mod
+
+ok, mod = pcall(require,'luasodium.crypto_stream.ffi')
 if ok then
   return mod
 end
 
-return require'luasodium.crypto_stream.core'
+ok, mod = pcall(require,'luasodium.crypto_stream.core')
+if ok then
+  return mod
+end
+
+return require'luasodium.crypto_stream.pureffi'
 

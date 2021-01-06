@@ -1,3 +1,5 @@
+-- signatures, used by
+-- both pure FFI and FFI-inside-C
 local signatures = {
   ['sodium_init'] = [[
     int %s(void)
