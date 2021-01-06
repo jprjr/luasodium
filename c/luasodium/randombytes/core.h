@@ -14,7 +14,7 @@ ls_randombytes_uniform(lua_State *L) {
         return lua_error(L);
     }
 
-    lua_pushinteger(L,randombytes_uniform(lua_tointeger(L,1)));
+    lua_pushinteger(L,randombytes_uniform((const uint32_t)lua_tointeger(L,1)));
     return 1;
 }
 

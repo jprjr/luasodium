@@ -156,7 +156,7 @@ ls_sodium_bin2base64(lua_State *L) {
         }
     }
 
-    b64_len = sodium_base64_encoded_len(bin_len,variant);
+    b64_len = sodium_base64_encoded_len(bin_len,(const int)variant);
     b64 = lua_newuserdata(L,b64_len);
 
     /* LCOV_EXCL_START */
@@ -170,7 +170,7 @@ ls_sodium_bin2base64(lua_State *L) {
 
     sodium_bin2base64(b64,b64_len,
       (const unsigned char *)bin, bin_len,
-      variant);
+      (const int)variant);
     lua_pushstring(L,b64);
     sodium_memzero(b64,b64_len);
     return 1;
@@ -232,7 +232,7 @@ ls_sodium_base642bin(lua_State *L) {
         bin,bin_len,
         base64,base64_len,
         ignore, &out_bin_len,
-        &base64_end,variant) != 0) {
+        &base64_end,(const int)variant) != 0) {
         lua_pushliteral(L,"error in base642bin");
         return lua_error(L);
     }
