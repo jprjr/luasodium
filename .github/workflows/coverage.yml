@@ -58,7 +58,9 @@ jobs:
     - name: install dependencies
       run: vcpkg install libsodium:x64-windows libsodium:x86-windows lua:x64-windows lua:x86-windows
 
-    - name: cmake
-      run: 'cmake -B build-windows -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake .'
+    - name: cmake configure
+      run: 'cmake -B build-windows -DCMAKE_TOOLCHAIN_FILE=C:\vcpkg\scripts\buildsystems\vcpkg.cmake -S .'
 
+    - name: cmake build
+      run: 'cmake --build build-windows'
 
