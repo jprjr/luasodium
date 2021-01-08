@@ -37,59 +37,30 @@ LUASODIUM_LUAS := \
 
 LUASODIUM_CORES = $(foreach lib,$(LUASODIUM_MODS),$(addprefix $(lib)/,core ffi))
 LUASODIUM_TESTS = $(addprefix test-,$(LUASODIUM_MODS))
-LUASODIUM_TESTS_FFI = $(addprefix ffitest-,$(LUASODIUM_MODS))
 
-LUASODIUM_OBJS = c/luasodium/core.o c/luasodium/ffi.o
-LUASODIUM_OBJS += $(addsuffix .o,$(addprefix c/luasodium/,$(LUASODIUM_CORES)))
+LUASODIUM_OBJS = $(addsuffix .o,$(addprefix c/luasodium/,$(LUASODIUM_CORES)))
 
 LUASODIUM_GCNO = $(LUASODIUM_OBJS:%.o=%.gcno)
 LUASODIUM_GCDA = $(LUASODIUM_OBJS:%.o=%.gcda)
 
-LUASODIUM_CORE_HEADERS = $(addsuffix /core.h,$(addprefix c/luasodium/,$(LUASODIUM_MODS)))
-LUASODIUM_FFI_HEADERS = $(addsuffix /ffi.h,$(addprefix c/luasodium/,$(LUASODIUM_MODS)))
 LUASODIUM_DLLS = $(LUASODIUM_OBJS:%.o=%$(DLL))
 LUASODIUM_LIBS = $(LUASODIUM_OBJS:%.o=%$(LIB))
-
-LUASODIUM_FFI_LOADER = c/luasodium/ffi-function-loader.h
-LUASODIUM_FFI_IMPLEMENTATIONS = $(addsuffix /ffi-implementation.h,$(addprefix c/luasodium/,$(LUASODIUM_MODS)))
-
-LUASODIUM_FFI_DEFAULT_SIG = c/luasodium/ffi-default-signatures.h
-LUASODIUM_FFI_SIGNATURES  = $(addsuffix /ffi-signatures.h,$(addprefix c/luasodium/,$(LUASODIUM_MODS)))
 
 INSTALL_LUAS = install-lua-luasodium $(addprefix install-lua-,$(LUASODIUM_MODS))
 INSTALL_DLLS = install-dll-core install-dll-ffi $(addprefix install-dll-,$(LUASODIUM_MODS))
 INSTALL_LIBS = install-lib-core install-lib-ffi $(addprefix install-lib-,$(LUASODIUM_MODS))
 
-.PHONY: all clean release test ffitest github-release coverage install install-lua-luasodium $(INSTALL_LUAS) $(INSTALL_DLLS) $(INSTALL_LIBS)
+TESTMODE=core
+
+.PHONY: all clean release test github-release coverage install install-lua-luasodium $(INSTALL_LUAS) $(INSTALL_DLLS) $(INSTALL_LIBS)
 .SUFFIXES:
 
 all: $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
 
-c/luasodium/ffi-function-loader.h: ffi/luasodium/_ffi/function_loader.lua | tools/bin2c
-	./tools/bin2c $< $@ ffi_function_loader
-
-c/luasodium/ffi-default-signatures.h: ffi/luasodium/_ffi/default_signatures.lua | tools/bin2c
-	./tools/bin2c $< $@ ffi_default_signatures
-
-c/luasodium/%/ffi-implementation.h: ffi/luasodium/%/implementation.lua | tools/bin2c
-	./tools/bin2c $< $@ $(addsuffix _ffi_implementation,$(addprefix ls_,$(notdir $(patsubst %/,%,$(dir $<)))))
-
-c/luasodium/%/ffi-signatures.h: ffi/luasodium/%/signatures.lua | tools/bin2c
-	./tools/bin2c $< $@ $(addsuffix _ffi_signatures,$(addprefix ls_,$(notdir $(patsubst %/,%,$(dir $<)))))
-
-c/luasodium/core.o: c/luasodium/core.c $(LUASODIUM_CORE_HEADERS) c/luasodium/version/ffi-implementation.h
+%/core.o: %/core.c %/constants.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-c/luasodium/ffi.o: c/luasodium/ffi.c $(LUASODIUM_FFI_HEADERS) $(LUASODIUM_FFI_LOADER) $(LUASODIUM_FFI_DEFAULT_SIG) $(LUASODIUM_FFI_SIGNATURES) $(LUASODIUM_FFI_IMPLEMENTATIONS)
-	$(CC) $(CFLAGS) -o $@ -c $<
-
-c/luasodium/version/core.o: c/luasodium/version/core.c c/luasodium/version/core.h c/luasodium/version/ffi-implementation.h
-	$(CC) $(CFLAGS) -o $@ -c $<
-
-%/core.o: %/core.c %/core.h %/constants.h
-	$(CC) $(CFLAGS) -o $@ -c $<
-
-%/ffi.o: %/ffi.c %/ffi.h %/constants.h %/ffi-implementation.h %/ffi-signatures.h $(LUASODIUM_FFI_LOADER) $(LUASODIUM_FFI_DEFAULT_SIG)
+%/ffi.o: %/ffi.c %/constants.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 %$(DLL): %.o
@@ -98,17 +69,8 @@ c/luasodium/version/core.o: c/luasodium/version/core.c c/luasodium/version/core.
 %$(LIB): %.o
 	ar rcs $@ $^
 
-tools/bin2c: tools/bin2c.c
-	$(HOST_CC) -o $@ $^
-
-ffitest-%:
-	luajit -l tools.set_paths_ffi -l tools.try_luacov spec/$(@:ffitest-%=%)_spec.lua
-
-test-%: c/luasodium/core$(DLL) c/luasodium/ffi$(DLL) c/luasodium/%/core$(DLL) c/luasodium/%/ffi$(DLL)
-	$(LUA) -l tools.set_paths -l tools.try_luacov spec/$(@:test-%=%)_spec.lua
-
-ffitest: $(LUASODIUM_TESTS_FFI)
-	luajit -l tools.set_paths_ffi tools/verify-ffi.lua $(LUASODIUM_MODS)
+test-%: $(LUASODIUM_DLLS)
+	busted -c --lua=$(shell which $(LUA)) --lpath 'lua/?.lua' --cpath 'c/?.so' spec/$(@:test-%=%)_spec.lua
 
 test: $(LUASODIUM_TESTS)
 
@@ -116,14 +78,10 @@ clean:
 	rm -f $(LUASODIUM_DLLS)
 	rm -f $(LUASODIUM_OBJS)
 	rm -f $(LUASODIUM_LIBS)
-	rm -f $(LUASODIUM_FFI_LOADER)
-	rm -f $(LUASODIUM_FFI_IMPLEMENTATIONS)
-	rm -f $(LUASODIUM_FFI_DEFAULT_SIG)
-	rm -f $(LUASODIUM_FFI_SIGNATURES)
 	rm -f $(LUASODIUM_GCDA)
 	rm -f $(LUASODIUM_GCNO)
 
-release: $(LUASODIUM_FFI_IMPLEMENTATIONS) $(LUASODIUM_FFI_SIGNATURES) README.md c/luasodium/ffi-function-loader.h c/luasodium/ffi-default-signatures.h
+release:
 	rm -rf luasodium-$(VERSION) dist/luasodium-$(VERSION)
 	rm -rf dist/luasodium-$(VERSION).tar.gz
 	rm -rf dist/luasodium-$(VERSION).tar.xz
@@ -135,7 +93,6 @@ release: $(LUASODIUM_FFI_IMPLEMENTATIONS) $(LUASODIUM_FFI_SIGNATURES) README.md 
 	rsync -a c luasodium-$(VERSION)/
 	rsync -a cmake luasodium-$(VERSION)/
 	rsync -a lua luasodium-$(VERSION)/
-	rsync -a ffi luasodium-$(VERSION)/
 	rsync -a rockspecs luasodium-$(VERSION)/
 	rsync -a spec luasodium-$(VERSION)/
 	rsync -a tools luasodium-$(VERSION)/
@@ -215,37 +172,33 @@ install-libs: $(INSTALL_LIBS)
 
 install: install-luas install-dlls install-libs
 
-fficoverage-%:
-	rm -f luacov.stats.out
-	luajit -l tools.set_paths_ffi -l tools.try_luacov spec/$(@:fficoverage-%=%)_spec.lua
+coverage-collect-c:
+	gcovr -r . --json -o $(TESTMODE)-c-coverage.json
+
+coverage-collect-lua:
 	luacov -r gcovr
-	mv luacov.report.out $@.json
+	mv luacov.report.out $(TESTMODE)-lua-coverage.json
 
-FFICOVERAGES = $(addprefix fficoverage-,$(LUASODIUM_MODS))
+coverage-run:
+	busted -c --lua="$(shell which $(LUA))" --lpath 'lua/?.lua' --cpath 'c/?.so' --verbose
 
-coverage-c:
+# wrapper job for running each coverage job
+coverage:
+	rm -rf coverage
+	rm -f *.json
+	rm -f luacov.stats.out luacov.report.out
+	mkdir -p coverage
 	$(MAKE) -f Makefile clean
 	$(MAKE) -f Makefile LDFLAGS="--coverage $(shell $(PKGCONFIG) --libs libsodium)" CFLAGS="-fPIC -Wall -Wextra -g -O0 -fprofile-arcs -ftest-coverage --coverage $(shell $(PKGCONFIG) --cflags $(LUA)) $(shell $(PKGCONFIG) --libs libsodium)" LUA=$(LUA)
-	busted --lua="$(shell which $(LUA))" --lpath 'lua/?.lua' --cpath 'c/?.so' --verbose
-	gcovr -e '(.+/)?ffi\.c' -r . --json -o c-coverage.json
+	$(MAKE) -f Makefile LUA=$(LUA) TESTMODE=core coverage-run
+	$(MAKE) -f Makefile LUA=$(LUA) TESTMODE=core coverage-collect-c
+	$(MAKE) -f Makefile LUA=$(LUA) TESTMODE=core coverage-collect-lua
+	$(MAKE) -f Makefile LUA=$(LUA) TESTMODE=ffi coverage-run
+	$(MAKE) -f Makefile LUA=$(LUA) TESTMODE=ffi coverage-collect-c
+	$(MAKE) -f Makefile LUA=$(LUA) TESTMODE=ffi coverage-collect-lua
+	$(MAKE) -f Makefile LUA=$(LUA) TESTMODE=pureffi coverage-run
+	$(MAKE) -f Makefile LUA=$(LUA) TESTMODE=pureffi coverage-collect-lua
+	gcovr --html-details coverage/index.html $(addprefix --add-tracefile ,$(foreach cmode,core ffi,$(cmode)-c-coverage.json) $(foreach lmode,core ffi pureffi,$(lmode)-lua-coverage.json))
+	gcovr --xml coverage/index.xml $(addprefix --add-tracefile ,$(foreach cmode,core ffi,$(cmode)-c-coverage.json) $(foreach lmode,core ffi pureffi,$(lmode)-lua-coverage.json))
 
-coverage: coverage-c $(FFICOVERAGES)
-	mkdir -p coverage
-	gcovr --html-details coverage/index.html --add-tracefile c-coverage.json $(addprefix --add-tracefile fficoverage-,$(addsuffix .json,$(LUASODIUM_MODS)))
-	gcovr --xml coverage/index.xml --add-tracefile c-coverage.json $(addprefix --add-tracefile fficoverage-,$(addsuffix .json,$(LUASODIUM_MODS)))
-	gcovr --add-tracefile c-coverage.json $(addprefix --add-tracefile fficoverage-,$(addsuffix .json,$(LUASODIUM_MODS)))
 
-coverage-jit:
-	$(MAKE) -f Makefile coverage LUA=luajit
-
-# for some reason, running busted with ffi path + luajit + spec test folder gives an error
-# but running an individual spec doesn't
-define FFI_COVERAGE
-coverage-ffi-$(1):
-	busted --coverage --lua="$(shell which luajit)" --lpath 'ffi/?.lua' --verbose spec/$(1)_spec.lua
-endef
-$(foreach mod,$(LUASODIUM_MODS),$(eval $(call FFI_COVERAGE,$(mod))))
-
-FFI_COVERAGES = $(addprefix coverage-ffi-,$(LUASODIUM_MODS))
-
-coverage-ffi: $(FFI_COVERAGES)

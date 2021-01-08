@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 project(luasodium)
 
+# set to whatever modules we're building
 set(LUASODIUM_MODULES
   crypto_auth
   crypto_box
@@ -21,8 +22,27 @@ set(LUASODIUM_CORETYPES
   ffi
 )
 
+set(LUASODIUM_ROOTMODULES
+  _all
+  core
+  ffi
+  pureffi
+)
+
+set(LUASODIUM_FFIMODULES
+  constant_loader
+  default_signatures
+  ffi_loader
+  function_loader
+  lib_loader
+  pureffi_loader
+)
+
+# by default we probably want shared libraries, set this
+# to off if you want to build static binaries with this library.
 option(BUILD_SHARED_LIBS "Build modules as shared libraries" ON)
 
+# try to find libsodium via pkg-config
 find_package(PkgConfig)
 pkg_check_modules(LIBSODIUM libsodium)
 include(FindPackageHandleStandardArgs)
@@ -34,152 +54,145 @@ FIND_PACKAGE_HANDLE_STANDARD_ARGS(
 )
 
 if(NOT LIBSODIUM_LIBRARIES)
-  # try finding the vcpkg version of sodium
+  # try finding the vcpkg version of sodium (windows)
   find_package(unofficial-sodium)
   if(unofficial-sodium_FOUND)
-    set(LIBSODIUM_LIBRARIES unofficial-sodium::sodium)
+  set(LIBSODIUM_LIBRARIES unofficial-sodium::sodium)
   endif()
 endif()
 
 if(NOT LIBSODIUM_LIBRARIES)
-    message(FATAL_ERROR "Unable to find libsodium, please set LIBSODIUM_INCLUDEDIR and LIBSODIUM_LIBRARIES")
+  message(FATAL_ERROR "Unable to find libsodium, please set LIBSODIUM_INCLUDEDIR and LIBSODIUM_LIBRARIES")
 endif()
 
+# if a user gives us a LUA_INCLUDE_DIR, just use that
 if(NOT LUA_INCLUDE_DIR)
-    include(FindLua)
-    if(LUA_VERSION)
-      find_package(Lua ${LUA_VERSION} EXACT REQUIRED)
-    else()
-      find_package(Lua REQUIRED)
-      set(LUA_VERSION "${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}" CACHE STRING "Lua version to use")
-    endif()
+  if(LUA_VERSION)
+    find_package(Lua ${LUA_VERSION} EXACT REQUIRED)
+  else()
+    find_package(Lua REQUIRED)
+    set(LUA_VERSION "${LUA_VERSION_MAJOR}.${LUA_VERSION_MINOR}" CACHE STRING "Lua version to use")
+  endif()
 endif()
 
+# TODO: check if the include_dir is given and get the lua version that way
 if(NOT LUA_VERSION)
-    message(FATAL_ERROR "Unable to determine lua version, please set LUA_VERSION")
+  message(FATAL_ERROR "Unable to determine lua version, please set LUA_VERSION")
 endif()
 
 
 set(CMODULE_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib/lua/${LUA_VERSION}")
 set(LUAMODULE_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/share/lua/${LUA_VERSION}")
 
-set(bin2c_cmdline_ffi_default_signatures
-  "-DOUTPUT_C=${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/ffi-default-signatures.h"
-  "-DINPUT_FILE=${CMAKE_CURRENT_SOURCE_DIR}/ffi/luasodium/_ffi/default_signatures.lua"
-  "-DIDENT=ffi_default_signatures"
-  -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/bin2c.cmake"
+configure_file(
+  "lua/luasodium.lua"
+  "${CMAKE_BINARY_DIR}/luasodium.lua"
+  COPYONLY
 )
-
-add_custom_command(
-  OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/ffi-default-signatures.h"
-  COMMAND ${CMAKE_COMMAND} ARGS ${bin2c_cmdline_ffi_default_signatures}
-  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/ffi/luasodium/_ffi/default_signatures.lua"
-  COMMENT "Running bin2c"
-  PRE_BUILD VERBATIM
-)
-
-set(bin2c_cmdline_ffi_function_loader
-  "-DOUTPUT_C=${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/ffi-function-loader.h"
-  "-DINPUT_FILE=${CMAKE_CURRENT_SOURCE_DIR}/ffi/luasodium/_ffi/function_loader.lua"
-  "-DIDENT=ffi_function_loader"
-  -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/bin2c.cmake"
-)
-
-add_custom_command(
-  OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/ffi-function-loader.h"
-  COMMAND ${CMAKE_COMMAND} ARGS ${bin2c_cmdline_ffi_function_loader}
-  DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/ffi/luasodium/_ffi/function_loader.lua"
-  COMMENT "Running bin2c"
-  PRE_BUILD VERBATIM
-)
-
-foreach(LS_MOD ${LUASODIUM_MODULES})
-  set(bin2c_${LS_MOD}_ffi_signatures
-    "-DOUTPUT_C=${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/${LS_MOD}/ffi-signatures.h"
-    "-DINPUT_FILE=${CMAKE_CURRENT_SOURCE_DIR}/ffi/luasodium/${LS_MOD}/signatures.lua"
-    "-DIDENT=ls_${LS_MOD}_ffi_signatures"
-    -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/bin2c.cmake"
-  )
-  add_custom_command(
-    OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/${LS_MOD}/ffi-signatures.h"
-    COMMAND ${CMAKE_COMMAND} ARGS ${bin2c_${LS_MOD}_ffi_signatures}
-    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/ffi/luasodium/${LS_MOD}/signatures.lua"
-    COMMENT "Running bin2c"
-    PRE_BUILD VERBATIM
-  )
-  set(bin2c_${LS_MOD}_ffi_implementation
-    "-DOUTPUT_C=${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/${LS_MOD}/ffi-implementation.h"
-    "-DINPUT_FILE=${CMAKE_CURRENT_SOURCE_DIR}/ffi/luasodium/${LS_MOD}/implementation.lua"
-    "-DIDENT=ls_${LS_MOD}_ffi_implementation"
-    -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/bin2c.cmake"
-  )
-  add_custom_command(
-    OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/${LS_MOD}/ffi-implementation.h"
-    COMMAND ${CMAKE_COMMAND} ARGS ${bin2c_${LS_MOD}_ffi_implementation}
-    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/ffi/luasodium/${LS_MOD}/implementation.lua"
-    COMMENT "Running bin2c"
-    PRE_BUILD VERBATIM
-  )
-  install(FILES "lua/luasodium/${LS_MOD}.lua"
-    DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/"
-  )
-endforeach()
-
-foreach(LS_CT ${LUASODIUM_CORETYPES})
-  add_library("${LS_CT}" "c/luasodium/${LS_CT}.c")
-  target_link_libraries("${LS_CT}" PRIVATE ${LIBSODIUM_LIBRARIES})
-  if(WIN32)
-    target_link_libraries("${LS_CT}" PRIVATE ${LUA_LIBRARIES})
-  endif()
-  target_sources("${LS_CT}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/ffi-default-signatures.h")
-  target_sources("${LS_CT}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/ffi-function-loader.h")
-
-  target_include_directories("${LS_CT}" PRIVATE ${LUA_INCLUDE_DIR})
-  target_include_directories("${LS_CT}" PRIVATE ${LIBSODIUM_INCLUDE_DIR})
-
-  set_target_properties("${LS_CT}" PROPERTIES PREFIX "")
-  set_target_properties("${LS_CT}" PROPERTIES OUTPUT_NAME "${LS_CT}")
-  set_target_properties("${LS_CT}" PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/luasodium")
-  set_target_properties("${LS_CT}" PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/luasodium")
-  set_target_properties("${LS_CT}" PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/luasodium")
-
-  install(TARGETS "${LS_CT}"
-      LIBRARY DESTINATION "${CMODULE_INSTALL_LIB_DIR}/luasodium"
-      RUNTIME DESTINATION "${CMODULE_INSTALL_LIB_DIR}/luasodium"
-      ARCHIVE DESTINATION "${CMODULE_INSTALL_LIB_DIR}/luasodium"
-  )
-
-  foreach(LS_MOD ${LUASODIUM_MODULES})
-    add_library("${LS_MOD}_${LS_CT}" "c/luasodium/${LS_MOD}/${LS_CT}.c")
-    target_link_libraries("${LS_MOD}_${LS_CT}" PRIVATE ${LIBSODIUM_LIBRARIES})
-    if(WIN32)
-      target_link_libraries("${LS_MOD}_${LS_CT}" PRIVATE ${LUA_LIBRARIES})
-    endif()
-    target_include_directories("${LS_MOD}_${LS_CT}" PRIVATE ${LUA_INCLUDE_DIR})
-    target_include_directories("${LS_MOD}_${LS_CT}" PRIVATE ${LIBSODIUM_INCLUDE_DIR})
-    target_sources("${LS_MOD}_${LS_CT}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/ffi-default-signatures.h")
-    target_sources("${LS_MOD}_${LS_CT}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/ffi-function-loader.h")
-    target_sources("${LS_MOD}_${LS_CT}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/${LS_MOD}/ffi-signatures.h")
-    target_sources("${LS_MOD}_${LS_CT}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/${LS_MOD}/ffi-implementation.h")
-    target_sources("${LS_CT}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/${LS_MOD}/ffi-signatures.h")
-    target_sources("${LS_CT}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/${LS_MOD}/ffi-implementation.h")
-
-    set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES PREFIX "")
-    set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES OUTPUT_NAME "${LS_CT}")
-    set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
-    set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
-    set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
-    install(TARGETS "${LS_MOD}_${LS_CT}"
-      LIBRARY DESTINATION "${CMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}"
-      RUNTIME DESTINATION "${CMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}"
-      ARCHIVE DESTINATION "${CMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}"
-    )
-  endforeach()
-endforeach()
-
 
 install(FILES "lua/luasodium.lua"
   DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}"
 )
+
+foreach(LUAFILE ${LUASODIUM_ROOTMODULES})
+  configure_file(
+    "lua/luasodium/${LUAFILE}.lua"
+    "${CMAKE_BINARY_DIR}/luasodium/${LUAFILE}.lua"
+    COPYONLY
+  )
+
+  install(FILES "lua/luasodium/${LUAFILE}.lua"
+    DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/${LUAFILE}.lua"
+  )
+endforeach()
+
+foreach(LUAFILE ${LUASODIUM_FFIMODULES})
+  configure_file(
+    "lua/luasodium/_ffi/${LUAFILE}.lua"
+    "${CMAKE_BINARY_DIR}/luasodium/_ffi/${LUAFILE}.lua"
+    COPYONLY
+  )
+
+  install(FILES "lua/luasodium/_ffi/${LUAFILE}.lua"
+    DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/_ffi/${LUAFILE}.lua"
+  )
+endforeach()
+
+foreach(LS_MOD ${LUASODIUM_MODULES})
+  configure_file(
+  "lua/luasodium/${LS_MOD}.lua"
+  "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}.lua"
+  COPYONLY
+  )
+
+  configure_file(
+  "lua/luasodium/${LS_MOD}/constants.lua"
+  "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}/constants.lua"
+  COPYONLY
+  )
+
+  configure_file(
+  "lua/luasodium/${LS_MOD}/implementation.lua"
+  "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}/implementation.lua"
+  COPYONLY
+  )
+
+  configure_file(
+  "lua/luasodium/${LS_MOD}/pureffi.lua"
+  "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}/pureffi.lua"
+  COPYONLY
+  )
+
+  configure_file(
+  "lua/luasodium/${LS_MOD}/signatures.lua"
+  "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}/signatures.lua"
+  COPYONLY
+  )
+
+  install(FILES "lua/luasodium/${LS_MOD}.lua"
+  DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/"
+  )
+
+  install(FILES "lua/luasodium/${LS_MOD}/constants.lua"
+  DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}/constants.lua"
+  )
+
+  install(FILES "lua/luasodium/${LS_MOD}/implementation.lua"
+  DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}/implementation.lua"
+  )
+
+  install(FILES "lua/luasodium/${LS_MOD}/pureffi.lua"
+  DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}/pureffi.lua"
+  )
+
+  install(FILES "lua/luasodium/${LS_MOD}/signatures.lua"
+  DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}/signatures.lua"
+  )
+
+endforeach()
+
+foreach(LS_CT ${LUASODIUM_CORETYPES})
+  foreach(LS_MOD ${LUASODIUM_MODULES})
+  add_library("${LS_MOD}_${LS_CT}" "c/luasodium/${LS_MOD}/${LS_CT}.c")
+  target_link_libraries("${LS_MOD}_${LS_CT}" PRIVATE ${LIBSODIUM_LIBRARIES})
+  if(WIN32)
+    target_link_libraries("${LS_MOD}_${LS_CT}" PRIVATE ${LUA_LIBRARIES})
+  endif()
+  target_include_directories("${LS_MOD}_${LS_CT}" PRIVATE ${LUA_INCLUDE_DIR})
+  target_include_directories("${LS_MOD}_${LS_CT}" PRIVATE ${LIBSODIUM_INCLUDE_DIR})
+
+  set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES PREFIX "")
+  set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES OUTPUT_NAME "${LS_CT}")
+  set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
+  set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
+  set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
+
+  install(TARGETS "${LS_MOD}_${LS_CT}"
+    LIBRARY DESTINATION "${CMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}"
+    RUNTIME DESTINATION "${CMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}"
+    ARCHIVE DESTINATION "${CMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}"
+  )
+  endforeach()
+endforeach()
 
 

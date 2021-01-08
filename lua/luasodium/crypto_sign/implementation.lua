@@ -3,17 +3,11 @@ return function(libs, constants)
   local string_len = string.len
   local string_format = string.format
   local ffi_string = ffi.string
-  local istype = ffi.istype
 
   local char_array = ffi.typeof('char[?]')
 
   local sodium_lib = libs.sodium
   local clib = libs.C
-
-  -- create a struct wrapper for sign state
-  ffi.cdef([[
-  typedef struct { void *state; } ls_crypto_sign_state_t;
-  ]])
 
   local crypto_sign_PUBLICKEYBYTES = constants.crypto_sign_PUBLICKEYBYTES
   local crypto_sign_SECRETKEYBYTES = constants.crypto_sign_SECRETKEYBYTES
@@ -26,12 +20,10 @@ return function(libs, constants)
     clib.free(state)
   end
 
-  local crypto_sign_state_methods = {}
-  local crypto_sign_state_mt = {
-    __index = crypto_sign_state_methods,
+  local ls_crypto_sign_state_methods = {}
+  local ls_crypto_sign_state_mt = {
+    __index = ls_crypto_sign_state_methods,
   }
-
-  local ls_crypto_sign_state_t
 
   local function ls_crypto_sign_keypair()
     local pk = char_array(crypto_sign_PUBLICKEYBYTES)
@@ -163,12 +155,13 @@ return function(libs, constants)
   end
 
   local function ls_crypto_sign_init()
-    local ls_state = ls_crypto_sign_state_t()
-    ls_state.state = ffi.gc(clib.malloc(crypto_sign_STATEBYTES),zerofree)
-    if tonumber(sodium_lib.crypto_sign_init(ls_state.state)) == -1 then
+    local state = ffi.gc(clib.malloc(crypto_sign_STATEBYTES),zerofree)
+    if tonumber(sodium_lib.crypto_sign_init(state)) == -1 then
       return error('crypto_sign_init error')
     end
-    return ls_state
+    return setmetatable({
+      state = state
+    }, ls_crypto_sign_state_mt)
   end
 
   local function ls_crypto_sign_update(ls_state,m)
@@ -176,7 +169,8 @@ return function(libs, constants)
       return error('requires 2 parameters')
     end
 
-    if not istype(ls_crypto_sign_state_t,ls_state) then
+    local mt = getmetatable(ls_state)
+    if mt ~= ls_crypto_sign_state_mt then
       return error('invalid userdata')
     end
 
@@ -189,7 +183,8 @@ return function(libs, constants)
       return error('requires 2 parameters')
     end
 
-    if not istype(ls_crypto_sign_state_t,ls_state) then
+    local mt = getmetatable(ls_state)
+    if mt ~= ls_crypto_sign_state_mt then
       return error('invalid userdata')
     end
 
@@ -216,7 +211,8 @@ return function(libs, constants)
       return error('requires 3 parameters')
     end
 
-    if not istype(ls_crypto_sign_state_t,ls_state) then
+    local mt = getmetatable(ls_state)
+    if mt ~= ls_crypto_sign_state_mt then
       return error('invalid userdata')
     end
 
@@ -271,11 +267,9 @@ return function(libs, constants)
     return pk_str
   end
 
-  crypto_sign_state_methods.update = ls_crypto_sign_update
-  crypto_sign_state_methods.final_create = ls_crypto_sign_final_create
-  crypto_sign_state_methods.final_verify = ls_crypto_sign_final_verify
-
-  ls_crypto_sign_state_t = ffi.metatype('ls_crypto_sign_state_t',crypto_sign_state_mt)
+  ls_crypto_sign_state_methods.update = ls_crypto_sign_update
+  ls_crypto_sign_state_methods.final_create = ls_crypto_sign_final_create
+  ls_crypto_sign_state_methods.final_verify = ls_crypto_sign_final_verify
 
   local M = {
     crypto_sign_keypair = ls_crypto_sign_keypair,

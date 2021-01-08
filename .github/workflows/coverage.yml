@@ -10,7 +10,7 @@ jobs:
     steps:
     - name: checkout
       uses: actions/checkout@v2
-            
+
     - name: install libsodium
       run: sudo apt-get install libsodium-dev
 
@@ -21,21 +21,22 @@ jobs:
       uses: leafo/gh-actions-lua@v8.0.0
       with:
         luaVersion: "luajit-2.1.0-beta3"
+
     - name: create luajit symlink
       run: ln -s luajit-2.1.0-beta3 .lua/bin/luajit
-        
+
     - name: Install LuaRocks
       uses: leafo/gh-actions-luarocks@v4.0.0
 
     - name: install busted
       run: luarocks install busted
-    
+
     - name: install luacov
       run: luarocks install luacov
-    
+
     - name: install luacov-reporter-gcovr
       run: luarocks install luacov-reporter-gcovr
-    
+
     - name: make
       env:
         PKG_CONFIG_PATH: ./.lua/lib/pkgconfig/
@@ -45,4 +46,4 @@ jobs:
       uses: codecov/codecov-action@v1.1.1
       with:
         file: coverage/index.xml
-   
+

@@ -1,49 +1,25 @@
-#include "ffi.h"
+#include "../luasodium-ffi.h"
+#include "constants.h"
+
+static const luasodium_function_t ls_utils_functions[] = {
+    LS_FUNC(sodium_init),
+    LS_FUNC(sodium_memzero),
+    LS_FUNC(sodium_memcmp),
+    LS_FUNC(sodium_bin2hex),
+    LS_FUNC(sodium_hex2bin),
+    LS_FUNC(sodium_bin2base64),
+    LS_FUNC(sodium_base642bin),
+    LS_FUNC(sodium_increment),
+    LS_FUNC(sodium_add),
+    LS_FUNC(sodium_sub),
+    LS_FUNC(sodium_compare),
+    LS_FUNC(sodium_is_zero),
+    LS_FUNC(sodium_pad),
+    LS_FUNC(sodium_unpad),
+    LS_FUNC(sodium_base64_encoded_len),
+    { NULL, NULL },
+};
 
 int luaopen_luasodium_utils_ffi(lua_State *L) {
-    if(luaL_loadbuffer(L,ls_utils_ffi_implementation,ls_utils_ffi_implementation_length,"utils.lua") ) {
-        return lua_error(L);
-    }
-    if(lua_pcall(L,0,1,0)) {
-        return lua_error(L);
-    }
-
-    if(luaL_loadbuffer(L,ffi_function_loader,ffi_function_loader_length,"luasodium/_ffi/function_loader.lua")) {
-        return lua_error(L);
-    }
-    if(lua_pcall(L,0,1,0)) {
-        return lua_error(L);
-    }
-
-    if(luaL_loadbuffer(L,ffi_default_signatures,ffi_default_signatures_length, "luasodium/_ffi/default_signatures.lua")) {
-        return lua_error(L);
-    }
-    if(lua_pcall(L,0,1,0)) {
-        return lua_error(L);
-    }
-
-    if(luaL_loadbuffer(L,ls_utils_ffi_signatures,ls_utils_ffi_signatures_length,"luasodium/utils/signatures.lua")) {
-        return lua_error(L);
-    }
-    if(lua_pcall(L,0,1,0)) {
-        return lua_error(L);
-    }
-
-    if(lua_pcall(L,1,1,0)) {
-        return lua_error(L);
-    }
-
-    lua_newtable(L);
-    luasodium_push_functions(L,ls_utils_functions,lua_gettop(L));
-    if(lua_pcall(L,2,1,0)) {
-        return lua_error(L);
-    }
-
-    lua_newtable(L);
-    luasodium_push_constants(L,ls_utils_constants,lua_gettop(L));
-
-    if(lua_pcall(L,2,1,0)) {
-        return lua_error(L);
-    }
-    return 1;
+    return LS_LOAD_FFI(L, utils);
 }

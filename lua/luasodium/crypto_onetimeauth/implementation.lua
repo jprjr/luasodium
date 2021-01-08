@@ -3,18 +3,12 @@ return function(libs, constants)
   local string_len = string.len
   local string_format = string.format
   local ffi_string = ffi.string
-  local istype = ffi.istype
   local tonumber = tonumber
 
   local sodium_lib = libs.sodium
   local clib = libs.C
 
   local char_array = ffi.typeof('char[?]')
-
-  -- create struct wrappers for sha states
-  ffi.cdef([[
-  typedef struct { void *state; } ls_crypto_onetimeauth_state_t;
-  ]])
 
   local crypto_onetimeauth_BYTES = constants.crypto_onetimeauth_BYTES
   local crypto_onetimeauth_KEYBYTES = constants.crypto_onetimeauth_KEYBYTES
@@ -29,8 +23,6 @@ return function(libs, constants)
   local ls_crypto_onetimeauth_mt = {
     __index = ls_crypto_onetimeauth_methods,
   }
-
-  local ls_crypto_onetimeauth_state_t
 
   local function ls_crypto_onetimeauth(message,key)
     if not key then
@@ -95,12 +87,13 @@ return function(libs, constants)
       ))
     end
 
-    local ls_state = ls_crypto_onetimeauth_state_t()
-    ls_state.state = ffi.gc(clib.malloc(crypto_onetimeauth_STATEBYTES),ls_onetimeauth_free)
-    if tonumber(sodium_lib.crypto_onetimeauth_init(ls_state.state,key)) == -1 then
+    local state = ffi.gc(clib.malloc(crypto_onetimeauth_STATEBYTES),ls_onetimeauth_free)
+    if tonumber(sodium_lib.crypto_onetimeauth_init(state,key)) == -1 then
       return error('crypto_onetimeauth_init error')
     end
-    return ls_state
+    return setmetatable({
+      state = state
+    }, ls_crypto_onetimeauth_mt)
   end
 
   local function ls_crypto_onetimeauth_update(ls_state,m)
@@ -108,7 +101,8 @@ return function(libs, constants)
       return error('requires 2 parameters')
     end
 
-    if not istype(ls_crypto_onetimeauth_state_t,ls_state) then
+    local mt = getmetatable(ls_state)
+    if mt ~= ls_crypto_onetimeauth_mt then
       return error('invalid userdata')
     end
 
@@ -121,7 +115,8 @@ return function(libs, constants)
       return error('requires 1 parameter')
     end
 
-    if not istype(ls_crypto_onetimeauth_state_t,ls_state) then
+    local mt = getmetatable(ls_state)
+    if mt ~= ls_crypto_onetimeauth_mt then
       return error('invalid userdata')
     end
 
@@ -138,9 +133,6 @@ return function(libs, constants)
 
   ls_crypto_onetimeauth_methods.update = ls_crypto_onetimeauth_update
   ls_crypto_onetimeauth_methods.final = ls_crypto_onetimeauth_final
-
-  ls_crypto_onetimeauth_state_t = ffi.metatype('ls_crypto_onetimeauth_state_t',
-    ls_crypto_onetimeauth_mt)
 
   local M = {
     crypto_onetimeauth = ls_crypto_onetimeauth,

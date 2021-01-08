@@ -1,20 +1,14 @@
 return function(libs, constants)
   local ffi = require'ffi'
   local string_len = string.len
+  local string_format = string.format
   local ffi_string = ffi.string
-  local istype = ffi.istype
   local tonumber = tonumber
 
   local sodium_lib = libs.sodium
   local clib = libs.C
 
   local char_array = ffi.typeof('char[?]')
-
-  -- create struct wrappers for sha states
-  ffi.cdef([[
-  typedef struct { void *state; } ls_crypto_hash_sha256_state_t;
-  typedef struct { void *state; } ls_crypto_hash_sha512_state_t;
-  ]])
 
   local crypto_hash_BYTES = constants.crypto_hash_BYTES
   local crypto_hash_sha256_BYTES = constants.crypto_hash_sha256_BYTES
@@ -34,15 +28,13 @@ return function(libs, constants)
 
   local ls_crypto_hash_sha256_methods = {}
   local ls_crypto_hash_sha512_methods = {}
+
   local ls_crypto_hash_sha256_mt = {
     __index = ls_crypto_hash_sha256_methods,
   }
   local ls_crypto_hash_sha512_mt = {
     __index = ls_crypto_hash_sha512_methods,
   }
-
-  local ls_crypto_hash_sha256_state_t
-  local ls_crypto_hash_sha512_state_t
 
   local function ls_crypto_hash(message)
     if not message then
@@ -93,12 +85,13 @@ return function(libs, constants)
   end
 
   local function ls_crypto_hash_sha256_init()
-    local ls_state = ls_crypto_hash_sha256_state_t()
-    ls_state.state = ffi.gc(clib.malloc(crypto_hash_sha256_STATEBYTES),ls_sha256_free)
-    if tonumber(sodium_lib.crypto_hash_sha256_init(ls_state.state)) == -1 then
+    local state = ffi.gc(clib.malloc(crypto_hash_sha256_STATEBYTES),ls_sha256_free)
+    if tonumber(sodium_lib.crypto_hash_sha256_init(state)) == -1 then
       return error('crypto_hash_sha256_init error')
     end
-    return ls_state
+    return setmetatable({
+      state = state,
+    }, ls_crypto_hash_sha256_mt)
   end
 
   local function ls_crypto_hash_sha256_update(ls_state,m)
@@ -106,7 +99,8 @@ return function(libs, constants)
       return error('requires 2 parameters')
     end
 
-    if not istype(ls_crypto_hash_sha256_state_t,ls_state) then
+    local mt = getmetatable(ls_state)
+    if mt ~= ls_crypto_hash_sha256_mt then
       return error('invalid userdata')
     end
 
@@ -119,7 +113,8 @@ return function(libs, constants)
       return error('requires 1 parameter')
     end
 
-    if not istype(ls_crypto_hash_sha256_state_t,ls_state) then
+    local mt = getmetatable(ls_state)
+    if mt ~= ls_crypto_hash_sha256_mt then
       return error('invalid userdata')
     end
 
@@ -135,12 +130,13 @@ return function(libs, constants)
   end
 
   local function ls_crypto_hash_sha512_init()
-    local ls_state = ls_crypto_hash_sha512_state_t()
-    ls_state.state = ffi.gc(clib.malloc(crypto_hash_sha512_STATEBYTES),ls_sha512_free)
-    if tonumber(sodium_lib.crypto_hash_sha512_init(ls_state.state)) == -1 then
+    local state = ffi.gc(clib.malloc(crypto_hash_sha512_STATEBYTES),ls_sha512_free)
+    if tonumber(sodium_lib.crypto_hash_sha512_init(state)) == -1 then
       return error('crypto_hash_sha512_init error')
     end
-    return ls_state
+    return setmetatable({
+      state = state,
+    }, ls_crypto_hash_sha512_mt)
   end
 
   local function ls_crypto_hash_sha512_update(ls_state,m)
@@ -148,7 +144,8 @@ return function(libs, constants)
       return error('requires 2 parameters')
     end
 
-    if not istype(ls_crypto_hash_sha512_state_t,ls_state) then
+    local mt = getmetatable(ls_state)
+    if mt ~= ls_crypto_hash_sha512_mt then
       return error('invalid userdata')
     end
 
@@ -161,7 +158,8 @@ return function(libs, constants)
       return error('requires 1 parameter')
     end
 
-    if not istype(ls_crypto_hash_sha512_state_t,ls_state) then
+    local mt = getmetatable(ls_state)
+    if mt ~= ls_crypto_hash_sha512_mt then
       return error('invalid userdata')
     end
 
@@ -180,9 +178,6 @@ return function(libs, constants)
   ls_crypto_hash_sha256_methods.final = ls_crypto_hash_sha256_final
   ls_crypto_hash_sha512_methods.update = ls_crypto_hash_sha512_update
   ls_crypto_hash_sha512_methods.final = ls_crypto_hash_sha512_final
-
-  ls_crypto_hash_sha256_state_t = ffi.metatype('ls_crypto_hash_sha256_state_t',ls_crypto_hash_sha256_mt)
-  ls_crypto_hash_sha512_state_t = ffi.metatype('ls_crypto_hash_sha512_state_t',ls_crypto_hash_sha512_mt)
 
   local M = {
     crypto_hash = ls_crypto_hash,

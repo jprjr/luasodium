@@ -1,44 +1,11 @@
-local libs = {}
+require('busted.runner')()
 
-local function describe_stub(_,cb)
-  cb()
+local mode = os.getenv('TESTMODE')
+if not mode then
+  mode = 'core'
 end
 
-local function it_stub(_,cb)
-  cb()
-end
-
-do
-  local ok, runner = pcall(require,'busted.runner')
-  if ok then
-    runner()
-  end
-end
-
-if not describe then
-  describe = describe_stub
-  it = it_stub
-end
-
-
--- these should always load, regardless of Lua interpreter
-do
-  local lib = require'luasodium'
-  assert(type(lib) == 'table')
-  libs.luasodium = lib
-  lib = require'luasodium.crypto_auth'
-  assert(type(lib) == 'table')
-  libs['luasodium.crypto_auth'] = lib
-end
-
-for _,t in ipairs({'core','ffi','pureffi'}) do
-  for _,m in ipairs({'luasodium.' .. t, 'luasodium.crypto_crypto_auth.' .. t}) do
-    local ok, lib = pcall(require,m)
-    if ok then
-      libs[m] = lib
-    end
-  end
-end
+local lib = require('luasodium.' .. mode)
 
 local expected_tag = {
   36, 166, 137, 74, 84, 118, 157, 225,
@@ -47,48 +14,46 @@ local expected_tag = {
   192, 230, 240, 71, 202, 197, 133, 26,
 }
 
-for m,lib in pairs(libs) do
-  describe('crypto_auth: ' .. m, function()
-    it('should be a library', function()
-      assert(type(lib) == 'table')
-    end)
+describe('crypto_auth', function()
+  it('should be a library', function()
+    assert(type(lib) == 'table')
+  end)
 
-    it('should throw errors', function()
-      assert(pcall(lib.crypto_auth) == false)
-      assert(pcall(lib.crypto_auth,1) == false)
-      assert(pcall(lib.crypto_auth,1,2) == false)
-      assert(pcall(lib.crypto_auth_verify) == false)
-      assert(pcall(lib.crypto_auth_verify,1) == false)
-      assert(pcall(lib.crypto_auth_verify,1,2) == false)
-      assert(pcall(lib.crypto_auth_verify,1,2,3) == false)
-      assert(pcall(lib.crypto_auth_verify,'','','') == false)
-      assert(pcall(lib.crypto_auth_verify,string.rep('\0',lib.crypto_auth_BYTES),'','') == false)
-    end)
+  it('should throw errors', function()
+    assert(pcall(lib.crypto_auth) == false)
+    assert(pcall(lib.crypto_auth,1) == false)
+    assert(pcall(lib.crypto_auth,1,2) == false)
+    assert(pcall(lib.crypto_auth_verify) == false)
+    assert(pcall(lib.crypto_auth_verify,1) == false)
+    assert(pcall(lib.crypto_auth_verify,1,2) == false)
+    assert(pcall(lib.crypto_auth_verify,1,2,3) == false)
+    assert(pcall(lib.crypto_auth_verify,'','','') == false)
+    assert(pcall(lib.crypto_auth_verify,string.rep('\0',lib.crypto_auth_BYTES),'','') == false)
+  end)
 
-    describe('zero-byte key tests', function()
-      local key = string.rep('\0',lib.crypto_auth_KEYBYTES)
-      it('should generate the correct authentication tag', function()
-        local tag = lib.crypto_auth('a message',key)
-        assert(string.len(tag) == lib.crypto_auth_BYTES)
+  describe('zero-byte key tests', function()
+    local key = string.rep('\0',lib.crypto_auth_KEYBYTES)
+    it('should generate the correct authentication tag', function()
+      local tag = lib.crypto_auth('a message',key)
+      assert(string.len(tag) == lib.crypto_auth_BYTES)
 
-        for j=1,string.len(tag) do
-          assert(string.byte(tag,j) == expected_tag[j])
-        end
-      end)
-    end)
-
-    describe('random byte key tests', function()
-      it('should generate a key', function()
-        local key = lib.crypto_auth_keygen()
-        assert(string.len(key) == lib.crypto_auth_KEYBYTES)
-        local tag = lib.crypto_auth('a message',key)
-        assert(string.len(tag) == lib.crypto_auth_BYTES)
-        assert(lib.crypto_auth_verify(tag,'a message',key) == true)
-        assert(lib.crypto_auth_verify(tag,'another message',key) == false)
-      end)
+      for j=1,string.len(tag) do
+        assert(string.byte(tag,j) == expected_tag[j])
+      end
     end)
   end)
 
-end
+  describe('random byte key tests', function()
+    it('should generate a key', function()
+      local key = lib.crypto_auth_keygen()
+      assert(string.len(key) == lib.crypto_auth_KEYBYTES)
+      local tag = lib.crypto_auth('a message',key)
+      assert(string.len(tag) == lib.crypto_auth_BYTES)
+      assert(lib.crypto_auth_verify(tag,'a message',key) == true)
+      assert(lib.crypto_auth_verify(tag,'another message',key) == false)
+    end)
+  end)
+end)
+
 
 
