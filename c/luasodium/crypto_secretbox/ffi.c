@@ -21,6 +21,7 @@ static const luasodium_function_t ls_crypto_secretbox_functions[] = {
     { NULL, NULL },
 };
 
+LS_PUBLIC
 int luaopen_luasodium_crypto_secretbox_ffi(lua_State *L) {
     return LS_LOAD_FFI(L, crypto_secretbox);
 }

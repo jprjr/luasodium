@@ -10,7 +10,7 @@ static const luasodium_function_t ls_crypto_auth_functions[] = {
     { NULL }
 };
 
-
+LS_PUBLIC
 int
 luaopen_luasodium_crypto_auth_ffi(lua_State *L) {
     return LS_LOAD_FFI(L, crypto_auth);

@@ -113,6 +113,7 @@ static const struct luaL_Reg ls_crypto_stream_functions[] = {
     { NULL, NULL },
 };
 
+LS_PUBLIC
 int luaopen_luasodium_crypto_stream_core(lua_State *L) {
     /* LCOV_EXCL_START */
     LUASODIUM_INIT(L);

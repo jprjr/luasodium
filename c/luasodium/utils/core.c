@@ -474,6 +474,7 @@ static const struct luaL_Reg ls_utils_functions[] = {
     { NULL, NULL },
 };
 
+LS_PUBLIC
 int
 luaopen_luasodium_utils_core(lua_State *L) {
     /* LCOV_EXCL_START */

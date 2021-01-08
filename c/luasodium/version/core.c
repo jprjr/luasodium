@@ -34,6 +34,7 @@ static const struct luaL_Reg ls_version_functions[] = {
     { NULL, NULL },
 };
 
+LS_PUBLIC
 int luaopen_luasodium_version_core(lua_State *L) {
     /* no need for newtable since requiring will place
      * a table on top of the stack */

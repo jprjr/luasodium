@@ -456,6 +456,7 @@ ls_crypto_sign_state_setup(lua_State *L) {
     return 0;
 }
 
+LS_PUBLIC
 int luaopen_luasodium_crypto_sign_core(lua_State *L) {
     /* LCOV_EXCL_START */
     LUASODIUM_INIT(L);

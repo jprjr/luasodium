@@ -20,6 +20,7 @@ static const luasodium_function_t ls_utils_functions[] = {
     { NULL, NULL },
 };
 
+LS_PUBLIC
 int luaopen_luasodium_utils_ffi(lua_State *L) {
     return LS_LOAD_FFI(L, utils);
 }

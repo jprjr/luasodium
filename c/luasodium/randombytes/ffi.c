@@ -13,7 +13,7 @@ static const luasodium_function_t ls_randombytes_functions[] = {
     { NULL, NULL },
 };
 
-
+LS_PUBLIC
 int luaopen_luasodium_randombytes_ffi(lua_State *L) {
     return LS_LOAD_FFI(L, randombytes);
 }

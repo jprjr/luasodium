@@ -22,7 +22,7 @@ static const luasodium_function_t ls_crypto_box_functions[] = {
     { NULL }
 };
 
-
+LS_PUBLIC
 int luaopen_luasodium_crypto_box_ffi(lua_State *L) {
     return LS_LOAD_FFI(L, crypto_box);
 }

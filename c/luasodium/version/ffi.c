@@ -9,8 +9,8 @@ static const luasodium_function_t ls_version_functions[] = {
     { NULL, NULL },
 };
 
-int
-luaopen_luasodium_version_ffi(lua_State *L) {
+LS_PUBLIC
+int luaopen_luasodium_version_ffi(lua_State *L) {
     return LS_LOAD_FFI(L, version);
 }
 

@@ -72,6 +72,7 @@ static const luaL_Reg ls_crypto_scalarmult_functions[] = {
     { NULL }
 };
 
+LS_PUBLIC
 int luaopen_luasodium_crypto_scalarmult_core(lua_State *L) {
     /* LCOV_EXCL_START */
     LUASODIUM_INIT(L)

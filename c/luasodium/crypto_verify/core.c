@@ -59,7 +59,7 @@ ls_crypto_verify_core_setup(lua_State *L) {
     return 0;
 }
 
-
+LS_PUBLIC
 int luaopen_luasodium_crypto_verify_core(lua_State *L) {
     /* LCOV_EXCL_START */
     LUASODIUM_INIT(L);

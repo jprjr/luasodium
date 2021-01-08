@@ -391,6 +391,7 @@ static const struct luaL_Reg ls_crypto_secretbox_funcs[] = {
     { NULL, NULL }
 };
 
+LS_PUBLIC
 int
 luaopen_luasodium_crypto_secretbox_core(lua_State *L) {
     /* LCOV_EXCL_START */
