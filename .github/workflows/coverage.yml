@@ -65,5 +65,5 @@ jobs:
       run: 'cmake --build build-windows --config Debug'
 
     - name: cmake test
-      run: 'cd build-windows && ctest -C Debug'
+      run: 'cd build-windows && ctest -C Debug -V'
 
