@@ -1,4 +1,5 @@
 #include "../luasodium-c.h"
+#include "../internals/ls_lua_setfuncs.h"
 #include "constants.h"
 
 static int
@@ -107,13 +108,6 @@ static const struct luaL_Reg ls_randombytes_functions[] = {
     { NULL, NULL },
 };
 
-static int
-ls_randombytes_core_setup(lua_State *L) {
-    luasodium_set_constants(L,ls_randombytes_constants,lua_gettop(L));
-    luaL_setfuncs(L,ls_randombytes_functions,0);
-    return 0;
-}
-
 int
 luaopen_luasodium_randombytes_core(lua_State *L) {
     /* LCOV_EXCL_START */
@@ -121,7 +115,8 @@ luaopen_luasodium_randombytes_core(lua_State *L) {
     /* LCOV_EXCL_STOP */
     lua_newtable(L);
 
-    ls_randombytes_core_setup(L);
+    luasodium_set_constants(L,ls_randombytes_constants,lua_gettop(L));
+    ls_lua_setfuncs(L,ls_randombytes_functions,0);
 
     return 1;
 }

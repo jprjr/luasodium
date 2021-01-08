@@ -1,4 +1,5 @@
 #include "../luasodium-c.h"
+#include "../internals/ls_lua_setfuncs.h"
 #include "constants.h"
 
 #include <stdlib.h>
@@ -390,13 +391,6 @@ static const struct luaL_Reg ls_crypto_secretbox_funcs[] = {
     { NULL, NULL }
 };
 
-static int
-ls_crypto_secretbox_core_setup(lua_State *L) {
-    luasodium_set_constants(L,ls_crypto_secretbox_constants,lua_gettop(L));
-    luaL_setfuncs(L,ls_crypto_secretbox_funcs,0);
-    return 0;
-}
-
 int
 luaopen_luasodium_crypto_secretbox_core(lua_State *L) {
     /* LCOV_EXCL_START */
@@ -404,6 +398,7 @@ luaopen_luasodium_crypto_secretbox_core(lua_State *L) {
     /* LCOV_EXCL_STOP */
     lua_newtable(L);
 
-    ls_crypto_secretbox_core_setup(L);
+    luasodium_set_constants(L,ls_crypto_secretbox_constants,lua_gettop(L));
+    ls_lua_setfuncs(L,ls_crypto_secretbox_funcs,0);
     return 1;
 }

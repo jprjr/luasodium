@@ -1,5 +1,6 @@
 #include "../luasodium-c.h"
 #include "../internals/ls_lua_equal.h"
+#include "../internals/ls_lua_setfuncs.h"
 #include "constants.h"
 
 static int
@@ -403,10 +404,7 @@ static const struct luaL_Reg ls_crypto_sign_state_functions[] = {
 };
 
 static int
-ls_crypto_sign_core_setup(lua_State *L) {
-    luasodium_set_constants(L,ls_crypto_sign_constants,lua_gettop(L));
-    luaL_setfuncs(L,ls_crypto_sign_functions,0);
-
+ls_crypto_sign_state_setup(lua_State *L) {
     /* create our metatable for crypto_sign_state */
     lua_newtable(L);
     lua_pushcclosure(L,ls_crypto_sign_state__gc,0);
@@ -420,7 +418,7 @@ ls_crypto_sign_core_setup(lua_State *L) {
     /* push up copies of our module + metatable since setfuncs will pop metatable */
     lua_pushvalue(L,-2); /* module */
     lua_pushvalue(L,-2); /* metatable */
-    luaL_setfuncs(L,ls_crypto_sign_state_functions,1);
+    ls_lua_setfuncs(L,ls_crypto_sign_state_functions,1);
     lua_pop(L,1); /* module (copy) */
 
     /* stack is now:
@@ -464,6 +462,10 @@ int luaopen_luasodium_crypto_sign_core(lua_State *L) {
     /* LCOV_EXCL_STOP */
     lua_newtable(L);
 
-    ls_crypto_sign_core_setup(L);
+    luasodium_set_constants(L,ls_crypto_sign_constants,lua_gettop(L));
+    ls_lua_setfuncs(L,ls_crypto_sign_functions,0);
+
+    ls_crypto_sign_state_setup(L);
+
     return 1;
 }

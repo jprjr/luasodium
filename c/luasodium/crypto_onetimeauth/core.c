@@ -1,5 +1,6 @@
 #include "../luasodium-c.h"
 #include "../internals/ls_lua_equal.h"
+#include "../internals/ls_lua_setfuncs.h"
 #include "constants.h"
 
 static int
@@ -209,7 +210,7 @@ ls_crypto_onetimeauth_state_setup(lua_State *L) {
     /* push up copies of our module + metatable since setfuncs will pop metatable */
     lua_pushvalue(L,-2); /* module */
     lua_pushvalue(L,-2); /* metatable */
-    luaL_setfuncs(L,ls_crypto_onetimeauth_state_functions,1);
+    ls_lua_setfuncs(L,ls_crypto_onetimeauth_state_functions,1);
     lua_pop(L,1); /* module (copy) */
 
     /* stack is now:
@@ -243,23 +244,15 @@ ls_crypto_onetimeauth_state_setup(lua_State *L) {
     return 0;
 }
 
-
-static int
-ls_crypto_onetimeauth_core_setup(lua_State *L) {
-    luasodium_set_constants(L,ls_crypto_onetimeauth_constants,lua_gettop(L));
-    luaL_setfuncs(L,ls_crypto_onetimeauth_functions,0);
-    ls_crypto_onetimeauth_state_setup(L);
-    return 0;
-}
-
-
 int luaopen_luasodium_crypto_onetimeauth_core(lua_State *L) {
     /* LCOV_EXCL_START */
     LUASODIUM_INIT(L);
     /* LCOV_EXCL_STOP */
     lua_newtable(L);
 
-    ls_crypto_onetimeauth_core_setup(L);
+    luasodium_set_constants(L,ls_crypto_onetimeauth_constants,lua_gettop(L));
+    ls_lua_setfuncs(L,ls_crypto_onetimeauth_functions,0);
+    ls_crypto_onetimeauth_state_setup(L);
 
     return 1;
 }

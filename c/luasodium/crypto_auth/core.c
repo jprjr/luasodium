@@ -1,4 +1,5 @@
 #include "../luasodium-c.h"
+#include "../internals/ls_lua_setfuncs.h"
 #include "constants.h"
 
 static int
@@ -80,20 +81,14 @@ static const struct luaL_Reg ls_crypto_auth_functions[] = {
     { NULL, NULL },
 };
 
-static int
-ls_crypto_auth_core_setup(lua_State *L) {
-    luasodium_set_constants(L,ls_crypto_auth_constants,lua_gettop(L));
-    luaL_setfuncs(L,ls_crypto_auth_functions,0);
-    return 0;
-}
-
 int luaopen_luasodium_crypto_auth_core(lua_State *L) {
     /* LCOV_EXCL_START */
     LUASODIUM_INIT(L);
     /* LCOV_EXCL_STOP */
     lua_newtable(L);
 
-    ls_crypto_auth_core_setup(L);
+    luasodium_set_constants(L,ls_crypto_auth_constants,lua_gettop(L));
+    ls_lua_setfuncs(L,ls_crypto_auth_functions,0);
 
     return 1;
 }
