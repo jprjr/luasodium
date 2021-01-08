@@ -197,7 +197,7 @@ if(WIN32)
   target_link_libraries(luasodium PRIVATE ${LUA_LIBRARIES})
 endif()
 target_include_directories(luasodium PRIVATE ${LUA_INCLUDE_DIR})
-target_include_directories(luasodium PRIVATE ${LIBSODIUM_INCLUDE_DIR})
+target_include_directories(luasodium PRIVATE ${LIBSODIUM_INCLUDEDIR})
 
 set_target_properties(luasodium PROPERTIES PREFIX "")
 set_target_properties(luasodium PROPERTIES OUTPUT_NAME "luasodium")
