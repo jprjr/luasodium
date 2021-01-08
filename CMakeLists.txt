@@ -200,9 +200,9 @@ foreach(LS_CT ${LUASODIUM_CORETYPES})
 
     foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
       string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
-      set_target_properties("${LS_MOD}_${LS_CT}" PREOPERTIES RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
-      set_target_properties("${LS_MOD}_${LS_CT}" PREOPERTIES LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
-      set_target_properties("${LS_MOD}_${LS_CT}" PREOPERTIES ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
+      set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
+      set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
+      set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
     endforeach()
 
     install(TARGETS "${LS_MOD}_${LS_CT}"
