@@ -1,8 +1,18 @@
-local _VERSION = '1.0.4'
+local _VERSION_MAJOR = 1
+local _VERSION_MINOR = 0
+local _VERSION_PATCH = 5
+
+local _VERSION = string.format('%d.%d.%d',
+  _VERSION_MAJOR,
+  _VERSION_MINOR,
+  _VERSION_PATCH)
 
 return function(libs)
   local M = {
-    _VERSION = _VERSION
+    _VERSION = _VERSION,
+    _VERSION_MAJOR = _VERSION_MAJOR,
+    _VERSION_MINOR = _VERSION_MINOR,
+    _VERSION_PATCH = _VERSION_PATCH,
   }
 
   -- this may be running from my generic 'show version' script
