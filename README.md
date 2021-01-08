@@ -5,35 +5,31 @@
 Bindings to [Libsodium](https://libsodium.gitbook.io/doc/), with support
 for the Lua C API as well as LuaJIT's FFI API.
 
-By default, the module attempts to load the FFI API, then falls back
-to the C API. If you want more control over which version you're using,
-you can append `.core` to the module to load the C API, or `.ffi` to
-load the FFI API.
+There's basically three methods for loading the API, they're tried in
+this order:
+
+1. FFI API from a C module, with function pointers.
+2. Traditional C API
+3. FFI API, using `ffi.load` to load `libsodium` at runtime.
+
+If you'd like to load a specific version, you can append:
+
+* `.ffi` (to use FFI via pointers in a C module)
+* `.core` (to use the traditional C API).
+* `.pureffi` (to use FFI and find/load `libsodium` at runtime).
 
 The `.core` and `.ffi` variants don't exist in the OpenResty
-Package Manager version, since its FFI only. You just use
-regular module name in that case.
+Package Manager version, since OPM doesn't support C
+modules.
 
 Example:
 
 ```lua
-local luasodium     = require'luasodium'      -- tries to load FFI, fallback to C API
-local luasodium_c   = require'luasodium.core' -- uses the C API only
-local luasodium_ffi = require'luasodium.ffi'  -- uses the FFI API only
+local luasodium         = require'luasodium'          -- tries to load FFI, fallback to C API
+local luasodium_ffi     = require'luasodium.ffi'      -- uses the FFI API (in a C module)
+local luasodium_c       = require'luasodium.core'     -- uses the C API
+local luasodium_pureffi = require'luasodium.pureffi'  -- uses the FFI API (without any C modules)
 ```
-
-The FFI API is loaded inside a C module via function pointers,
-this allows the FFI API to work in static binaries, and remove the need
-to search for a library with `ffi.load` (since the C module will already
-be linked to `libsodium` and have references to the needed functions).
-
-If you're in an environment where building a C module is difficult,
-but using the FFI API is fine, you can also just use the modules under
-the `ffi/` folder directly. They're able to be loaded as regular
-modules by LuaJIT.
-This is how the version on [OPM](https://opm.openresty.org/package/jprjr/luasodium/)
-is published, since OPM doesn't allow C modules. In this case,
-it will use `ffi.load` to locate the `sodium` library.
 
 ## Status and roadmap
 
@@ -61,6 +57,7 @@ crypto\_secretbox\_xsalsa20poly1305).
 
 * The libsodium `crypto_generichash` API.
 * The libsodium `crypto_secretstream` API.
+
 
 
 ## Caveats
@@ -108,11 +105,6 @@ Builds packages for lua, lua-5.1, lua-5.2, and lua-5.3.
 
 ### Source
 
-Release tarballs are available, they include pre-generated headers
-for the ffi modules. They also include amalgamated versions of
-the main `luasodium` module, in case you want something easy to
-integrate into your own build system.
-
 Currently migrating to a CMake build system. Building and installing
 the library with cmake works, I have not yet moved running tests, generating
 release tarballs, etc into cmake.
@@ -138,6 +130,7 @@ CMake should find libsodium and Lua automatically. Or you can specify some flags
 
 If you set LUA_INCLUDEDIR, you'll need to also set LUA_VERSION. If you're building with
 any version of LuaJIT, set it to `5.1`.
+
 
 ## Licensing
 
