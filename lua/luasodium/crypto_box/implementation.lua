@@ -65,7 +65,7 @@ return function(libs, constants)
 
     local clen = string_len(c)
 
-    if clen <= crypto_box_MACBYTES then
+    if clen < crypto_box_MACBYTES then
       return error(string.format('wrong c size, expected at least: %d',
         crypto_box_MACBYTES))
     end
@@ -149,7 +149,7 @@ return function(libs, constants)
 
     local clen = string_len(c)
 
-    if clen <= crypto_box_MACBYTES then
+    if clen < crypto_box_MACBYTES then
       return error(string_format(
         'wrong cipher length, expected at least: %d',
         crypto_box_MACBYTES))
@@ -333,7 +333,7 @@ return function(libs, constants)
 
     local clen = string_len(c)
 
-    if clen <= crypto_box_MACBYTES then
+    if clen < crypto_box_MACBYTES then
       return error(string_format(
         'wrong cipher length, expected at least: %d',
         crypto_box_MACBYTES))
@@ -513,7 +513,7 @@ return function(libs, constants)
 
     local clen = string_len(c)
 
-    if clen <= crypto_box_MACBYTES then
+    if clen < crypto_box_MACBYTES then
       return error(string.format('wrong c size, expected at least: %d',
         crypto_box_MACBYTES))
     end

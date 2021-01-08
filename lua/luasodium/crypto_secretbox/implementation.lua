@@ -57,7 +57,7 @@ return function(libs, constants)
 
     local clen = string_len(c)
 
-    if clen <= crypto_secretbox_MACBYTES then
+    if clen < crypto_secretbox_MACBYTES then
       return error(string.format('wrong c size, expected at least: %d',
         crypto_secretbox_MACBYTES))
     end
@@ -131,7 +131,7 @@ return function(libs, constants)
 
     local clen = string_len(c)
 
-    if clen <= crypto_secretbox_MACBYTES then
+    if clen < crypto_secretbox_MACBYTES then
       return error(string.format('wrong c size, expected at least: %d',
         crypto_secretbox_MACBYTES))
     end

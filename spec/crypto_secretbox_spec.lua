@@ -115,12 +115,12 @@ local key = string.rep('\0',lib.crypto_secretbox_KEYBYTES)
     assert(pcall(lib.crypto_secretbox_detached,'',string.rep('\0',lib.crypto_secretbox_NONCEBYTES),'') == false)
 
     assert(pcall(lib.crypto_secretbox_open,'','','') == false)
-    assert(pcall(lib.crypto_secretbox_open,string.rep('\0',lib.crypto_secretbox_MACBYTES+1),'','') == false)
-    assert(pcall(lib.crypto_secretbox_open,string.rep('\0',lib.crypto_secretbox_MACBYTES+1),string.rep('\0',lib.crypto_secretbox_NONCEBYTES),'') == false)
+    assert(pcall(lib.crypto_secretbox_open,string.rep('\0',lib.crypto_secretbox_MACBYTES),'','') == false)
+    assert(pcall(lib.crypto_secretbox_open,string.rep('\0',lib.crypto_secretbox_MACBYTES),string.rep('\0',lib.crypto_secretbox_NONCEBYTES),'') == false)
 
     assert(pcall(lib.crypto_secretbox_open_easy,'','','') == false)
-    assert(pcall(lib.crypto_secretbox_open_easy,string.rep('\0',lib.crypto_secretbox_MACBYTES+1),'','') == false)
-    assert(pcall(lib.crypto_secretbox_open_easy,string.rep('\0',lib.crypto_secretbox_MACBYTES+1),string.rep('\0',lib.crypto_secretbox_NONCEBYTES),'') == false)
+    assert(pcall(lib.crypto_secretbox_open_easy,string.rep('\0',lib.crypto_secretbox_MACBYTES),'','') == false)
+    assert(pcall(lib.crypto_secretbox_open_easy,string.rep('\0',lib.crypto_secretbox_MACBYTES),string.rep('\0',lib.crypto_secretbox_NONCEBYTES),'') == false)
 
     assert(pcall(lib.crypto_secretbox_open_detached,'','','','') == false)
     assert(pcall(lib.crypto_secretbox_open_detached,'',string.rep('\0',lib.crypto_secretbox_MACBYTES),'','') == false)

@@ -163,7 +163,7 @@ ls_crypto_box_open(lua_State *L) {
     pk    = (const unsigned char *)lua_tolstring(L,3,&pklen);
     sk    = (const unsigned char *)lua_tolstring(L,4,&sklen);
 
-    if(clen <= crypto_box_MACBYTES) {
+    if(clen < crypto_box_MACBYTES) {
         return luaL_error(L,"wrong mac size, expected at least: %d",crypto_box_MACBYTES);
     }
 
@@ -301,7 +301,7 @@ ls_crypto_box_open_easy(lua_State *L) {
     pk = (const unsigned char *)lua_tolstring(L,3,&pklen);
     sk = (const unsigned char *)lua_tolstring(L,4,&sklen);
 
-    if(clen <= crypto_box_MACBYTES) {
+    if(clen < crypto_box_MACBYTES) {
         return luaL_error(L,"wrong cipher length, expected at least: %d",
           crypto_box_MACBYTES);
     }
@@ -585,7 +585,7 @@ ls_crypto_box_open_easy_afternm(lua_State *L) {
     n  = (const unsigned char *)lua_tolstring(L,2,&nlen);
     k  = (const unsigned char *)lua_tolstring(L,3,&klen);
 
-    if(clen <= crypto_box_MACBYTES) {
+    if(clen < crypto_box_MACBYTES) {
         return luaL_error(L,"wrong cipher length, expected at least: %d",
           crypto_box_MACBYTES);
     }
@@ -828,7 +828,7 @@ ls_crypto_box_open_afternm(lua_State *L) {
     nonce = (const unsigned char *)lua_tolstring(L,2,&noncelen);
     k     = (const unsigned char *)lua_tolstring(L,3,&klen);
 
-    if(clen <= crypto_box_MACBYTES) {
+    if(clen < crypto_box_MACBYTES) {
         return luaL_error(L,"wrong mac size, expected at least: %d",crypto_box_MACBYTES);
     }
 

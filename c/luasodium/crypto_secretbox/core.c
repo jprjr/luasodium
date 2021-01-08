@@ -109,7 +109,7 @@ ls_crypto_secretbox_open(lua_State *L) {
     nonce = (const unsigned char *)lua_tolstring(L,2,&noncelen);
     key   = (const unsigned char *)lua_tolstring(L,3,&keylen);
 
-    if(clen <= crypto_secretbox_MACBYTES) {
+    if(clen < crypto_secretbox_MACBYTES) {
         return luaL_error(L,"wrong mac size, expected at least: %d",crypto_secretbox_MACBYTES);
     }
 
@@ -234,7 +234,7 @@ ls_crypto_secretbox_open_easy(lua_State *L) {
     nonce = (const unsigned char *)lua_tolstring(L,2,&noncelen);
     key   = (const unsigned char *)lua_tolstring(L,3,&keylen);
 
-    if(inputlen <= crypto_secretbox_MACBYTES) {
+    if(inputlen < crypto_secretbox_MACBYTES) {
         return luaL_error(L,"wrong mac size, expected at least: %d",crypto_secretbox_MACBYTES);
     }
 
