@@ -94,10 +94,10 @@ release:
 	mkdir -p dist
 	mkdir -p luasodium-$(VERSION)/
 	rsync -a c luasodium-$(VERSION)/
-	rsync -a cmake luasodium-$(VERSION)/
 	rsync -a lua luasodium-$(VERSION)/
 	rsync -a rockspecs luasodium-$(VERSION)/
 	rsync -a spec luasodium-$(VERSION)/
+	rsync -a test luasodium-$(VERSION)/
 	rsync -a tools luasodium-$(VERSION)/
 	rsync -a README.md luasodium-$(VERSION)/README.md
 	rsync -a LICENSE luasodium-$(VERSION)/LICENSE
