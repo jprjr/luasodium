@@ -44,14 +44,9 @@ option(BUILD_SHARED_LIBS "Build modules as shared libraries" ON)
 
 # try to find libsodium via pkg-config
 find_package(PkgConfig)
-pkg_check_modules(LIBSODIUM libsodium)
-include(FindPackageHandleStandardArgs)
-FIND_PACKAGE_HANDLE_STANDARD_ARGS(
-  libsodium
-  DEFAULT_MSG
-  LIBSODIUM_LIBRARIES
-  LIBSODIUM_INCLUDEDIR
-)
+if(PKG_CONFIG_FOUND)
+  pkg_check_modules(LIBSODIUM libsodium REQUIRED)
+endif()
 
 if(NOT LIBSODIUM_LIBRARIES)
   # try finding the vcpkg version of sodium (windows)
@@ -193,11 +188,19 @@ endforeach()
 add_library(luasodium ${luasodium_sources})
 
 target_link_libraries(luasodium PRIVATE ${LIBSODIUM_LIBRARIES})
+target_link_directories(luasodium PRIVATE ${LIBSODIUM_LIBRARY_DIRS})
 if(WIN32)
   target_link_libraries(luasodium PRIVATE ${LUA_LIBRARIES})
 endif()
 target_include_directories(luasodium PRIVATE ${LUA_INCLUDE_DIR})
 target_include_directories(luasodium PRIVATE ${LIBSODIUM_INCLUDEDIR})
+
+if(APPLE)
+  set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS} -undefined dynamic_lookup")
+  if(BUILD_SHARED_LIBS)
+    set_target_properties(luasodium PROPERTIES SUFFIX ".so")
+  endif()
+endif()
 
 set_target_properties(luasodium PROPERTIES PREFIX "")
 set_target_properties(luasodium PROPERTIES OUTPUT_NAME "luasodium")
