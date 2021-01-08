@@ -43,8 +43,8 @@ LUASODIUM_OBJS = $(addsuffix .o,$(addprefix c/luasodium/,$(LUASODIUM_CORES)))
 LUASODIUM_GCNO = $(LUASODIUM_OBJS:%.o=%.gcno)
 LUASODIUM_GCDA = $(LUASODIUM_OBJS:%.o=%.gcda)
 
-LUASODIUM_DLLS = $(LUASODIUM_OBJS:%.o=%$(DLL))
-LUASODIUM_LIBS = $(LUASODIUM_OBJS:%.o=%$(LIB))
+LUASODIUM_DLLS = c/luasodium$(DLL)
+LUASODIUM_LIBS = c/luasodium$(LIB)
 
 INSTALL_LUAS = install-lua-luasodium $(addprefix install-lua-,$(LUASODIUM_MODS))
 INSTALL_DLLS = install-dll-core install-dll-ffi $(addprefix install-dll-,$(LUASODIUM_MODS))
@@ -63,10 +63,10 @@ all: $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
 %/ffi.o: %/ffi.c %/constants.h
 	$(CC) $(CFLAGS) -o $@ -c $<
 
-%$(DLL): %.o
-	$(CC) -shared -o $@ $< $(LDFLAGS)
+c/luasodium$(DLL): $(LUASODIUM_OBJS)
+	$(CC) -shared -o $@ $^ $(LDFLAGS)
 
-%$(LIB): %.o
+c/luasodium$(LIB): $(LUASODIUM_OBJS)
 	ar rcs $@ $^
 
 test-%: $(LUASODIUM_DLLS)
@@ -131,29 +131,11 @@ install-lua-$(1):
 	install -Dm0644 lua/luasodium/$(1).lua $(DESTDIR)$(INSTALL_LMOD)/luasodium/$(1).lua
 endef
 
-define DLL_INSTALL
-install-dll-$(1): c/luasodium/$(1)/core$(DLL) c/luasodium/$(1)/ffi$(DLL)
-	install -Dm0755 c/luasodium/$(1)/core$(DLL) $(DESTDIR)$(INSTALL_CMOD)/luasodium/$(1)/core$(DLL)
-	install -Dm0755 c/luasodium/$(1)/ffi$(DLL) $(DESTDIR)$(INSTALL_CMOD)/luasodium/$(1)/ffi$(DLL)
-endef
+install-dll-luasodium: c/luasodium$(DLL)
+	install -Dm0755 c/luasodium$(DLL) $(DESTDIR)$(INSTALL_CMOD)/luasodium$(DLL)
 
-define LIB_INSTALL
-install-lib-$(1): c/luasodium/$(1)/core$(LIB) c/luasodium/$(1)/ffi$(LIB)
-	install -Dm0644 c/luasodium/$(1)/core$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium/$(1)/core$(LIB)
-	install -Dm0644 c/luasodium/$(1)/ffi$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium/$(1)/ffi$(LIB)
-endef
-
-install-lib-core: c/luasodium/core$(LIB)
-	install -Dm0644 c/luasodium/core$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium/core$(LIB)
-
-install-lib-ffi: c/luasodium/ffi$(LIB)
-	install -Dm0644 c/luasodium/ffi$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium/ffi$(LIB)
-
-install-dll-core: c/luasodium/core$(DLL)
-	install -Dm0755 c/luasodium/core$(DLL) $(DESTDIR)$(INSTALL_CMOD)/luasodium/core$(DLL)
-
-install-dll-ffi: c/luasodium/ffi$(DLL)
-	install -Dm0755 c/luasodium/ffi$(DLL) $(DESTDIR)$(INSTALL_CMOD)/luasodium/ffi$(DLL)
+install-lib-luasodium: c/luasodium$(LIB)
+	install -Dm0644 c/luasodium$(LIB) $(DESTDIR)$(INSTALL_CMOD)/luasodium$(LIB)
 
 install-lua-luasodium:
 	install -Dm0644 lua/luasodium.lua $(DESTDIR)$(INSTALL_LMOD)/luasodium.lua
@@ -164,11 +146,7 @@ $(foreach mod,$(LUASODIUM_MODS),$(eval $(call LIB_INSTALL,$(mod))))
 
 install-luas: $(INSTALL_LUAS)
 
-install-dlls: $(INSTALL_DLLS)
-
-install-libs: $(INSTALL_LIBS)
-
-install: install-luas install-dlls install-libs
+install: install-luas install-dll-luasodium install-lib-luasodium
 
 coverage-collect-c:
 	gcovr -r . --json -o $(TESTMODE)-c-coverage.json

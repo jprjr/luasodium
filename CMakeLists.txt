@@ -182,34 +182,38 @@ foreach(LS_MOD ${LUASODIUM_MODULES})
 
 endforeach()
 
+set(luasodium_sources)
+
 foreach(LS_CT ${LUASODIUM_CORETYPES})
   foreach(LS_MOD ${LUASODIUM_MODULES})
-    add_library("${LS_MOD}_${LS_CT}" "c/luasodium/${LS_MOD}/${LS_CT}.c")
-    target_link_libraries("${LS_MOD}_${LS_CT}" PRIVATE ${LIBSODIUM_LIBRARIES})
-    if(WIN32)
-      target_link_libraries("${LS_MOD}_${LS_CT}" PRIVATE ${LUA_LIBRARIES})
-    endif()
-    target_include_directories("${LS_MOD}_${LS_CT}" PRIVATE ${LUA_INCLUDE_DIR})
-    target_include_directories("${LS_MOD}_${LS_CT}" PRIVATE ${LIBSODIUM_INCLUDE_DIR})
-
-    set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES PREFIX "")
-    set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES OUTPUT_NAME "${LS_CT}")
-    set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
-    set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
-    set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
-
-    foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
-      string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
-      set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
-      set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
-      set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
-    endforeach()
-
-    install(TARGETS "${LS_MOD}_${LS_CT}"
-      LIBRARY DESTINATION "${CMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}"
-      RUNTIME DESTINATION "${CMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}"
-      ARCHIVE DESTINATION "${CMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}"
-    )
+    list(APPEND luasodium_sources "c/luasodium/${LS_MOD}/${LS_CT}.c")
   endforeach()
 endforeach()
 
+add_library(luasodium ${luasodium_sources})
+
+target_link_libraries(luasodium PRIVATE ${LIBSODIUM_LIBRARIES})
+if(WIN32)
+  target_link_libraries(luasodium PRIVATE ${LUA_LIBRARIES})
+endif()
+target_include_directories(luasodium PRIVATE ${LUA_INCLUDE_DIR})
+target_include_directories(luasodium PRIVATE ${LIBSODIUM_INCLUDE_DIR})
+
+set_target_properties(luasodium PROPERTIES PREFIX "")
+set_target_properties(luasodium PROPERTIES OUTPUT_NAME "luasodium")
+set_target_properties(luasodium PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+set_target_properties(luasodium PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+set_target_properties(luasodium PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
+
+foreach(OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES})
+  string(TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG)
+  set_target_properties(luasodium PROPERTIES RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${CMAKE_BINARY_DIR}")
+  set_target_properties(luasodium PROPERTIES LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${CMAKE_BINARY_DIR}")
+  set_target_properties(luasodium PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} "${CMAKE_BINARY_DIR}")
+endforeach()
+
+install(TARGETS luasodium
+  LIBRARY DESTINATION "${CMODULE_INSTALL_LIB_DIR}"
+  RUNTIME DESTINATION "${CMODULE_INSTALL_LIB_DIR}"
+  ARCHIVE DESTINATION "${CMODULE_INSTALL_LIB_DIR}"
+)
