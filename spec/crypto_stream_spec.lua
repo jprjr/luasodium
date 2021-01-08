@@ -1,4 +1,13 @@
-require('busted.runner')()
+if pcall(require,'busted.runner') then
+  require('busted.runner')()
+else
+  describe = function(_,cb) -- luacheck: ignore
+    cb()
+  end
+  it = function(_,cb) -- luacheck: ignore
+    cb()
+  end
+end
 
 local mode = os.getenv('TESTMODE')
 if not mode then
