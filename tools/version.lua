@@ -1,2 +1,2 @@
-local version = require'ffi.luasodium.version.implementation'()
+local version = require'lua.luasodium.version.implementation'()
 print(version._VERSION)

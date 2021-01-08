@@ -85,7 +85,7 @@ release:
 	rm -rf luasodium-$(VERSION) dist/luasodium-$(VERSION)
 	rm -rf dist/luasodium-$(VERSION).tar.gz
 	rm -rf dist/luasodium-$(VERSION).tar.xz
-	rm -f $(LUASODIUM_OBJS) $(LUASODIUM_DLLS) $(LUASODIUM_LIBS) tools/bin2c
+	rm -f $(LUASODIUM_OBJS) $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
 	rm -f $(LUASODIUM_GCNO)
 	rm -f $(LUASODIUM_GCDA)
 	mkdir -p dist
@@ -96,8 +96,6 @@ release:
 	rsync -a rockspecs luasodium-$(VERSION)/
 	rsync -a spec luasodium-$(VERSION)/
 	rsync -a tools luasodium-$(VERSION)/
-	perl tools/amalgate.pl c/luasodium/core.c > luasodium-$(VERSION)/c/luasodium-amalgamated-core.c
-	perl tools/amalgate.pl c/luasodium/ffi.c > luasodium-$(VERSION)/c/luasodium-amalgamated-ffi.c
 	rsync -a README.md luasodium-$(VERSION)/README.md
 	rsync -a LICENSE luasodium-$(VERSION)/LICENSE
 	rsync -a Makefile luasodium-$(VERSION)/Makefile
