@@ -1,4 +1,5 @@
 #include "../luasodium-c.h"
+#include "../internals/ls_lua_set_constants.h"
 #include "constants.h"
 
 typedef int (*ls_verify_func_ptr)(const unsigned char *x, const unsigned char *y);
@@ -48,7 +49,7 @@ static const ls_crypto_verify_def ls_crypto_verify_defs[] = {
 static int
 ls_crypto_verify_core_setup(lua_State *L) {
     const ls_crypto_verify_def *d = ls_crypto_verify_defs;
-    luasodium_set_constants(L,ls_crypto_verify_constants,lua_gettop(L));
+    ls_lua_set_constants(L,ls_crypto_verify_constants,lua_gettop(L));
 
     for(; d->name != NULL; d++) {
         lua_pushlightuserdata(L,d->func);

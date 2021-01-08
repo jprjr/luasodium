@@ -182,7 +182,7 @@ foreach(LS_MOD ${LUASODIUM_MODULES})
 
 endforeach()
 
-set(luasodium_sources)
+set(luasodium_sources "c/luasodium/luasodium.c")
 
 foreach(LS_CT ${LUASODIUM_CORETYPES})
   foreach(LS_MOD ${LUASODIUM_MODULES})

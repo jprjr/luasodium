@@ -1,12 +1,9 @@
-#ifndef LS_LUA_SETFUNCS_H
-#define LS_LUA_SETFUNCS_H
-
-#include <lua.h>
-#include <lauxlib.h>
+#ifndef LS_LUA_SET_FUNCTIONS_H
+#define LS_LUA_SET_FUNCTIONS_H
 
 #if !defined(luaL_newlibtable) \
   && (!defined LUA_VERSION_NUM || LUA_VERSION_NUM==501)
-static void ls_lua_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
+static void ls_lua_set_functions (lua_State *L, const luaL_Reg *l, int nup) {
   luaL_checkstack(L, nup+1, "too many upvalues");
   for (; l->name != NULL; l++) {  /* fill the table with given functions */
     int i;
@@ -19,7 +16,7 @@ static void ls_lua_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
   lua_pop(L, nup);  /* remove upvalues */
 }
 #else
-#define ls_lua_setfuncs(L,l,nup) luaL_setfuncs(L,l,nup)
+#define ls_lua_set_functions(L,l,nup) luaL_setfuncs(L,l,nup)
 #endif
 
 #endif

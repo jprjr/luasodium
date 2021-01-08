@@ -1,5 +1,6 @@
 #include "../luasodium-c.h"
-#include "../internals/ls_lua_setfuncs.h"
+#include "../internals/ls_lua_set_functions.h"
+#include "../internals/ls_lua_set_constants.h"
 #include "constants.h"
 
 static int
@@ -88,8 +89,8 @@ int luaopen_luasodium_crypto_auth_core(lua_State *L) {
     /* LCOV_EXCL_STOP */
     lua_newtable(L);
 
-    luasodium_set_constants(L,ls_crypto_auth_constants,lua_gettop(L));
-    ls_lua_setfuncs(L,ls_crypto_auth_functions,0);
+    ls_lua_set_constants(L,ls_crypto_auth_constants,lua_gettop(L));
+    ls_lua_set_functions(L,ls_crypto_auth_functions,0);
 
     return 1;
 }

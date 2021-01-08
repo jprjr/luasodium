@@ -23,14 +23,6 @@ typedef struct luasodium_function_s {
 
 #define LS_FUNC(x) { #x, (ls_func_ptr)x }
 
-static void
-luasodium_set_constants(lua_State *L, const luasodium_constant_t *c,int index) {
-    for(; c->name != NULL; c++) {
-        lua_pushinteger(L,c->value);
-        lua_setfield(L,index,c->name);
-    }
-}
-
 #if defined(_WIN32) || defined(_WIN64) || defined(WIN32) || defined(_MSC_VER)
 #define LS_PUBLIC __declspec(dllexport)
 #else

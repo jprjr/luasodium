@@ -38,7 +38,7 @@ LUASODIUM_LUAS := \
 LUASODIUM_CORES = $(foreach lib,$(LUASODIUM_MODS),$(addprefix $(lib)/,core ffi))
 LUASODIUM_TESTS = $(addprefix test-,$(LUASODIUM_MODS))
 
-LUASODIUM_OBJS = $(addsuffix .o,$(addprefix c/luasodium/,$(LUASODIUM_CORES)))
+LUASODIUM_OBJS = c/luasodium/luasodium.o $(addsuffix .o,$(addprefix c/luasodium/,$(LUASODIUM_CORES)))
 
 LUASODIUM_GCNO = $(LUASODIUM_OBJS:%.o=%.gcno)
 LUASODIUM_GCDA = $(LUASODIUM_OBJS:%.o=%.gcda)
@@ -56,6 +56,9 @@ TESTMODE=core
 .SUFFIXES:
 
 all: $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
+
+c/luasodium/luasodium.o: c/luasodium/luasodium.c
+	$(CC) $(CFLAGS) -o $@ -c $<
 
 %/core.o: %/core.c %/constants.h
 	$(CC) $(CFLAGS) -o $@ -c $<
