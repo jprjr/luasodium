@@ -80,6 +80,13 @@ if(NOT LUA_VERSION)
   message(FATAL_ERROR "Unable to determine lua version, please set LUA_VERSION")
 endif()
 
+if(NOT CMAKE_CROSSCOMPILING)
+  enable_testing()
+
+  add_executable(ls_test_spec test/test.c)
+  target_link_libraries(ls_test_spec PRIVATE ${LUA_LIBRARIES})
+  target_include_directories(ls_test_spec PRIVATE ${LUA_INCLUDE_DIR})
+endif()
 
 set(CMODULE_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib/lua/${LUA_VERSION}")
 set(LUAMODULE_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/share/lua/${LUA_VERSION}")
@@ -169,30 +176,33 @@ foreach(LS_MOD ${LUASODIUM_MODULES})
   DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}/signatures.lua"
   )
 
+  if(NOT CMAKE_CROSSCOMPILING)
+    add_test(NAME "${LS_MOD}_tests" COMMAND ls_test_spec "${CMAKE_SOURCE_DIR}/spec/${LS_MOD}_spec.lua")
+  endif()
+
 endforeach()
 
 foreach(LS_CT ${LUASODIUM_CORETYPES})
   foreach(LS_MOD ${LUASODIUM_MODULES})
-  add_library("${LS_MOD}_${LS_CT}" "c/luasodium/${LS_MOD}/${LS_CT}.c")
-  target_link_libraries("${LS_MOD}_${LS_CT}" PRIVATE ${LIBSODIUM_LIBRARIES})
-  if(WIN32)
-    target_link_libraries("${LS_MOD}_${LS_CT}" PRIVATE ${LUA_LIBRARIES})
-  endif()
-  target_include_directories("${LS_MOD}_${LS_CT}" PRIVATE ${LUA_INCLUDE_DIR})
-  target_include_directories("${LS_MOD}_${LS_CT}" PRIVATE ${LIBSODIUM_INCLUDE_DIR})
+    add_library("${LS_MOD}_${LS_CT}" "c/luasodium/${LS_MOD}/${LS_CT}.c")
+    target_link_libraries("${LS_MOD}_${LS_CT}" PRIVATE ${LIBSODIUM_LIBRARIES})
+    if(WIN32)
+      target_link_libraries("${LS_MOD}_${LS_CT}" PRIVATE ${LUA_LIBRARIES})
+    endif()
+    target_include_directories("${LS_MOD}_${LS_CT}" PRIVATE ${LUA_INCLUDE_DIR})
+    target_include_directories("${LS_MOD}_${LS_CT}" PRIVATE ${LIBSODIUM_INCLUDE_DIR})
 
-  set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES PREFIX "")
-  set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES OUTPUT_NAME "${LS_CT}")
-  set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
-  set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
-  set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
+    set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES PREFIX "")
+    set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES OUTPUT_NAME "${LS_CT}")
+    set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
+    set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
+    set_target_properties("${LS_MOD}_${LS_CT}" PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/luasodium/${LS_MOD}")
 
-  install(TARGETS "${LS_MOD}_${LS_CT}"
-    LIBRARY DESTINATION "${CMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}"
-    RUNTIME DESTINATION "${CMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}"
-    ARCHIVE DESTINATION "${CMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}"
-  )
+    install(TARGETS "${LS_MOD}_${LS_CT}"
+      LIBRARY DESTINATION "${CMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}"
+      RUNTIME DESTINATION "${CMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}"
+      ARCHIVE DESTINATION "${CMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}"
+    )
   endforeach()
 endforeach()
-
 
