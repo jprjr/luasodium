@@ -45,7 +45,7 @@ option(BUILD_SHARED_LIBS "Build modules as shared libraries" ON)
 # try to find libsodium via pkg-config
 find_package(PkgConfig)
 if(PKG_CONFIG_FOUND)
-  pkg_check_modules(LIBSODIUM libsodium REQUIRED)
+  pkg_check_modules(LIBSODIUM libsodium)
 endif()
 
 if(NOT LIBSODIUM_LIBRARIES)
