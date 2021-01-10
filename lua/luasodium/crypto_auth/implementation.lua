@@ -1,6 +1,7 @@
 return function(libs, constants)
   local ffi = require'ffi'
   local string_len = string.len
+  local string_format = string.format
   local ffi_string = ffi.string
   local tonumber = tonumber
 
@@ -8,60 +9,75 @@ return function(libs, constants)
 
   local char_array = ffi.typeof('char[?]')
 
-  local crypto_auth_BYTES = constants.crypto_auth_BYTES
-  local crypto_auth_KEYBYTES = constants.crypto_auth_KEYBYTES
+  local function ls_crypto_auth(basename)
+    local crypto_auth = string_format('%s',basename)
+    local crypto_auth_verify = string_format('%s_verify',basename)
+    local crypto_auth_keygen = string_format('%s_keygen',basename)
+    local BYTES = constants[string_format('%s_BYTES',basename)]
+    local KEYBYTES = constants[string_format('%s_KEYBYTES',basename)]
 
-  local function ls_crypto_auth(message,key)
-    if not key then
-      return error('requires 2 arguments')
-    end
+    return {
+      [crypto_auth] = function(message,key)
+        if not key then
+          return error('requires 2 arguments')
+        end
 
-    if string_len(key) ~= crypto_auth_KEYBYTES then
-      return error('wrong key length, expected %d', crypto_auth_KEYBYTES)
-    end
+        if string_len(key) ~= KEYBYTES then
+          return error('wrong key length, expected %d', KEYBYTES)
+        end
 
-    local out = char_array(crypto_auth_BYTES)
-    if tonumber(sodium_lib.crypto_auth(
-      out,message,string_len(message),key)) == -1 then
-      return error('crypto_auth error')
-    end
+        local out = char_array(BYTES)
+        if tonumber(sodium_lib[crypto_auth](
+          out,message,string_len(message),key)) == -1 then
+          return error('crypto_auth error')
+        end
 
-    local out_str = ffi_string(out,crypto_auth_BYTES)
-    sodium_lib.sodium_memzero(out,crypto_auth_BYTES)
-    return out_str
+        local out_str = ffi_string(out,BYTES)
+        sodium_lib.sodium_memzero(out,BYTES)
+        return out_str
+      end,
 
-  end
+      [crypto_auth_verify] = function(tag,message,key)
+        if not key then
+          return error('requires 3 arguments')
+        end
 
-  local function ls_crypto_auth_verify(tag,message,key)
-    if not key then
-      return error('requires 3 arguments')
-    end
+        if string_len(key) ~= KEYBYTES then
+          return error('wrong key length, expected %d', KEYBYTES)
+        end
 
-    if string_len(key) ~= crypto_auth_KEYBYTES then
-      return error('wrong key length, expected %d', crypto_auth_KEYBYTES)
-    end
+        return tonumber(sodium_lib[crypto_auth_verify](
+          tag, message, string_len(message), key)) == 0
 
-    return tonumber(sodium_lib.crypto_auth_verify(
-      tag, message, string_len(message), key)) == 0
-  end
+      end,
 
-  local function ls_crypto_auth_keygen()
-    local k = char_array(crypto_auth_KEYBYTES)
-    sodium_lib.crypto_auth_keygen(k)
-    local k_str = ffi_string(k,crypto_auth_KEYBYTES)
-    sodium_lib.sodium_memzero(k,crypto_auth_KEYBYTES)
-    return k_str
+      [crypto_auth_keygen] = function()
+        local k = char_array(KEYBYTES)
+        sodium_lib[crypto_auth_keygen](k)
+        local k_str = ffi_string(k,KEYBYTES)
+        sodium_lib.sodium_memzero(k,KEYBYTES)
+        return k_str
+      end,
+    }
   end
 
   if sodium_lib.sodium_init() == -1 then
     return error('sodium_init error')
   end
 
-  local M = {
-    crypto_auth = ls_crypto_auth,
-    crypto_auth_verify = ls_crypto_auth_verify,
-    crypto_auth_keygen = ls_crypto_auth_keygen,
-  }
+  local M = {}
+
+  for _,basename in ipairs({
+      'crypto_auth',
+      'crypto_auth_hmacsha256',
+      'crypto_auth_hmacsha512256',
+      'crypto_auth_hmacsha512',
+  }) do
+    local m = ls_crypto_auth(basename)
+    for k,v in pairs(m) do
+      M[k] = v
+    end
+  end
 
   for k,v in pairs(constants) do
     M[k] = v
