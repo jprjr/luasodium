@@ -10,7 +10,8 @@ LDFLAGS = $(shell $(PKGCONFIG) --libs libsodium)
 
 MODS = \
   crypto_auth \
-  crypto_box
+  crypto_box \
+  crypto_hash
 
 PROGS = $(addprefix create-results-,$(MODS))
 OBJS  = $(addsuffix $(OBJ),$(PROGS)) misc$(OBJ)
