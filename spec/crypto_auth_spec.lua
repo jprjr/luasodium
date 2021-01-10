@@ -16,12 +16,13 @@ end
 
 local lib = require('luasodium.' .. mode)
 
-local expected_tag = {
-  36, 166, 137, 74, 84, 118, 157, 225,
-  136, 104, 231, 95, 232, 156, 215, 110,
-  24, 95, 206, 127, 136, 148, 76, 35,
-  192, 230, 240, 71, 202, 197, 133, 26,
-}
+local function tbl_to_str(tbl)
+  local c = {}
+  for i=1,#tbl do
+    c[i] = string.char(tbl[i])
+  end
+  return table.concat(c,'')
+end
 
 local message = 'hello'
 
@@ -64,13 +65,6 @@ local expected_results = {
   },
 }
 
-local function tbl_to_str(tbl)
-  local c = {}
-  for i=1,#tbl do
-    c[i] = string.char(tbl[i])
-  end
-  return table.concat(c,'')
-end
 
 describe('crypto_auth', function()
   it('should be a library', function()

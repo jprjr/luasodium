@@ -2,30 +2,9 @@
 #include <stdio.h>
 #include <assert.h>
 
+#include "misc.h"
+
 /* generates expected results for the crypto_auth spec tests */
-
-static void
-open_section(const char *name) {
-    printf("  ['%s'] = {\n",name);
-}
-
-static void
-close_section(void) {
-    printf("  },\n");
-}
-
-static void
-dump_table(const char *name, unsigned char *data, size_t length) {
-    size_t i = 0;
-    printf("    ['%s'] = {",name);
-    for(i=0;i<length;i++) {
-        if(i % 8 == 0) {
-            printf("\n      ");
-        }
-        printf(" %u,",data[i]);
-    }
-    printf("\n    },\n");
-}
 
 int main(void) {
     const unsigned char *message = (const unsigned char *)"hello";

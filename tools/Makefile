@@ -9,18 +9,19 @@ CFLAGS = -Wall -Wextra $(shell $(PKGCONFIG) --cflags libsodium)
 LDFLAGS = $(shell $(PKGCONFIG) --libs libsodium)
 
 MODS = \
-  crypto_auth
+  crypto_auth \
+  crypto_box
 
 PROGS = $(addprefix create-results-,$(MODS))
-OBJS  = $(addsuffix $(OBJ),$(PROGS))
+OBJS  = $(addsuffix $(OBJ),$(PROGS)) misc$(OBJ)
 EXES  = $(addsuffix $(EXE),$(PROGS))
 
 all: $(PROGS)
 
-create-results-%: create-results-%$(OBJ)
+create-results-%: create-results-%$(OBJ) misc$(OBJ)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
-create-results-%$(OBJ): create-results-%.c
+%$(OBJ): %.c
 	$(CC) $(CFLAGS) -o $@ -c $<
 
 clean:
