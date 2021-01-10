@@ -16,75 +16,129 @@ end
 
 local lib = require('luasodium.' .. mode)
 
-local premade_key = {
-  83, 21, 59, 40, 150, 103, 152, 168,
-  130, 18, 221, 36, 241, 86, 169, 91,
-  85, 174, 114, 181, 18, 171, 243, 28,
-  6, 19, 73, 97, 201, 154, 165, 112,
-}
-
-local expected_auth = {
-  16, 113, 131, 16, 241, 219, 80, 253,
-  90, 136, 14, 219, 255, 174, 234, 189,
-}
-
-local key_bytes = {}
-for i,v in ipairs(premade_key) do
-  key_bytes[i] = string.char(v)
+local function tbl_to_str(tbl)
+  local c = {}
+  for i=1,#tbl do
+    c[i] = string.char(tbl[i])
+  end
+  return table.concat(c,'')
 end
 
-local key = table.concat(key_bytes,'')
+
 local message = 'a message'
 
-describe('crypto_onetimeauth', function()
-  it('should generate the expected auth tag', function()
-    local auth = lib.crypto_onetimeauth(message,key)
-    assert(string.len(auth) == lib.crypto_onetimeauth_BYTES)
-    for i=1,lib.crypto_onetimeauth_BYTES do
-      assert(string.byte(auth,i) == expected_auth[i])
-    end
-    assert(lib.crypto_onetimeauth_verify(auth,message,key) == true)
-    assert(lib.crypto_onetimeauth_verify(string.rep('\0',lib.crypto_onetimeauth_BYTES),message,key) == false)
+local expected_results = {
+  ['crypto_onetimeauth'] = {
+    ['premade_key'] = {
+       161, 31, 143, 18, 208, 135, 111, 115,
+       109, 45, 143, 210, 110, 20, 194, 222,
+       136, 241, 99, 227, 39, 23, 16, 198,
+       118, 199, 56, 76, 179, 98, 18, 121,
+    },
+    ['auth'] = {
+       65, 101, 104, 124, 211, 222, 164, 222,
+       14, 18, 11, 124, 223, 178, 185, 143,
+    },
+  },
+  ['crypto_onetimeauth_poly1305'] = {
+    ['premade_key'] = {
+       161, 31, 143, 18, 208, 135, 111, 115,
+       109, 45, 143, 210, 110, 20, 194, 222,
+       136, 241, 99, 227, 39, 23, 16, 198,
+       118, 199, 56, 76, 179, 98, 18, 121,
+    },
+    ['auth'] = {
+       65, 101, 104, 124, 211, 222, 164, 222,
+       14, 18, 11, 124, 223, 178, 185, 143,
+    },
+  },
+}
+
+describe('crypto_onetimeauth library', function()
+  it('should have constants', function()
+    assert(type(lib.crypto_onetimeauth_BYTES) == 'number')
+    assert(type(lib.crypto_onetimeauth_KEYBYTES) == 'number')
+    --assert(type(lib.crypto_onetimeauth_poly1305_BYTES) == 'number')
+    --assert(type(lib.crypto_onetimeauth_poly1305_KEYBYTES) == 'number')
   end)
 
-  it('should generate keys', function()
-    local key = lib.crypto_onetimeauth_keygen()
-    assert(string.len(key) == lib.crypto_onetimeauth_KEYBYTES)
-  end)
+  for _,f in ipairs({
+    'crypto_onetimeauth',
+    'crypto_onetimeauth_poly1305',
+  }) do
+    local crypto_onetimeauth = string.format('%s',f)
+    local crypto_onetimeauth_verify = string.format('%s_verify',f)
+    local crypto_onetimeauth_keygen = string.format('%s_keygen',f)
+    local crypto_onetimeauth_init = string.format('%s_init',f)
+    local crypto_onetimeauth_update = string.format('%s_update',f)
+    local crypto_onetimeauth_final = string.format('%s_final',f)
 
-  it('should support chunked auth tags', function()
-    local state = lib.crypto_onetimeauth_init(key)
-    assert(lib.crypto_onetimeauth_update(state,message) == true)
-    local auth = lib.crypto_onetimeauth_final(state)
+    local BYTES = lib[string.format('%s_BYTES',f)]
+    local KEYBYTES = lib[string.format('%s_KEYBYTES',f)]
 
-    for i=1,lib.crypto_onetimeauth_BYTES do
-      assert(string.byte(auth,i) == expected_auth[i])
-    end
+    local key = tbl_to_str(expected_results[f].premade_key)
+    local auth = tbl_to_str(expected_results[f].auth)
 
-    local state2 = lib.crypto_onetimeauth_init(key)
-    assert(state2:update(message) == true)
-    assert(state2:final() == auth)
-  end)
+    describe('function ' .. crypto_onetimeauth_keygen, function()
+      it('should generate keys', function()
+        local k = lib[crypto_onetimeauth_keygen]()
+        assert(string.len(k) == KEYBYTES)
+      end)
+    end)
 
-  it('should reject invalid calls', function()
-    assert(pcall(lib.crypto_onetimeauth) == false)
-    assert(pcall(lib.crypto_onetimeauth_verify) == false)
-    assert(pcall(lib.crypto_onetimeauth_init) == false)
-    assert(pcall(lib.crypto_onetimeauth_update) == false)
-    assert(pcall(lib.crypto_onetimeauth_final) == false)
+    describe('function ' .. crypto_onetimeauth, function()
+      it('should reject invalid calls', function()
+        assert(pcall(lib[crypto_onetimeauth]) == false)
+        assert(pcall(lib[crypto_onetimeauth],'','') == false)
+      end)
 
-    assert(pcall(lib.crypto_onetimeauth,'','') == false)
-    assert(pcall(lib.crypto_onetimeauth,'',string.rep('\0',lib.crypto_onetimeauth_KEYBYTES)) == true)
+      it('should generate an expected tag', function()
+        assert(lib[crypto_onetimeauth](message,key) == auth)
+      end)
+    end)
 
-    assert(pcall(lib.crypto_onetimeauth_verify,'','','') == false)
-    assert(pcall(lib.crypto_onetimeauth_verify,string.rep('\0',lib.crypto_onetimeauth_BYTES),'','') == false)
-    assert(pcall(lib.crypto_onetimeauth_verify,string.rep('\0',lib.crypto_onetimeauth_BYTES),'',string.rep('\0',lib.crypto_onetimeauth_KEYBYTES)) == true)
+    describe('function ' .. crypto_onetimeauth_verify, function()
+      it('should reject invalid calls', function()
+        assert(pcall(lib[crypto_onetimeauth_verify]) == false)
+        assert(pcall(lib[crypto_onetimeauth_verify],'','','') == false)
+        assert(pcall(lib[crypto_onetimeauth_verify],string.rep('\0',BYTES),'','') == false)
 
-    assert(pcall(lib.crypto_onetimeauth_init,'') == false)
+      end)
 
-    assert(pcall(lib.crypto_onetimeauth_update,'') == false)
-    assert(pcall(lib.crypto_onetimeauth_update,'','') == false)
-    assert(pcall(lib.crypto_onetimeauth_final,'') == false)
+      it('should validate a known good tag', function()
+        assert(lib[crypto_onetimeauth_verify](auth,message,key) == true)
+      end)
 
-  end)
+      it('should return false on a bad tag', function()
+        local tag = string.rep('\0',BYTES)
+        assert(lib[crypto_onetimeauth_verify](tag,message,key) == false)
+      end)
+    end)
+
+    describe('chunked tags', function()
+      it('should reject bad calls for chunked functions', function()
+        assert(pcall(lib[crypto_onetimeauth_init]) == false)
+        assert(pcall(lib[crypto_onetimeauth_update]) == false)
+        assert(pcall(lib[crypto_onetimeauth_final]) == false)
+        assert(pcall(lib[crypto_onetimeauth_init],'') == false)
+        assert(pcall(lib[crypto_onetimeauth_update],'') == false)
+        assert(pcall(lib[crypto_onetimeauth_update],'','') == false)
+        assert(pcall(lib[crypto_onetimeauth_final],'') == false)
+      end)
+
+      it('should generate the same results as non-chunked version', function()
+        local state = lib[crypto_onetimeauth_init](key)
+        assert(lib[crypto_onetimeauth_update](state,message) == true)
+        assert(lib[crypto_onetimeauth_final](state) == auth)
+      end)
+
+      it('should support object-oriented usage', function()
+        local state = lib[crypto_onetimeauth_init](key)
+        assert(state:update(message) == true)
+        assert(state:final() == auth)
+      end)
+
+    end)
+  end
 end)
+
