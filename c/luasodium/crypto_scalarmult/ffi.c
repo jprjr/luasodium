@@ -4,8 +4,10 @@
 static const luasodium_function_t ls_crypto_scalarmult_functions[] = {
     LS_FUNC(sodium_init),
     LS_FUNC(sodium_memzero),
-    LS_FUNC(crypto_scalarmult_base),
     LS_FUNC(crypto_scalarmult),
+    LS_FUNC(crypto_scalarmult_base),
+    LS_FUNC(crypto_scalarmult_curve25519),
+    LS_FUNC(crypto_scalarmult_curve25519_base),
     { NULL, NULL },
 };
 
