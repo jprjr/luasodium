@@ -1,6 +1,5 @@
 #include "../luasodium-c.h"
 #include "../internals/ls_lua_equal.h"
-#include "../internals/ls_lua_set_functions.h"
 #include "../internals/ls_lua_set_constants.h"
 #include "constants.h"
 
@@ -62,9 +61,12 @@ ls_crypto_onetimeauth(lua_State *L) {
     }
 
     c = lua_newuserdata(L,BYTES);
+
+    /* LCOV_EXCL_START */
     if(c == NULL) {
         return luaL_error(L,"out of memory");
     }
+    /* LCOV_EXCL_STOP */
     lua_pop(L,1);
 
     /* LCOV_EXCL_START */
@@ -128,9 +130,12 @@ ls_crypto_onetimeauth_keygen(lua_State *L) {
     KEYBYTES = (size_t)lua_tointeger(L,lua_upvalueindex(2));
 
     k = lua_newuserdata(L,KEYBYTES);
+
+    /* LCOV_EXCL_START */
     if(k == NULL) {
         return luaL_error(L,"out of memory");
     }
+    /* LCOV_EXCL_STOP */
     lua_pop(L,1);
 
     f(k);
@@ -248,9 +253,12 @@ ls_crypto_onetimeauth_final(lua_State *L) {
     state = lua_touserdata(L,1);
 
     h = (unsigned char *)lua_newuserdata(L,BYTES);
+
+    /* LCOV_EXCL_START */
     if(h == NULL) {
         return luaL_error(L,"out of memory");
     }
+    /* LCOV_EXCL_STOP */
     lua_pop(L,1);
 
     /* LCOV_EXCL_START */
