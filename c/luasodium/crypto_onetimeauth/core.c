@@ -281,9 +281,40 @@ ls_crypto_onetimeauth_state__gc(lua_State *L) {
     return 0;
 }
 
+#define LS_PUSH_CRYPTO_ONETIMEAUTH(x) \
+    lua_pushliteral(L, #x ); \
+    lua_pushlightuserdata(L, x ); \
+    lua_pushinteger(L,x ## _KEYBYTES); \
+    lua_pushinteger(L,x ## _BYTES); \
+    lua_pushcclosure(L,ls_crypto_onetimeauth,4); \
+    lua_setfield(L,-2, #x );
 
-static int
-ls_crypto_onetimeauth_state_setup(lua_State *L) {
+#define LS_PUSH_CRYPTO_ONETIMEAUTH_VERIFY(x) \
+    lua_pushlightuserdata(L, x ## _verify ); \
+    lua_pushinteger(L,x ## _KEYBYTES); \
+    lua_pushinteger(L,x ## _BYTES); \
+    lua_pushcclosure(L,ls_crypto_onetimeauth_verify,3); \
+    lua_setfield(L,-2, #x "_verify" );
+
+#define LS_PUSH_CRYPTO_ONETIMEAUTH_KEYGEN(x) \
+    lua_pushlightuserdata(L, x ## _keygen ); \
+    lua_pushinteger(L,x ## _KEYBYTES); \
+    lua_pushcclosure(L,ls_crypto_onetimeauth_keygen,2); \
+    lua_setfield(L,-2, #x "_keygen" );
+
+
+static void
+ls_crypto_onetimeauth_state_setup(lua_State *L,
+  size_t STATEBYTES,
+  size_t KEYBYTES,
+  size_t BYTES,
+  const char *initname,
+  ls_crypto_onetimeauth_init_ptr init_ptr,
+  const char *updatename,
+  ls_crypto_onetimeauth_update_ptr update_ptr,
+  const char *finalname,
+  ls_crypto_onetimeauth_final_ptr final_ptr) {
+
     int module_index = 0;
     int metatable_index = 0;
 
@@ -293,136 +324,53 @@ ls_crypto_onetimeauth_state_setup(lua_State *L) {
     lua_newtable(L);
     metatable_index = lua_gettop(L);
 
-    lua_pushinteger(L,crypto_onetimeauth_statebytes());
+    /* first the init method */
+    lua_pushstring(L,initname);
+    lua_pushlightuserdata(L,init_ptr);
+    lua_pushinteger(L,KEYBYTES);
+    lua_pushinteger(L,STATEBYTES);
+    lua_pushvalue(L,metatable_index);
+    lua_pushcclosure(L,ls_crypto_onetimeauth_init,5);
+    lua_setfield(L,module_index,initname);
+
+    /* __gc method */
+    lua_pushinteger(L,STATEBYTES);
     lua_pushcclosure(L,ls_crypto_onetimeauth_state__gc,1);
     lua_setfield(L,-2,"__gc");
 
-    /* table of methods */
-    lua_newtable(L);
-    lua_setfield(L,-2,"__index");
-
-    /* stack is now:
-     * table (module)
-     * table (our metatable)
-     */
-
-    lua_pushliteral(L,"crypto_onetimeauth_init");
-    lua_pushlightuserdata(L,crypto_onetimeauth_init);
-    lua_pushinteger(L,crypto_onetimeauth_KEYBYTES);
-    lua_pushinteger(L,crypto_onetimeauth_statebytes());
-    lua_pushvalue(L,metatable_index);
-    lua_pushcclosure(L,ls_crypto_onetimeauth_init,5);
-    lua_setfield(L,module_index,"crypto_onetimeauth_init");
-
-    lua_pushlightuserdata(L,crypto_onetimeauth_update);
+    lua_pushlightuserdata(L,update_ptr);
     lua_pushvalue(L,metatable_index);
     lua_pushcclosure(L,ls_crypto_onetimeauth_update,2);
-    lua_setfield(L,module_index,"crypto_onetimeauth_update");
+    lua_setfield(L,module_index,updatename);
 
-    lua_pushliteral(L,"crypto_onetimeauth_final");
-    lua_pushlightuserdata(L,crypto_onetimeauth_final);
-    lua_pushinteger(L,crypto_onetimeauth_BYTES);
+    lua_pushstring(L,finalname);
+    lua_pushlightuserdata(L,final_ptr);
+    lua_pushinteger(L,BYTES);
     lua_pushvalue(L,metatable_index);
     lua_pushcclosure(L,ls_crypto_onetimeauth_final,4);
-    lua_setfield(L,module_index,"crypto_onetimeauth_final");
+    lua_setfield(L,module_index,finalname);
 
-
-    lua_getfield(L,-1,"__index");
-    /* module
-     * metatable
-     * __index
-     */
-
-    lua_getfield(L,-3,"crypto_onetimeauth_update");
-    /* module
-     * metatable
-     * __index
-     * function
-     */
+    /* now we add these methods to the metatable index */
+    lua_newtable(L);
+    lua_getfield(L,module_index,updatename);
     lua_setfield(L,-2,"update");
-
-    lua_getfield(L,-3,"crypto_onetimeauth_final");
+    lua_getfield(L,module_index,finalname);
     lua_setfield(L,-2,"final");
-
-    /* module
-     * metatable
-     * __index
-     */
-
-    lua_pop(L,2);
-    return 0;
-}
-
-static int
-ls_crypto_onetimeauth_poly1305_state_setup(lua_State *L) {
-    int module_index = 0;
-    int metatable_index = 0;
-
-    module_index = lua_gettop(L);
-
-    /* create our metatable for crypto_onetimeauth_poly1305_state */
-    lua_newtable(L);
-    metatable_index = lua_gettop(L);
-
-    lua_pushinteger(L,crypto_onetimeauth_poly1305_statebytes());
-    lua_pushcclosure(L,ls_crypto_onetimeauth_state__gc,1);
-    lua_setfield(L,-2,"__gc");
-
-    /* table of methods */
-    lua_newtable(L);
     lua_setfield(L,-2,"__index");
-
-    /* stack is now:
-     * table (module)
-     * table (our metatable)
-     */
-
-    lua_pushliteral(L,"crypto_onetimeauth_poly1305_init");
-    lua_pushlightuserdata(L,crypto_onetimeauth_poly1305_init);
-    lua_pushinteger(L,crypto_onetimeauth_poly1305_KEYBYTES);
-    lua_pushinteger(L,crypto_onetimeauth_poly1305_statebytes());
-    lua_pushvalue(L,metatable_index);
-    lua_pushcclosure(L,ls_crypto_onetimeauth_init,5);
-    lua_setfield(L,module_index,"crypto_onetimeauth_poly1305_init");
-
-    lua_pushlightuserdata(L,crypto_onetimeauth_poly1305_update);
-    lua_pushvalue(L,metatable_index);
-    lua_pushcclosure(L,ls_crypto_onetimeauth_update,2);
-    lua_setfield(L,module_index,"crypto_onetimeauth_poly1305_update");
-
-    lua_pushliteral(L,"crypto_onetimeauth_poly1305_final");
-    lua_pushlightuserdata(L,crypto_onetimeauth_poly1305_final);
-    lua_pushinteger(L,crypto_onetimeauth_poly1305_BYTES);
-    lua_pushvalue(L,metatable_index);
-    lua_pushcclosure(L,ls_crypto_onetimeauth_final,4);
-    lua_setfield(L,module_index,"crypto_onetimeauth_poly1305_final");
-
-
-    lua_getfield(L,-1,"__index");
-    /* module
-     * metatable
-     * __index
-     */
-
-    lua_getfield(L,-3,"crypto_onetimeauth_poly1305_update");
-    /* module
-     * metatable
-     * __index
-     * function
-     */
-    lua_setfield(L,-2,"update");
-
-    lua_getfield(L,-3,"crypto_onetimeauth_poly1305_final");
-    lua_setfield(L,-2,"final");
-
-    /* module
-     * metatable
-     * __index
-     */
-
-    lua_pop(L,2);
-    return 0;
+    lua_pop(L,1);
 }
+
+#define LS_CRYPTO_ONETIMEAUTH_STATE_SETUP(x) \
+    ls_crypto_onetimeauth_state_setup(L, \
+      x ## _statebytes(), \
+      x ## _KEYBYTES, \
+      x ## _BYTES, \
+      #x "_init", \
+      (ls_crypto_onetimeauth_init_ptr)x ## _init, \
+      #x "_update", \
+      (ls_crypto_onetimeauth_update_ptr) x ## _update, \
+      #x "_final", \
+      (ls_crypto_onetimeauth_final_ptr)x ## _final);
 
 LS_PUBLIC
 int luaopen_luasodium_crypto_onetimeauth_core(lua_State *L) {
@@ -434,45 +382,16 @@ int luaopen_luasodium_crypto_onetimeauth_core(lua_State *L) {
 
     ls_lua_set_constants(L,ls_crypto_onetimeauth_constants,lua_gettop(L));
 
-    lua_pushliteral(L,"crypto_onetimeauth");
-    lua_pushlightuserdata(L,crypto_onetimeauth);
-    lua_pushinteger(L,crypto_onetimeauth_KEYBYTES);
-    lua_pushinteger(L,crypto_onetimeauth_BYTES);
-    lua_pushcclosure(L,ls_crypto_onetimeauth,4);
-    lua_setfield(L,-2,"crypto_onetimeauth");
+    LS_PUSH_CRYPTO_ONETIMEAUTH(crypto_onetimeauth);
+    LS_PUSH_CRYPTO_ONETIMEAUTH_VERIFY(crypto_onetimeauth);
+    LS_PUSH_CRYPTO_ONETIMEAUTH_KEYGEN(crypto_onetimeauth);
 
-    lua_pushlightuserdata(L,crypto_onetimeauth_verify);
-    lua_pushinteger(L,crypto_onetimeauth_KEYBYTES);
-    lua_pushinteger(L,crypto_onetimeauth_BYTES);
-    lua_pushcclosure(L,ls_crypto_onetimeauth_verify,3);
-    lua_setfield(L,-2,"crypto_onetimeauth_verify");
+    LS_PUSH_CRYPTO_ONETIMEAUTH(crypto_onetimeauth_poly1305);
+    LS_PUSH_CRYPTO_ONETIMEAUTH_VERIFY(crypto_onetimeauth_poly1305);
+    LS_PUSH_CRYPTO_ONETIMEAUTH_KEYGEN(crypto_onetimeauth_poly1305);
 
-    lua_pushlightuserdata(L,crypto_onetimeauth_keygen);
-    lua_pushinteger(L,crypto_onetimeauth_KEYBYTES);
-    lua_pushcclosure(L,ls_crypto_onetimeauth_keygen,2);
-    lua_setfield(L,-2,"crypto_onetimeauth_keygen");
-
-    lua_pushliteral(L,"crypto_onetimeauth_poly1305");
-    lua_pushlightuserdata(L,crypto_onetimeauth_poly1305);
-    lua_pushinteger(L,crypto_onetimeauth_poly1305_KEYBYTES);
-    lua_pushinteger(L,crypto_onetimeauth_poly1305_BYTES);
-    lua_pushcclosure(L,ls_crypto_onetimeauth,4);
-    lua_setfield(L,-2,"crypto_onetimeauth_poly1305");
-
-    lua_pushlightuserdata(L,crypto_onetimeauth_poly1305_verify);
-    lua_pushinteger(L,crypto_onetimeauth_poly1305_KEYBYTES);
-    lua_pushinteger(L,crypto_onetimeauth_poly1305_BYTES);
-    lua_pushcclosure(L,ls_crypto_onetimeauth_verify,3);
-    lua_setfield(L,-2,"crypto_onetimeauth_poly1305_verify");
-
-    lua_pushlightuserdata(L,crypto_onetimeauth_poly1305_keygen);
-    lua_pushinteger(L,crypto_onetimeauth_poly1305_KEYBYTES);
-    lua_pushcclosure(L,ls_crypto_onetimeauth_keygen,2);
-    lua_setfield(L,-2,"crypto_onetimeauth_poly1305_keygen");
-
-    ls_crypto_onetimeauth_state_setup(L);
-    ls_crypto_onetimeauth_poly1305_state_setup(L);
-
+    LS_CRYPTO_ONETIMEAUTH_STATE_SETUP(crypto_onetimeauth);
+    LS_CRYPTO_ONETIMEAUTH_STATE_SETUP(crypto_onetimeauth_poly1305);
 
     return 1;
 }
