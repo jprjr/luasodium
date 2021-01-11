@@ -202,9 +202,13 @@ ls_crypto_hash_state_setup(lua_State *L,
   ls_crypto_hash_update_ptr update_ptr,
   const char *finalname,
   ls_crypto_hash_final_ptr final_ptr) {
+
     int module_index = 0;
     int metatable_index = 0;
+
     module_index = lua_gettop(L);
+
+    /* create the metatable */
     lua_newtable(L);
     metatable_index = lua_gettop(L);
 
