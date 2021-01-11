@@ -267,7 +267,6 @@ static const struct luaL_Reg ls_crypto_hash_functions[] = {
     LS_LUA_FUNC(crypto_hash),
     LS_LUA_FUNC(crypto_hash_sha256),
     LS_LUA_FUNC(crypto_hash_sha512),
-    LS_LUA_FUNC(crypto_hash_sha256_init),
     { NULL, NULL },
 };
 
