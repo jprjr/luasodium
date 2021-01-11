@@ -1273,15 +1273,15 @@ ls_crypto_box_open_detached_afternm(lua_State *L) {
     return 1;
 }
 
-#define LS_PUSH_CRYPTO_BOX_KEYPAIR(x, y) \
+#define LS_PUSH_CRYPTO_BOX_KEYPAIR(x) \
   lua_pushliteral(L, #x "_keypair" ); \
   lua_pushlightuserdata(L, x ## _keypair); \
   lua_pushinteger(L, x ## _PUBLICKEYBYTES); \
   lua_pushinteger(L, x ## _SECRETKEYBYTES); \
-  lua_pushcclosure(L, ls_ ## y ## _keypair, 4); \
+  lua_pushcclosure(L, ls_crypto_box_keypair, 4); \
   lua_setfield(L,-2, #x "_keypair");
 
-#define LS_PUSH_CRYPTO_BOX(x, y) \
+#define LS_PUSH_CRYPTO_BOX(x) \
   lua_pushliteral(L, #x ); \
   lua_pushlightuserdata(L, x ); \
   lua_pushinteger(L, x ## _MACBYTES); \
@@ -1290,10 +1290,10 @@ ls_crypto_box_open_detached_afternm(lua_State *L) {
   lua_pushinteger(L, x ## _SECRETKEYBYTES); \
   lua_pushinteger(L, x ## _ZEROBYTES); \
   lua_pushinteger(L, x ## _BOXZEROBYTES); \
-  lua_pushcclosure(L, ls_ ## y , 8); \
+  lua_pushcclosure(L, ls_crypto_box , 8); \
   lua_setfield(L,-2, #x );
 
-#define LS_PUSH_CRYPTO_BOX_OPEN(x, y) \
+#define LS_PUSH_CRYPTO_BOX_OPEN(x) \
   lua_pushliteral(L, #x "_open" ); \
   lua_pushlightuserdata(L, x ## _open ); \
   lua_pushinteger(L, x ## _MACBYTES); \
@@ -1302,19 +1302,19 @@ ls_crypto_box_open_detached_afternm(lua_State *L) {
   lua_pushinteger(L, x ## _SECRETKEYBYTES); \
   lua_pushinteger(L, x ## _ZEROBYTES); \
   lua_pushinteger(L, x ## _BOXZEROBYTES); \
-  lua_pushcclosure(L, ls_ ## y ## _open , 8); \
+  lua_pushcclosure(L, ls_crypto_box_open , 8); \
   lua_setfield(L,-2, #x "_open" );
 
-#define LS_PUSH_CRYPTO_BOX_BEFORENM(x, y) \
+#define LS_PUSH_CRYPTO_BOX_BEFORENM(x) \
   lua_pushliteral(L, #x "_beforenm" ); \
   lua_pushlightuserdata(L, x ## _beforenm ); \
   lua_pushinteger(L, x ## _PUBLICKEYBYTES); \
   lua_pushinteger(L, x ## _SECRETKEYBYTES); \
   lua_pushinteger(L, x ## _BEFORENMBYTES); \
-  lua_pushcclosure(L, ls_ ## y ## _beforenm , 5); \
+  lua_pushcclosure(L, ls_crypto_box_beforenm , 5); \
   lua_setfield(L,-2, #x "_beforenm" );
 
-#define LS_PUSH_CRYPTO_BOX_AFTERNM(x, y) \
+#define LS_PUSH_CRYPTO_BOX_AFTERNM(x) \
   lua_pushliteral(L, #x "_afternm" ); \
   lua_pushlightuserdata(L, x ## _afternm ); \
   lua_pushinteger(L, x ## _MACBYTES); \
@@ -1322,10 +1322,10 @@ ls_crypto_box_open_detached_afternm(lua_State *L) {
   lua_pushinteger(L, x ## _BEFORENMBYTES); \
   lua_pushinteger(L, x ## _ZEROBYTES); \
   lua_pushinteger(L, x ## _BOXZEROBYTES); \
-  lua_pushcclosure(L, ls_ ## y ## _afternm , 7); \
+  lua_pushcclosure(L, ls_crypto_box_afternm , 7); \
   lua_setfield(L,-2, #x "_afternm" );
 
-#define LS_PUSH_CRYPTO_BOX_OPEN_AFTERNM(x, y) \
+#define LS_PUSH_CRYPTO_BOX_OPEN_AFTERNM(x) \
   lua_pushliteral(L, #x "_open_afternm" ); \
   lua_pushlightuserdata(L, x ## _open_afternm ); \
   lua_pushinteger(L, x ## _MACBYTES); \
@@ -1333,92 +1333,92 @@ ls_crypto_box_open_detached_afternm(lua_State *L) {
   lua_pushinteger(L, x ## _BEFORENMBYTES); \
   lua_pushinteger(L, x ## _ZEROBYTES); \
   lua_pushinteger(L, x ## _BOXZEROBYTES); \
-  lua_pushcclosure(L, ls_ ## y ## _open_afternm , 7); \
+  lua_pushcclosure(L, ls_crypto_box_open_afternm , 7); \
   lua_setfield(L,-2, #x "_open_afternm" );
 
-#define LS_PUSH_CRYPTO_BOX_SEED_KEYPAIR(x, y) \
+#define LS_PUSH_CRYPTO_BOX_SEED_KEYPAIR(x) \
   lua_pushliteral(L, #x "_seed_keypair" ); \
   lua_pushlightuserdata(L, x ## _seed_keypair); \
   lua_pushinteger(L, x ## _PUBLICKEYBYTES); \
   lua_pushinteger(L, x ## _SECRETKEYBYTES); \
   lua_pushinteger(L, x ## _SEEDBYTES); \
-  lua_pushcclosure(L, ls_ ## y ## _seed_keypair, 5); \
+  lua_pushcclosure(L, ls_crypto_box_seed_keypair, 5); \
   lua_setfield(L,-2, #x "_seed_keypair");
 
-#define LS_PUSH_CRYPTO_BOX_EASY(x, y) \
+#define LS_PUSH_CRYPTO_BOX_EASY(x) \
   lua_pushliteral(L, #x "_easy" ); \
   lua_pushlightuserdata(L, x ## _easy ); \
   lua_pushinteger(L, x ## _MACBYTES); \
   lua_pushinteger(L, x ## _NONCEBYTES); \
   lua_pushinteger(L, x ## _PUBLICKEYBYTES); \
   lua_pushinteger(L, x ## _SECRETKEYBYTES); \
-  lua_pushcclosure(L, ls_ ## y ## _easy , 6); \
+  lua_pushcclosure(L, ls_crypto_box_easy , 6); \
   lua_setfield(L,-2, #x "_easy" );
 
-#define LS_PUSH_CRYPTO_BOX_OPEN_EASY(x, y) \
+#define LS_PUSH_CRYPTO_BOX_OPEN_EASY(x) \
   lua_pushliteral(L, #x "_open_easy" ); \
   lua_pushlightuserdata(L, x ## _open_easy ); \
   lua_pushinteger(L, x ## _MACBYTES); \
   lua_pushinteger(L, x ## _NONCEBYTES); \
   lua_pushinteger(L, x ## _PUBLICKEYBYTES); \
   lua_pushinteger(L, x ## _SECRETKEYBYTES); \
-  lua_pushcclosure(L, ls_ ## y ## _open_easy , 6); \
+  lua_pushcclosure(L, ls_crypto_box_open_easy , 6); \
   lua_setfield(L,-2, #x "_open_easy" );
 
-#define LS_PUSH_CRYPTO_BOX_DETACHED(x, y) \
+#define LS_PUSH_CRYPTO_BOX_DETACHED(x) \
   lua_pushliteral(L, #x "_detached" ); \
   lua_pushlightuserdata(L, x ## _detached ); \
   lua_pushinteger(L, x ## _MACBYTES); \
   lua_pushinteger(L, x ## _NONCEBYTES); \
   lua_pushinteger(L, x ## _PUBLICKEYBYTES); \
   lua_pushinteger(L, x ## _SECRETKEYBYTES); \
-  lua_pushcclosure(L, ls_ ## y ## _detached , 6); \
+  lua_pushcclosure(L, ls_crypto_box_detached , 6); \
   lua_setfield(L,-2, #x "_detached" );
 
-#define LS_PUSH_CRYPTO_BOX_OPEN_DETACHED(x, y) \
+#define LS_PUSH_CRYPTO_BOX_OPEN_DETACHED(x) \
   lua_pushliteral(L, #x "_open_detached" ); \
   lua_pushlightuserdata(L, x ## _open_detached ); \
   lua_pushinteger(L, x ## _MACBYTES); \
   lua_pushinteger(L, x ## _NONCEBYTES); \
   lua_pushinteger(L, x ## _PUBLICKEYBYTES); \
   lua_pushinteger(L, x ## _SECRETKEYBYTES); \
-  lua_pushcclosure(L, ls_ ## y ## _open_detached , 6); \
+  lua_pushcclosure(L, ls_crypto_box_open_detached , 6); \
   lua_setfield(L,-2, #x "_open_detached" );
 
-#define LS_PUSH_CRYPTO_BOX_EASY_AFTERNM(x, y) \
+#define LS_PUSH_CRYPTO_BOX_EASY_AFTERNM(x) \
   lua_pushliteral(L, #x "_easy_afternm" ); \
   lua_pushlightuserdata(L, x ## _easy_afternm ); \
   lua_pushinteger(L, x ## _MACBYTES); \
   lua_pushinteger(L, x ## _NONCEBYTES); \
   lua_pushinteger(L, x ## _BEFORENMBYTES); \
-  lua_pushcclosure(L, ls_ ## y ## _easy_afternm , 5); \
+  lua_pushcclosure(L, ls_crypto_box_easy_afternm , 5); \
   lua_setfield(L,-2, #x "_easy_afternm" );
 
-#define LS_PUSH_CRYPTO_BOX_OPEN_EASY_AFTERNM(x, y) \
+#define LS_PUSH_CRYPTO_BOX_OPEN_EASY_AFTERNM(x) \
   lua_pushliteral(L, #x "_open_easy_afternm" ); \
   lua_pushlightuserdata(L, x ## _open_easy_afternm ); \
   lua_pushinteger(L, x ## _MACBYTES); \
   lua_pushinteger(L, x ## _NONCEBYTES); \
   lua_pushinteger(L, x ## _BEFORENMBYTES); \
-  lua_pushcclosure(L, ls_ ## y ## _open_easy_afternm , 5); \
+  lua_pushcclosure(L, ls_crypto_box_open_easy_afternm , 5); \
   lua_setfield(L,-2, #x "_open_easy_afternm" );
 
-#define LS_PUSH_CRYPTO_BOX_DETACHED_AFTERNM(x, y) \
+#define LS_PUSH_CRYPTO_BOX_DETACHED_AFTERNM(x) \
   lua_pushliteral(L, #x "_detached_afternm" ); \
   lua_pushlightuserdata(L, x ## _detached_afternm ); \
   lua_pushinteger(L, x ## _MACBYTES); \
   lua_pushinteger(L, x ## _NONCEBYTES); \
   lua_pushinteger(L, x ## _BEFORENMBYTES); \
-  lua_pushcclosure(L, ls_ ## y ## _detached_afternm , 5); \
+  lua_pushcclosure(L, ls_crypto_box_detached_afternm , 5); \
   lua_setfield(L,-2, #x "_detached_afternm" );
 
-#define LS_PUSH_CRYPTO_BOX_OPEN_DETACHED_AFTERNM(x, y) \
+#define LS_PUSH_CRYPTO_BOX_OPEN_DETACHED_AFTERNM(x) \
   lua_pushliteral(L, #x "_open_detached_afternm" ); \
   lua_pushlightuserdata(L, x ## _open_detached_afternm ); \
   lua_pushinteger(L, x ## _MACBYTES); \
   lua_pushinteger(L, x ## _NONCEBYTES); \
   lua_pushinteger(L, x ## _BEFORENMBYTES); \
-  lua_pushcclosure(L, ls_ ## y ## _open_detached_afternm , 5); \
+  lua_pushcclosure(L, ls_crypto_box_open_detached_afternm , 5); \
   lua_setfield(L,-2, #x "_open_detached_afternm" );
 
 LS_PUBLIC
@@ -1430,32 +1430,32 @@ int luaopen_luasodium_crypto_box_core(lua_State *L) {
 
     ls_lua_set_constants(L,ls_crypto_box_constants,lua_gettop(L));
 
-    LS_PUSH_CRYPTO_BOX_KEYPAIR(crypto_box,crypto_box);
-    LS_PUSH_CRYPTO_BOX(crypto_box,crypto_box);
-    LS_PUSH_CRYPTO_BOX_OPEN(crypto_box,crypto_box);
-    LS_PUSH_CRYPTO_BOX_BEFORENM(crypto_box,crypto_box);
-    LS_PUSH_CRYPTO_BOX_AFTERNM(crypto_box,crypto_box);
-    LS_PUSH_CRYPTO_BOX_OPEN_AFTERNM(crypto_box,crypto_box);
+    LS_PUSH_CRYPTO_BOX_KEYPAIR(crypto_box);
+    LS_PUSH_CRYPTO_BOX(crypto_box);
+    LS_PUSH_CRYPTO_BOX_OPEN(crypto_box);
+    LS_PUSH_CRYPTO_BOX_BEFORENM(crypto_box);
+    LS_PUSH_CRYPTO_BOX_AFTERNM(crypto_box);
+    LS_PUSH_CRYPTO_BOX_OPEN_AFTERNM(crypto_box);
 
-    LS_PUSH_CRYPTO_BOX_KEYPAIR(crypto_box_curve25519xsalsa20poly1305,crypto_box);
-    LS_PUSH_CRYPTO_BOX(crypto_box_curve25519xsalsa20poly1305,crypto_box);
-    LS_PUSH_CRYPTO_BOX_OPEN(crypto_box_curve25519xsalsa20poly1305,crypto_box);
-    LS_PUSH_CRYPTO_BOX_BEFORENM(crypto_box_curve25519xsalsa20poly1305,crypto_box);
-    LS_PUSH_CRYPTO_BOX_AFTERNM(crypto_box_curve25519xsalsa20poly1305,crypto_box);
-    LS_PUSH_CRYPTO_BOX_OPEN_AFTERNM(crypto_box_curve25519xsalsa20poly1305,crypto_box);
+    LS_PUSH_CRYPTO_BOX_KEYPAIR(crypto_box_curve25519xsalsa20poly1305);
+    LS_PUSH_CRYPTO_BOX(crypto_box_curve25519xsalsa20poly1305);
+    LS_PUSH_CRYPTO_BOX_OPEN(crypto_box_curve25519xsalsa20poly1305);
+    LS_PUSH_CRYPTO_BOX_BEFORENM(crypto_box_curve25519xsalsa20poly1305);
+    LS_PUSH_CRYPTO_BOX_AFTERNM(crypto_box_curve25519xsalsa20poly1305);
+    LS_PUSH_CRYPTO_BOX_OPEN_AFTERNM(crypto_box_curve25519xsalsa20poly1305);
 
-    LS_PUSH_CRYPTO_BOX_SEED_KEYPAIR(crypto_box,crypto_box);
-    LS_PUSH_CRYPTO_BOX_SEED_KEYPAIR(crypto_box_curve25519xsalsa20poly1305,crypto_box);
+    LS_PUSH_CRYPTO_BOX_SEED_KEYPAIR(crypto_box);
+    LS_PUSH_CRYPTO_BOX_SEED_KEYPAIR(crypto_box_curve25519xsalsa20poly1305);
 
-    LS_PUSH_CRYPTO_BOX_EASY(crypto_box,crypto_box);
-    LS_PUSH_CRYPTO_BOX_OPEN_EASY(crypto_box,crypto_box);
-    LS_PUSH_CRYPTO_BOX_DETACHED(crypto_box,crypto_box);
-    LS_PUSH_CRYPTO_BOX_OPEN_DETACHED(crypto_box,crypto_box);
+    LS_PUSH_CRYPTO_BOX_EASY(crypto_box);
+    LS_PUSH_CRYPTO_BOX_OPEN_EASY(crypto_box);
+    LS_PUSH_CRYPTO_BOX_DETACHED(crypto_box);
+    LS_PUSH_CRYPTO_BOX_OPEN_DETACHED(crypto_box);
 
-    LS_PUSH_CRYPTO_BOX_EASY_AFTERNM(crypto_box,crypto_box);
-    LS_PUSH_CRYPTO_BOX_OPEN_EASY_AFTERNM(crypto_box,crypto_box);
-    LS_PUSH_CRYPTO_BOX_DETACHED_AFTERNM(crypto_box,crypto_box);
-    LS_PUSH_CRYPTO_BOX_OPEN_DETACHED_AFTERNM(crypto_box,crypto_box);
+    LS_PUSH_CRYPTO_BOX_EASY_AFTERNM(crypto_box);
+    LS_PUSH_CRYPTO_BOX_OPEN_EASY_AFTERNM(crypto_box);
+    LS_PUSH_CRYPTO_BOX_DETACHED_AFTERNM(crypto_box);
+    LS_PUSH_CRYPTO_BOX_OPEN_DETACHED_AFTERNM(crypto_box);
 
     return 1;
 }

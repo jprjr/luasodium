@@ -133,25 +133,25 @@ ls_crypto_auth_keygen(lua_State *L) {
     return 1;
 }
 
-#define LS_PUSH_CRYPTO_AUTH(x, y) \
+#define LS_PUSH_CRYPTO_AUTH(x) \
   lua_pushliteral(L, #x ); \
   lua_pushlightuserdata(L, x); \
   lua_pushinteger(L, x ## _BYTES); \
   lua_pushinteger(L, x ## _KEYBYTES); \
-  lua_pushcclosure(L, ls_ ## y, 4); \
+  lua_pushcclosure(L, ls_crypto_auth , 4); \
   lua_setfield(L,-2, #x);
 
-#define LS_PUSH_CRYPTO_AUTH_VERIFY(x, y) \
+#define LS_PUSH_CRYPTO_AUTH_VERIFY(x) \
   lua_pushlightuserdata(L, x ## _verify); \
   lua_pushinteger(L, x ## _BYTES); \
   lua_pushinteger(L, x ## _KEYBYTES); \
-  lua_pushcclosure(L,ls_ ## y ## _verify, 3); \
+  lua_pushcclosure(L, ls_crypto_auth_verify, 3); \
   lua_setfield(L,-2, #x "_verify");
 
-#define LS_PUSH_CRYPTO_AUTH_KEYGEN(x, y) \
+#define LS_PUSH_CRYPTO_AUTH_KEYGEN(x) \
   lua_pushlightuserdata(L, x ## _keygen); \
   lua_pushinteger(L, x ## _KEYBYTES); \
-  lua_pushcclosure(L,ls_ ## y ## _keygen, 2); \
+  lua_pushcclosure(L,ls_crypto_auth_keygen, 2); \
   lua_setfield(L,-2, #x "_keygen");
 
 
@@ -164,21 +164,21 @@ int luaopen_luasodium_crypto_auth_core(lua_State *L) {
 
     ls_lua_set_constants(L,ls_crypto_auth_constants,lua_gettop(L));
 
-    LS_PUSH_CRYPTO_AUTH(crypto_auth, crypto_auth);
-    LS_PUSH_CRYPTO_AUTH_VERIFY(crypto_auth, crypto_auth);
-    LS_PUSH_CRYPTO_AUTH_KEYGEN(crypto_auth, crypto_auth);
+    LS_PUSH_CRYPTO_AUTH(crypto_auth);
+    LS_PUSH_CRYPTO_AUTH_VERIFY(crypto_auth);
+    LS_PUSH_CRYPTO_AUTH_KEYGEN(crypto_auth);
 
-    LS_PUSH_CRYPTO_AUTH(crypto_auth_hmacsha256, crypto_auth);
-    LS_PUSH_CRYPTO_AUTH_VERIFY(crypto_auth_hmacsha256, crypto_auth);
-    LS_PUSH_CRYPTO_AUTH_KEYGEN(crypto_auth_hmacsha256, crypto_auth);
+    LS_PUSH_CRYPTO_AUTH(crypto_auth_hmacsha256);
+    LS_PUSH_CRYPTO_AUTH_VERIFY(crypto_auth_hmacsha256);
+    LS_PUSH_CRYPTO_AUTH_KEYGEN(crypto_auth_hmacsha256);
 
-    LS_PUSH_CRYPTO_AUTH(crypto_auth_hmacsha512256, crypto_auth);
-    LS_PUSH_CRYPTO_AUTH_VERIFY(crypto_auth_hmacsha512256, crypto_auth);
-    LS_PUSH_CRYPTO_AUTH_KEYGEN(crypto_auth_hmacsha512256, crypto_auth);
+    LS_PUSH_CRYPTO_AUTH(crypto_auth_hmacsha512256);
+    LS_PUSH_CRYPTO_AUTH_VERIFY(crypto_auth_hmacsha512256);
+    LS_PUSH_CRYPTO_AUTH_KEYGEN(crypto_auth_hmacsha512256);
 
-    LS_PUSH_CRYPTO_AUTH(crypto_auth_hmacsha512, crypto_auth);
-    LS_PUSH_CRYPTO_AUTH_VERIFY(crypto_auth_hmacsha512, crypto_auth);
-    LS_PUSH_CRYPTO_AUTH_KEYGEN(crypto_auth_hmacsha512, crypto_auth);
+    LS_PUSH_CRYPTO_AUTH(crypto_auth_hmacsha512);
+    LS_PUSH_CRYPTO_AUTH_VERIFY(crypto_auth_hmacsha512);
+    LS_PUSH_CRYPTO_AUTH_KEYGEN(crypto_auth_hmacsha512);
 
     return 1;
 }

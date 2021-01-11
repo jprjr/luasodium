@@ -157,26 +157,26 @@ ls_crypto_stream_keygen(lua_State *L) {
     return 1;
 }
 
-#define LS_PUSH_CRYPTO_STREAM(x,y) \
+#define LS_PUSH_CRYPTO_STREAM(x) \
   lua_pushliteral(L, #x); \
   lua_pushlightuserdata(L, x); \
   lua_pushinteger(L, x ## _NONCEBYTES); \
   lua_pushinteger(L, x ## _KEYBYTES); \
-  lua_pushcclosure(L, ls_ ## y, 4); \
+  lua_pushcclosure(L, ls_crypto_stream, 4); \
   lua_setfield(L,-2, #x)
 
-#define LS_PUSH_CRYPTO_STREAM_XOR(x,y) \
+#define LS_PUSH_CRYPTO_STREAM_XOR(x) \
   lua_pushliteral(L, #x); \
   lua_pushlightuserdata(L, x ## _xor); \
   lua_pushinteger(L, x ## _NONCEBYTES); \
   lua_pushinteger(L, x ## _KEYBYTES); \
-  lua_pushcclosure(L, ls_ ## y ## _xor, 4); \
+  lua_pushcclosure(L, ls_crypto_stream_xor, 4); \
   lua_setfield(L,-2, #x "_xor")
 
-#define LS_PUSH_CRYPTO_STREAM_KEYGEN(x,y) \
+#define LS_PUSH_CRYPTO_STREAM_KEYGEN(x) \
   lua_pushlightuserdata(L, x ## _keygen); \
   lua_pushinteger(L, x ## _KEYBYTES); \
-  lua_pushcclosure(L, ls_ ## y ## _keygen, 2); \
+  lua_pushcclosure(L, ls_crypto_stream_keygen, 2); \
   lua_setfield(L,-2, #x "_keygen")
 
 LS_PUBLIC
@@ -188,21 +188,21 @@ int luaopen_luasodium_crypto_stream_core(lua_State *L) {
 
     ls_lua_set_constants(L,ls_crypto_stream_constants,lua_gettop(L));
 
-    LS_PUSH_CRYPTO_STREAM(crypto_stream,crypto_stream);
-    LS_PUSH_CRYPTO_STREAM_XOR(crypto_stream,crypto_stream);
-    LS_PUSH_CRYPTO_STREAM_KEYGEN(crypto_stream,crypto_stream);
+    LS_PUSH_CRYPTO_STREAM(crypto_stream);
+    LS_PUSH_CRYPTO_STREAM_XOR(crypto_stream);
+    LS_PUSH_CRYPTO_STREAM_KEYGEN(crypto_stream);
 
-    LS_PUSH_CRYPTO_STREAM(crypto_stream_xsalsa20,crypto_stream);
-    LS_PUSH_CRYPTO_STREAM_XOR(crypto_stream_xsalsa20,crypto_stream);
-    LS_PUSH_CRYPTO_STREAM_KEYGEN(crypto_stream_xsalsa20,crypto_stream);
+    LS_PUSH_CRYPTO_STREAM(crypto_stream_xsalsa20);
+    LS_PUSH_CRYPTO_STREAM_XOR(crypto_stream_xsalsa20);
+    LS_PUSH_CRYPTO_STREAM_KEYGEN(crypto_stream_xsalsa20);
 
-    LS_PUSH_CRYPTO_STREAM(crypto_stream_salsa20,crypto_stream);
-    LS_PUSH_CRYPTO_STREAM_XOR(crypto_stream_salsa20,crypto_stream);
-    LS_PUSH_CRYPTO_STREAM_KEYGEN(crypto_stream_salsa20,crypto_stream);
+    LS_PUSH_CRYPTO_STREAM(crypto_stream_salsa20);
+    LS_PUSH_CRYPTO_STREAM_XOR(crypto_stream_salsa20);
+    LS_PUSH_CRYPTO_STREAM_KEYGEN(crypto_stream_salsa20);
 
-    LS_PUSH_CRYPTO_STREAM(crypto_stream_salsa2012,crypto_stream);
-    LS_PUSH_CRYPTO_STREAM_XOR(crypto_stream_salsa2012,crypto_stream);
-    LS_PUSH_CRYPTO_STREAM_KEYGEN(crypto_stream_salsa2012,crypto_stream);
+    LS_PUSH_CRYPTO_STREAM(crypto_stream_salsa2012);
+    LS_PUSH_CRYPTO_STREAM_XOR(crypto_stream_salsa2012);
+    LS_PUSH_CRYPTO_STREAM_KEYGEN(crypto_stream_salsa2012);
 
     return 1;
 }
