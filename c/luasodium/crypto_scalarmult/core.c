@@ -117,6 +117,22 @@ ls_crypto_scalarmult(lua_State *L) {
     return 1;
 }
 
+#define LS_PUSH_CRYPTO_SCALARMULT(x) \
+    lua_pushliteral(L, #x ); \
+    lua_pushlightuserdata(L,x); \
+    lua_pushinteger(L,x ## _BYTES); \
+    lua_pushinteger(L,x ## _SCALARBYTES); \
+    lua_pushcclosure(L,ls_crypto_scalarmult,4); \
+    lua_setfield(L,-2, #x);
+
+#define LS_PUSH_CRYPTO_SCALARMULT_BASE(x) \
+    lua_pushliteral(L, #x "_base" ); \
+    lua_pushlightuserdata(L,x ## _base); \
+    lua_pushinteger(L,x ## _BYTES); \
+    lua_pushinteger(L,x ## _SCALARBYTES); \
+    lua_pushcclosure(L,ls_crypto_scalarmult_base,4); \
+    lua_setfield(L,-2, #x "_base" );
+
 LS_PUBLIC
 int luaopen_luasodium_crypto_scalarmult_core(lua_State *L) {
     /* LCOV_EXCL_START */
@@ -126,33 +142,11 @@ int luaopen_luasodium_crypto_scalarmult_core(lua_State *L) {
 
     ls_lua_set_constants(L,ls_crypto_scalarmult_constants,lua_gettop(L));
 
-    lua_pushliteral(L,"crypto_scalarmult");
-    lua_pushlightuserdata(L,crypto_scalarmult);
-    lua_pushinteger(L,crypto_scalarmult_BYTES);
-    lua_pushinteger(L,crypto_scalarmult_SCALARBYTES);
-    lua_pushcclosure(L,ls_crypto_scalarmult,4);
-    lua_setfield(L,-2,"crypto_scalarmult");
+    LS_PUSH_CRYPTO_SCALARMULT(crypto_scalarmult);
+    LS_PUSH_CRYPTO_SCALARMULT_BASE(crypto_scalarmult);
 
-    lua_pushliteral(L,"crypto_scalarmult_base");
-    lua_pushlightuserdata(L,crypto_scalarmult_base);
-    lua_pushinteger(L,crypto_scalarmult_BYTES);
-    lua_pushinteger(L,crypto_scalarmult_SCALARBYTES);
-    lua_pushcclosure(L,ls_crypto_scalarmult_base,4);
-    lua_setfield(L,-2,"crypto_scalarmult_base");
-
-    lua_pushliteral(L,"crypto_scalarmult_curve25519");
-    lua_pushlightuserdata(L,crypto_scalarmult_curve25519);
-    lua_pushinteger(L,crypto_scalarmult_curve25519_BYTES);
-    lua_pushinteger(L,crypto_scalarmult_curve25519_SCALARBYTES);
-    lua_pushcclosure(L,ls_crypto_scalarmult,4);
-    lua_setfield(L,-2,"crypto_scalarmult_curve25519");
-
-    lua_pushliteral(L,"crypto_scalarmult_curve25519_base");
-    lua_pushlightuserdata(L,crypto_scalarmult_curve25519_base);
-    lua_pushinteger(L,crypto_scalarmult_curve25519_BYTES);
-    lua_pushinteger(L,crypto_scalarmult_curve25519_SCALARBYTES);
-    lua_pushcclosure(L,ls_crypto_scalarmult_base,4);
-    lua_setfield(L,-2,"crypto_scalarmult_curve25519_base");
+    LS_PUSH_CRYPTO_SCALARMULT(crypto_scalarmult_curve25519);
+    LS_PUSH_CRYPTO_SCALARMULT_BASE(crypto_scalarmult_curve25519);
 
     return 1;
 }
