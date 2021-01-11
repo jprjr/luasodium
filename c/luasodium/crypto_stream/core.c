@@ -1,7 +1,22 @@
 #include "../luasodium-c.h"
-#include "../internals/ls_lua_set_functions.h"
 #include "../internals/ls_lua_set_constants.h"
 #include "constants.h"
+
+typedef int (*ls_crypto_stream_ptr)(
+  unsigned char *,
+  unsigned long long,
+  const unsigned char *,
+  const unsigned char *);
+
+typedef int (*ls_crypto_stream_xor_ptr)(
+  unsigned char *,
+  const unsigned char *,
+  unsigned long long,
+  const unsigned char *,
+  const unsigned char *);
+
+typedef void (*ls_crypto_stream_keygen_ptr)(
+  unsigned char *);
 
 static int
 ls_crypto_stream(lua_State *L) {
@@ -12,22 +27,32 @@ ls_crypto_stream(lua_State *L) {
     size_t nlen = 0;
     size_t klen = 0;
 
+    const char *fname = NULL;
+    ls_crypto_stream_ptr f = NULL;
+    size_t NONCEBYTES = 0;
+    size_t KEYBYTES = 0;
+
     if(lua_isnoneornil(L,3)) {
         return luaL_error(L,"requires 3 parameter");
     }
+
+    fname = lua_tostring(L,lua_upvalueindex(1));
+    f = (ls_crypto_stream_ptr) lua_touserdata(L,lua_upvalueindex(2));
+    NONCEBYTES = (size_t) lua_tointeger(L,lua_upvalueindex(3));
+    KEYBYTES = (size_t) lua_tointeger(L,lua_upvalueindex(4));
 
     clen = lua_tointeger(L,1);
     n = (const unsigned char *)lua_tolstring(L,2,&nlen);
     k = (const unsigned char *)lua_tolstring(L,3,&klen);
 
-    if(nlen != crypto_stream_NONCEBYTES) {
+    if(nlen != NONCEBYTES) {
         return luaL_error(L,"wrong nonce size, expected: %d",
-          crypto_stream_NONCEBYTES);
+          NONCEBYTES);
     }
 
-    if(klen != crypto_stream_KEYBYTES) {
+    if(klen != KEYBYTES) {
         return luaL_error(L,"wrong key size, expected: %d",
-          crypto_stream_KEYBYTES);
+          KEYBYTES);
     }
 
     c = lua_newuserdata(L,clen);
@@ -39,8 +64,8 @@ ls_crypto_stream(lua_State *L) {
     lua_pop(L,1);
 
     /* LCOV_EXCL_START */
-    if(crypto_stream(c,clen,n,k) == -1) {
-        return luaL_error(L,"crypto_stream error");
+    if(f(c,clen,n,k) == -1) {
+        return luaL_error(L,"%s error",fname);
     }
     /* LCOV_EXCL_STOP */
 
@@ -59,22 +84,32 @@ ls_crypto_stream_xor(lua_State *L) {
     size_t nlen = 0;
     size_t klen = 0;
 
+    const char *fname = NULL;
+    ls_crypto_stream_xor_ptr f = NULL;
+    size_t NONCEBYTES = 0;
+    size_t KEYBYTES = 0;
+
     if(lua_isnoneornil(L,3)) {
         return luaL_error(L,"requires 3 parameter");
     }
+
+    fname = lua_tostring(L,lua_upvalueindex(1));
+    f = (ls_crypto_stream_xor_ptr) lua_touserdata(L,lua_upvalueindex(2));
+    NONCEBYTES = (size_t) lua_tointeger(L,lua_upvalueindex(3));
+    KEYBYTES = (size_t) lua_tointeger(L,lua_upvalueindex(4));
 
     m = (const unsigned char *)lua_tolstring(L,1,&mlen);
     n = (const unsigned char *)lua_tolstring(L,2,&nlen);
     k = (const unsigned char *)lua_tolstring(L,3,&klen);
 
-    if(nlen != crypto_stream_NONCEBYTES) {
+    if(nlen != NONCEBYTES) {
         return luaL_error(L,"wrong nonce size, expected: %d",
-          crypto_stream_NONCEBYTES);
+          NONCEBYTES);
     }
 
-    if(klen != crypto_stream_KEYBYTES) {
+    if(klen != KEYBYTES) {
         return luaL_error(L,"wrong key size, expected: %d",
-          crypto_stream_KEYBYTES);
+          KEYBYTES);
     }
 
     c = lua_newuserdata(L,mlen);
@@ -86,8 +121,8 @@ ls_crypto_stream_xor(lua_State *L) {
     lua_pop(L,1);
 
     /* LCOV_EXCL_START */
-    if(crypto_stream_xor(c,m,mlen,n,k) == -1) {
-        return luaL_error(L,"crypto_stream_xor error");
+    if(f(c,m,mlen,n,k) == -1) {
+        return luaL_error(L,"%s error",fname);
     }
     /* LCOV_EXCL_STOP */
 
@@ -98,21 +133,51 @@ ls_crypto_stream_xor(lua_State *L) {
 
 static int
 ls_crypto_stream_keygen(lua_State *L) {
-    unsigned char k[crypto_stream_KEYBYTES];
+    unsigned char *k = NULL;
 
-    crypto_stream_keygen(k);
+    ls_crypto_stream_keygen_ptr f = NULL;
+    size_t KEYBYTES = 0;
 
-    lua_pushlstring(L,(const char *)k,crypto_stream_KEYBYTES);
-    sodium_memzero(k,crypto_stream_KEYBYTES);
+    f = (ls_crypto_stream_keygen_ptr) lua_touserdata(L,lua_upvalueindex(1));
+    KEYBYTES = (size_t) lua_tointeger(L,lua_upvalueindex(2));
+
+    k = lua_newuserdata(L,KEYBYTES);
+
+    /* LCOV_EXCL_START */
+    if(k == NULL) {
+        return luaL_error(L,"out of memory");
+    }
+    /* LCOV_EXCL_STOP */
+    lua_pop(L,1);
+
+    f(k);
+
+    lua_pushlstring(L,(const char *)k,KEYBYTES);
+    sodium_memzero(k,KEYBYTES);
     return 1;
 }
 
-static const struct luaL_Reg ls_crypto_stream_functions[] = {
-    LS_LUA_FUNC(crypto_stream),
-    LS_LUA_FUNC(crypto_stream_xor),
-    LS_LUA_FUNC(crypto_stream_keygen),
-    { NULL, NULL },
-};
+#define LS_PUSH_CRYPTO_STREAM(x,y) \
+  lua_pushliteral(L, #x); \
+  lua_pushlightuserdata(L, x); \
+  lua_pushinteger(L, x ## _NONCEBYTES); \
+  lua_pushinteger(L, x ## _KEYBYTES); \
+  lua_pushcclosure(L, y, 4); \
+  lua_setfield(L,-2, #x)
+
+#define LS_PUSH_CRYPTO_STREAM_XOR(x,y) \
+  lua_pushliteral(L, #x); \
+  lua_pushlightuserdata(L, x ## _xor); \
+  lua_pushinteger(L, x ## _NONCEBYTES); \
+  lua_pushinteger(L, x ## _KEYBYTES); \
+  lua_pushcclosure(L, y, 4); \
+  lua_setfield(L,-2, #x "_xor")
+
+#define LS_PUSH_CRYPTO_STREAM_KEYGEN(x,y) \
+  lua_pushlightuserdata(L, x ## _keygen); \
+  lua_pushinteger(L, x ## _KEYBYTES); \
+  lua_pushcclosure(L, y, 2); \
+  lua_setfield(L,-2, #x "_keygen")
 
 LS_PUBLIC
 int luaopen_luasodium_crypto_stream_core(lua_State *L) {
@@ -122,7 +187,22 @@ int luaopen_luasodium_crypto_stream_core(lua_State *L) {
     lua_newtable(L);
 
     ls_lua_set_constants(L,ls_crypto_stream_constants,lua_gettop(L));
-    ls_lua_set_functions(L,ls_crypto_stream_functions,0);
+
+    LS_PUSH_CRYPTO_STREAM(crypto_stream,ls_crypto_stream);
+    LS_PUSH_CRYPTO_STREAM_XOR(crypto_stream,ls_crypto_stream_xor);
+    LS_PUSH_CRYPTO_STREAM_KEYGEN(crypto_stream,ls_crypto_stream_keygen);
+
+    LS_PUSH_CRYPTO_STREAM(crypto_stream_xsalsa20,ls_crypto_stream);
+    LS_PUSH_CRYPTO_STREAM_XOR(crypto_stream_xsalsa20,ls_crypto_stream_xor);
+    LS_PUSH_CRYPTO_STREAM_KEYGEN(crypto_stream_xsalsa20,ls_crypto_stream_keygen);
+
+    LS_PUSH_CRYPTO_STREAM(crypto_stream_salsa20,ls_crypto_stream);
+    LS_PUSH_CRYPTO_STREAM_XOR(crypto_stream_salsa20,ls_crypto_stream_xor);
+    LS_PUSH_CRYPTO_STREAM_KEYGEN(crypto_stream_salsa20,ls_crypto_stream_keygen);
+
+    LS_PUSH_CRYPTO_STREAM(crypto_stream_salsa2012,ls_crypto_stream);
+    LS_PUSH_CRYPTO_STREAM_XOR(crypto_stream_salsa2012,ls_crypto_stream_xor);
+    LS_PUSH_CRYPTO_STREAM_KEYGEN(crypto_stream_salsa2012,ls_crypto_stream_keygen);
 
     return 1;
 }

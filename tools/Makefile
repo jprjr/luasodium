@@ -14,7 +14,8 @@ MODS = \
   crypto_hash \
   crypto_onetimeauth \
   crypto_scalarmult \
-  crypto_secretbox
+  crypto_secretbox \
+  crypto_stream
 
 PROGS = $(addprefix create-results-,$(MODS))
 OBJS  = $(addsuffix $(OBJ),$(PROGS)) misc$(OBJ)
