@@ -93,7 +93,7 @@ configure_file(
 )
 
 install(FILES "lua/luasodium.lua"
-  DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}"
+  DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/"
 )
 
 foreach(LUAFILE ${LUASODIUM_ROOTMODULES})
@@ -104,7 +104,7 @@ foreach(LUAFILE ${LUASODIUM_ROOTMODULES})
   )
 
   install(FILES "lua/luasodium/${LUAFILE}.lua"
-    DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/${LUAFILE}.lua"
+    DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/"
   )
 endforeach()
 
@@ -116,7 +116,7 @@ foreach(LUAFILE ${LUASODIUM_FFIMODULES})
   )
 
   install(FILES "lua/luasodium/_ffi/${LUAFILE}.lua"
-    DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/_ffi/${LUAFILE}.lua"
+    DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/_ffi/"
   )
 endforeach()
 
@@ -156,19 +156,19 @@ foreach(LS_MOD ${LUASODIUM_MODULES})
   )
 
   install(FILES "lua/luasodium/${LS_MOD}/constants.lua"
-  DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}/constants.lua"
+  DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}/"
   )
 
   install(FILES "lua/luasodium/${LS_MOD}/implementation.lua"
-  DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}/implementation.lua"
+  DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}/"
   )
 
   install(FILES "lua/luasodium/${LS_MOD}/pureffi.lua"
-  DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}/pureffi.lua"
+  DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}/"
   )
 
   install(FILES "lua/luasodium/${LS_MOD}/signatures.lua"
-  DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}/signatures.lua"
+  DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/luasodium/${LS_MOD}/"
   )
 
   if(NOT CMAKE_CROSSCOMPILING)
