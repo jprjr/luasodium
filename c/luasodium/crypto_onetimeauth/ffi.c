@@ -13,6 +13,13 @@ static const luasodium_function_t ls_crypto_onetimeauth_functions[] = {
     LS_FUNC(crypto_onetimeauth_update),
     LS_FUNC(crypto_onetimeauth_final),
     LS_FUNC(crypto_onetimeauth_statebytes),
+    LS_FUNC(crypto_onetimeauth_poly1305),
+    LS_FUNC(crypto_onetimeauth_poly1305_verify),
+    LS_FUNC(crypto_onetimeauth_poly1305_keygen),
+    LS_FUNC(crypto_onetimeauth_poly1305_init),
+    LS_FUNC(crypto_onetimeauth_poly1305_update),
+    LS_FUNC(crypto_onetimeauth_poly1305_final),
+    LS_FUNC(crypto_onetimeauth_poly1305_statebytes),
     { NULL }
 };
 
