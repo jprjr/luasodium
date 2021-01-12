@@ -91,6 +91,7 @@ release:
 	rm -f $(LUASODIUM_OBJS) $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
 	rm -f $(LUASODIUM_GCNO)
 	rm -f $(LUASODIUM_GCDA)
+	make -C tools clean
 	mkdir -p dist
 	mkdir -p luasodium-$(VERSION)/
 	rsync -a c luasodium-$(VERSION)/
