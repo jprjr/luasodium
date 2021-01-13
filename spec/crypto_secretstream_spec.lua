@@ -41,7 +41,9 @@ describe('library crypto_secretstream', function()
   }) do
 
     local crypto_secretstream_keygen = string.format('%s_keygen',f)
+    local crypto_secretstream_init_push = string.format('%s_init_push',f)
     local KEYBYTES = string.format('%s_KEYBYTES',f)
+    local HEADERBYTES = string.format('%s_HEADERBYTES',f)
 
     describe('function ' .. crypto_secretstream_keygen, function()
       it('should return a random key', function()
@@ -50,6 +52,20 @@ describe('library crypto_secretstream', function()
       end)
     end)
 
+    describe('function ' .. crypto_secretstream_init_push, function()
+      it('should error on invalid calls', function()
+        assert(pcall(lib[crypto_secretstream_init_push]) == false)
+        assert(pcall(lib[crypto_secretstream_init_push],'') == false)
+      end)
+
+      it('should return an object given a valid key', function()
+        local key = lib[crypto_secretstream_keygen]()
+        local state, header = lib[crypto_secretstream_init_push](key)
+        assert(type(state) == 'table' or type(state) == 'userdata')
+        assert(type(header) == 'string')
+        assert(string.len(header) == lib[HEADERBYTES])
+      end)
+    end)
   end
 
 end)
