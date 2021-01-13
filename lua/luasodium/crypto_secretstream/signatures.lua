@@ -41,7 +41,7 @@ local crypto_secretstream_pull_sig = [[
 ]]
 
 local crypto_secretstream_rekey_sig = [[
-  void %s(void)
+  void %s(void *)
 ]]
 
 local crypto_secretstream_size_sig = [[

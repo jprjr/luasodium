@@ -36,7 +36,7 @@ typedef int (*ls_crypto_secretstream_pull_ptr)(
   const unsigned char *,
   unsigned long long);
 
-typedef void (*ls_crypto_secretstream_rekey_ptr)(void);
+typedef void (*ls_crypto_secretstream_rekey_ptr)(void *);
 
 static int
 ls_crypto_secretstream_keygen(lua_State *L) {
@@ -220,6 +220,44 @@ ls_crypto_secretstream_push_tagged(lua_State *L) {
     return 1;
 }
 
+/* used for state:rekey() (does an explicit rekey) and
+ * state:rekey(message) (does a push with TAG_REKEY) */
+
+static int
+ls_crypto_secretstream_push_rekey(lua_State *L) {
+    void *state = NULL;
+    ls_crypto_secretstream_rekey_ptr f = NULL;
+
+    if(lua_isnoneornil(L,1)) {
+        return luaL_error(L,"requires 1 parameters");
+    }
+
+    if(lua_isnoneornil(L,2)) {
+        f = lua_touserdata(L, lua_upvalueindex(3));
+        state = lua_touserdata(L, 1);
+        f(state);
+        return 0;
+    }
+
+    lua_pushvalue(L,lua_upvalueindex(2));
+    lua_insert(L,1);
+
+    lua_pushnil(L);
+    lua_pushinteger(L,lua_tointeger(L,lua_upvalueindex(1)));
+    lua_insert(L,4);
+
+    lua_settop(L,5); /* stack should be:
+      function
+      userdata
+      string
+      tag
+      string or nil */
+
+    lua_call(L,4,1);
+    return 1;
+
+}
+
 static int
 ls_crypto_secretstream_init_pull(lua_State *L) {
     void *state = NULL;
@@ -352,6 +390,24 @@ ls_crypto_secretstream_pull(lua_State *L) {
 }
 
 static int
+ls_crypto_secretstream_rekey(lua_State *L) {
+    void *state = NULL;
+    ls_crypto_secretstream_rekey_ptr f = NULL;
+
+    /* requires: state */
+    if(!lua_isuserdata(L,1)) {
+        return luaL_error(L,"requires 1 parameters");
+    }
+
+    f = (ls_crypto_secretstream_rekey_ptr) lua_touserdata(L, lua_upvalueindex(1));
+
+    state = lua_touserdata(L,1);
+    f(state);
+
+    return 0;
+}
+
+static int
 ls_crypto_secretstream__gc(lua_State *L) {
     void *state = lua_touserdata(L,1);
     sodium_memzero(state, (size_t) lua_tointeger(L, lua_upvalueindex(1)));
@@ -381,7 +437,9 @@ ls_crypto_secretstream_push_setup(lua_State *L,
   const char *init_pull_name,
   ls_crypto_secretstream_init_pull_ptr init_pull_ptr,
   const char *pull_name,
-  ls_crypto_secretstream_pull_ptr pull_ptr) {
+  ls_crypto_secretstream_pull_ptr pull_ptr,
+  const char *rekey_name,
+  ls_crypto_secretstream_rekey_ptr rekey_ptr) {
 
     int module_index = 0;
     int metatable_index = 0;
@@ -394,6 +452,10 @@ ls_crypto_secretstream_push_setup(lua_State *L,
     lua_pushinteger(L,STATEBYTES);
     lua_pushcclosure(L,ls_crypto_secretstream__gc,1);
     lua_setfield(L,metatable_index,"__gc");
+
+    lua_pushlightuserdata(L,rekey_ptr);
+    lua_pushcclosure(L,ls_crypto_secretstream_rekey,1);
+    lua_setfield(L,module_index,rekey_name);
 
     /* init_push method */
     lua_pushstring(L,init_push_name);
@@ -426,7 +488,8 @@ ls_crypto_secretstream_push_setup(lua_State *L,
 
     lua_pushinteger(L,TAG_REKEY);
     lua_getfield(L, module_index, push_name);
-    lua_pushcclosure(L,ls_crypto_secretstream_push_tagged,2);
+    lua_pushlightuserdata(L, rekey_ptr);
+    lua_pushcclosure(L,ls_crypto_secretstream_push_rekey,3);
     lua_setfield(L,-2,"rekey");
 
     lua_pushinteger(L,TAG_FINAL);
@@ -467,6 +530,9 @@ ls_crypto_secretstream_push_setup(lua_State *L,
     lua_getfield(L,module_index,pull_name);
     lua_setfield(L,-2,"pull");
 
+    lua_getfield(L,module_index,rekey_name);
+    lua_setfield(L,-2,"rekey");
+
     lua_setfield(L,-2,"__index");
 
     lua_pop(L,1);
@@ -490,7 +556,9 @@ ls_crypto_secretstream_push_setup(lua_State *L,
     #x "_init_pull", \
     (ls_crypto_secretstream_init_pull_ptr)x ## _init_pull, \
     #x "_pull", \
-    (ls_crypto_secretstream_pull_ptr)x ## _pull);
+    (ls_crypto_secretstream_pull_ptr)x ## _pull, \
+    #x "_rekey", \
+    (ls_crypto_secretstream_rekey_ptr)x ## _rekey);
 
 LS_PUBLIC
 int luaopen_luasodium_crypto_secretstream_core(lua_State *L) {

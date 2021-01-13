@@ -16,6 +16,7 @@ return function(libs, constants)
     local crypto_secretstream_push = string_format('%s_push',basename)
     local crypto_secretstream_pull = string_format('%s_pull',basename)
     local crypto_secretstream_keygen = string_format('%s_keygen',basename)
+    local crypto_secretstream_rekey = string_format('%s_rekey',basename)
 
     local ABYTES = constants[string_format('%s_ABYTES',basename)]
     local KEYBYTES = constants[string_format('%s_KEYBYTES',basename)]
@@ -48,6 +49,10 @@ return function(libs, constants)
         local k_str = ffi_string(k,KEYBYTES)
         sodium_lib.sodium_memzero(k,KEYBYTES)
         return k_str
+      end,
+
+      [crypto_secretstream_rekey] = function(ls_state)
+        sodium_lib[crypto_secretstream_rekey](ls_state.state)
       end,
 
       [crypto_secretstream_init_push] = function(key)
@@ -174,9 +179,11 @@ return function(libs, constants)
       end,
     }
 
-    ls_crypto_secretstream_pull_methods.pull = M[crypto_secretstream_pull]
+    ls_crypto_secretstream_pull_methods.pull  = M[crypto_secretstream_pull]
+    ls_crypto_secretstream_pull_methods.rekey = M[crypto_secretstream_rekey]
 
     local ls_push = M[crypto_secretstream_push]
+    local ls_rekey = M[crypto_secretstream_rekey]
 
     ls_crypto_secretstream_push_methods.message = function(self, message, ad)
       if not message then
@@ -192,18 +199,21 @@ return function(libs, constants)
       return ls_push(self,message,TAG_PUSH,ad)
     end
 
-    ls_crypto_secretstream_push_methods.rekey = function(self, message, ad)
-      if not message then
-        return error('requires 2 parameters')
-      end
-      return ls_push(self,message,TAG_REKEY,ad)
-    end
-
     ls_crypto_secretstream_push_methods.final = function(self, message, ad)
       if not message then
         return error('requires 2 parameters')
       end
       return ls_push(self,message,TAG_FINAL,ad)
+    end
+
+    ls_crypto_secretstream_push_methods.rekey = function(self, message, ad)
+      if not message then
+        if not self then
+          return error('requires 1 parameter')
+        end
+        return ls_rekey(self)
+      end
+      return ls_push(self,message,TAG_REKEY,ad)
     end
 
     return M

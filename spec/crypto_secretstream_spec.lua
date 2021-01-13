@@ -41,6 +41,7 @@ describe('library crypto_secretstream', function()
   }) do
 
     local crypto_secretstream_keygen = string.format('%s_keygen',f)
+    local crypto_secretstream_rekey = string.format('%s_rekey',f)
 
     local crypto_secretstream_init_push = string.format('%s_init_push',f)
     local crypto_secretstream_push = string.format('%s_push',f)
@@ -126,7 +127,11 @@ describe('library crypto_secretstream', function()
       local message1 = estate:message('message1')
       local message2 = estate:rekey('message2')
       local message3 = estate:push('message3')
-      local message4 = estate:final('message4')
+      local message4 = estate:message('message4')
+      lib[crypto_secretstream_rekey](estate)
+      local message5 = estate:message('message5')
+      assert(estate:rekey() == nil)
+      local message6 = estate:final('message6')
       it('should error on invalid calls', function()
         local state = lib[crypto_secretstream_init_pull](header,key)
         assert(pcall(lib[crypto_secretstream_pull]) == false)
@@ -152,7 +157,20 @@ describe('library crypto_secretstream', function()
 
         m, tag = lib[crypto_secretstream_pull](state,message4)
         assert(m == 'message4')
+        assert(tag == lib[TAG_MESSAGE])
+
+        lib[crypto_secretstream_rekey](state)
+
+        m, tag = lib[crypto_secretstream_pull](state,message5)
+        assert(m == 'message5')
+        assert(tag == lib[TAG_MESSAGE])
+
+        lib[crypto_secretstream_rekey](state)
+
+        m, tag = lib[crypto_secretstream_pull](state,message6)
+        assert(m == 'message6')
         assert(tag == lib[TAG_FINAL])
+
       end)
 
       it('should decode encrypted messages, object-oriented', function()
@@ -173,6 +191,18 @@ describe('library crypto_secretstream', function()
 
         m, tag = state:pull(message4)
         assert(m == 'message4')
+        assert(tag == lib[TAG_MESSAGE])
+
+        state:rekey()
+
+        m, tag = state:pull(message5)
+        assert(m == 'message5')
+        assert(tag == lib[TAG_MESSAGE])
+
+        state:rekey()
+
+        m, tag = state:pull(message6)
+        assert(m == 'message6')
         assert(tag == lib[TAG_FINAL])
       end)
 
