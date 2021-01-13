@@ -1,4 +1,5 @@
 #include "../luasodium-c.h"
+#include "../internals/ls_lua_equal.h"
 #include "../internals/ls_lua_set_constants.h"
 #include "constants.h"
 
@@ -123,6 +124,107 @@ ls_crypto_secretstream_init_push(lua_State *L) {
     return 2;
 }
 
+static int
+ls_crypto_secretstream_push(lua_State *L) {
+    void *state = NULL;
+    unsigned char *c = NULL;
+    const unsigned char *m = NULL;
+    const unsigned char *ad = NULL;
+    unsigned long long clen = 0;
+    unsigned char tag = 0;
+    size_t mlen = 0;
+    size_t adlen = 0;
+
+    const char *fname = NULL;
+    ls_crypto_secretstream_push_ptr f = NULL;
+    size_t ABYTES = 0;
+
+    /* requires: state, message, tag
+     * optional: ad */
+    if(lua_isnoneornil(L,3)) {
+        return luaL_error(L,"requires 3 parameters");
+    }
+
+    fname = lua_tostring(L,lua_upvalueindex(1));
+    f = (ls_crypto_secretstream_push_ptr) lua_touserdata(L, lua_upvalueindex(2));
+    ABYTES = (size_t) lua_tointeger(L, lua_upvalueindex(3));
+
+    lua_pushvalue(L,lua_upvalueindex(4));
+    lua_getmetatable(L,1);
+
+    if(!ls_lua_equal(L,-2,-1)) {
+        return luaL_error(L,"invalid userdata");
+    }
+    lua_pop(L,2);
+
+    if(!lua_isstring(L,2)) {
+        return luaL_error(L,"invalid message");
+    }
+
+    if(!lua_isnumber(L,3)) {
+        return luaL_error(L,"invalid tag");
+    }
+
+    state = lua_touserdata(L,1);
+    m = (const unsigned char *)lua_tolstring(L,2,&mlen);
+    tag = (unsigned char)lua_tointeger(L,3);
+
+    if(lua_isstring(L,4)) {
+        ad = (const unsigned char *)lua_tolstring(L,4,&adlen);
+    }
+
+    c = lua_newuserdata(L,mlen + ABYTES);
+
+    /* LCOV_EXCL_START */
+    if(c == NULL) {
+        return luaL_error(L,"out of memory");
+    }
+    /* LCOV_EXCL_STOP */
+
+    lua_pop(L,1);
+
+    if(f(state,c,&clen,m,mlen,ad,adlen,tag) == -1) {
+        return luaL_error(L,"%s error",fname);
+    }
+
+    lua_pushlstring(L,(const char *)c,clen);
+    sodium_memzero(c,mlen + ABYTES);
+
+
+    return 1;
+}
+
+static int
+ls_crypto_secretstream_push_tagged(lua_State *L) {
+    if(lua_isnoneornil(L,2)) {
+        return luaL_error(L,"requires 2 parameters");
+    }
+
+    lua_pushvalue(L,lua_upvalueindex(2));
+    lua_insert(L,1);
+
+    lua_pushnil(L);
+    lua_pushinteger(L,lua_tointeger(L,lua_upvalueindex(1)));
+    lua_insert(L,4);
+
+    lua_settop(L,5); /* stack should be:
+      function
+      userdata
+      string
+      tag
+      string or nil */
+
+    lua_call(L,4,1);
+    return 1;
+}
+
+
+static int
+ls_crypto_secretstream__gc(lua_State *L) {
+    void *state = lua_touserdata(L,1);
+    sodium_memzero(state, (size_t) lua_tointeger(L, lua_upvalueindex(1)));
+    return 0;
+}
 
 #define LS_PUSH_CRYPTO_SECRETSTREAM_KEYGEN(x) \
   lua_pushlightuserdata(L, x ## _keygen); \
@@ -135,8 +237,15 @@ ls_crypto_secretstream_push_setup(lua_State *L,
   size_t STATEBYTES,
   size_t HEADERBYTES,
   size_t KEYBYTES,
+  size_t ABYTES,
+  unsigned char TAG_MESSAGE,
+  unsigned char TAG_PUSH,
+  unsigned char TAG_REKEY,
+  unsigned char TAG_FINAL,
   const char *init_name,
-  ls_crypto_secretstream_init_push_ptr init_ptr) {
+  ls_crypto_secretstream_init_push_ptr init_ptr,
+  const char *push_name,
+  ls_crypto_secretstream_push_ptr push_ptr) {
 
     int module_index = 0;
     int metatable_index = 0;
@@ -156,7 +265,42 @@ ls_crypto_secretstream_push_setup(lua_State *L,
     lua_pushcclosure(L, ls_crypto_secretstream_init_push, 6);
     lua_setfield(L, module_index, init_name);
 
-    lua_pop(L,1);
+    lua_pushstring(L,push_name);
+    lua_pushlightuserdata(L, push_ptr);
+    lua_pushinteger(L, ABYTES);
+    lua_pushvalue(L, metatable_index);
+    lua_pushcclosure(L, ls_crypto_secretstream_push, 4);
+    lua_setfield(L, module_index, push_name);
+
+    lua_pushinteger(L,STATEBYTES);
+    lua_pushcclosure(L,ls_crypto_secretstream__gc,1);
+    lua_setfield(L,metatable_index,"__gc");
+
+    lua_newtable(L);
+
+    lua_pushinteger(L,TAG_MESSAGE);
+    lua_getfield(L, module_index, push_name);
+    lua_pushcclosure(L,ls_crypto_secretstream_push_tagged,2);
+    lua_setfield(L,-2,"message");
+
+    lua_pushinteger(L,TAG_PUSH);
+    lua_getfield(L, module_index, push_name);
+    lua_pushcclosure(L,ls_crypto_secretstream_push_tagged,2);
+    lua_setfield(L,-2,"push");
+
+    lua_pushinteger(L,TAG_REKEY);
+    lua_getfield(L, module_index, push_name);
+    lua_pushcclosure(L,ls_crypto_secretstream_push_tagged,2);
+    lua_setfield(L,-2,"rekey");
+
+    lua_pushinteger(L,TAG_FINAL);
+    lua_getfield(L, module_index, push_name);
+    lua_pushcclosure(L,ls_crypto_secretstream_push_tagged,2);
+    lua_setfield(L,-2,"final");
+
+    lua_setfield(L,-2,"__index");
+
+    lua_pop(L,1); /* pops the metatable, leaves module on top of stack */
 }
 
 #define LS_CRYPTO_SECRETSTREAM_PUSH_SETUP(x) \
@@ -164,8 +308,15 @@ ls_crypto_secretstream_push_setup(lua_State *L,
     x ## _statebytes(), \
     x ## _HEADERBYTES, \
     x ## _KEYBYTES, \
+    x ## _ABYTES, \
+    x ## _TAG_MESSAGE, \
+    x ## _TAG_PUSH, \
+    x ## _TAG_REKEY, \
+    x ## _TAG_FINAL, \
     #x "_init_push", \
-    (ls_crypto_secretstream_init_push_ptr)x ## _init_push);
+    (ls_crypto_secretstream_init_push_ptr)x ## _init_push, \
+    #x "_push", \
+    (ls_crypto_secretstream_push_ptr)x ## _push);
 
 LS_PUBLIC
 int luaopen_luasodium_crypto_secretstream_core(lua_State *L) {

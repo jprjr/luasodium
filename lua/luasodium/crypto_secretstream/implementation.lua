@@ -12,11 +12,17 @@ return function(libs, constants)
 
   local function ls_crypto_secretstream(basename)
     local crypto_secretstream_init_push = string_format('%s_init_push',basename)
+    local crypto_secretstream_push = string_format('%s_push',basename)
     local crypto_secretstream_keygen = string_format('%s_keygen',basename)
 
+    local ABYTES = constants[string_format('%s_ABYTES',basename)]
     local KEYBYTES = constants[string_format('%s_KEYBYTES',basename)]
     local HEADERBYTES = constants[string_format('%s_HEADERBYTES',basename)]
     local STATEBYTES = tonumber(sodium_lib[string_format('%s_statebytes',basename)]())
+    local TAG_MESSAGE = tonumber(sodium_lib[string_format('%s_tag_message',basename)]())
+    local TAG_PUSH = tonumber(sodium_lib[string_format('%s_tag_push',basename)]())
+    local TAG_REKEY = tonumber(sodium_lib[string_format('%s_tag_rekey',basename)]())
+    local TAG_FINAL = tonumber(sodium_lib[string_format('%s_tag_final',basename)]())
 
     local ls_crypto_secretstream_free = function(state)
       sodium_lib.sodium_memzero(state,STATEBYTES)
@@ -65,7 +71,65 @@ return function(libs, constants)
         return ls_state, header_str
       end,
 
+      [crypto_secretstream_push] = function(ls_state, message, tag, ad)
+        if not tag then
+          return error('requires 3 arguments')
+        end
+
+        if getmetatable(ls_state) ~= ls_crypto_secretstream_mt then
+          return error('invalid userdata')
+        end
+
+        local mlen = string_len(message)
+        local adlen = 0
+        if ad then
+          adlen = string_len(ad)
+        end
+        local clen = ffi.new('unsigned long long[1]')
+
+        local c = char_array(ABYTES + mlen)
+
+        if tonumber(sodium_lib[crypto_secretstream_push](
+          ls_state.state,c,clen,
+          message,mlen,ad,adlen,tag)) == -1 then
+          return error(string_format('%s error',crypto_secretstream_push))
+        end
+
+        local c_str = ffi_string(c,clen[0])
+        sodium_lib.sodium_memzero(c,ABYTES + mlen)
+        return c_str
+      end,
     }
+
+    local ls_push = M[crypto_secretstream_push]
+
+    ls_crypto_secretstream_methods.message = function(self, message, ad)
+      if not message then
+        return error('requires 2 parameters')
+      end
+      return ls_push(self,message,TAG_MESSAGE,ad)
+    end
+
+    ls_crypto_secretstream_methods.push = function(self, message, ad)
+      if not message then
+        return error('requires 2 parameters')
+      end
+      return ls_push(self,message,TAG_PUSH,ad)
+    end
+
+    ls_crypto_secretstream_methods.rekey = function(self, message, ad)
+      if not message then
+        return error('requires 2 parameters')
+      end
+      return ls_push(self,message,TAG_REKEY,ad)
+    end
+
+    ls_crypto_secretstream_methods.final = function(self, message, ad)
+      if not message then
+        return error('requires 2 parameters')
+      end
+      return ls_push(self,message,TAG_FINAL,ad)
+    end
 
     return M
   end

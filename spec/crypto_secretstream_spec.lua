@@ -42,7 +42,10 @@ describe('library crypto_secretstream', function()
 
     local crypto_secretstream_keygen = string.format('%s_keygen',f)
     local crypto_secretstream_init_push = string.format('%s_init_push',f)
+    local crypto_secretstream_push = string.format('%s_push',f)
+
     local KEYBYTES = string.format('%s_KEYBYTES',f)
+    local ABYTES = string.format('%s_ABYTES',f)
     local HEADERBYTES = string.format('%s_HEADERBYTES',f)
 
     describe('function ' .. crypto_secretstream_keygen, function()
@@ -65,6 +68,32 @@ describe('library crypto_secretstream', function()
         assert(type(header) == 'string')
         assert(string.len(header) == lib[HEADERBYTES])
       end)
+    end)
+
+    describe('function ' .. crypto_secretstream_push, function()
+      local key = lib[crypto_secretstream_keygen]()
+      local state = lib[crypto_secretstream_init_push](key)
+      it('should reject invalid calls', function()
+        assert(pcall(lib[crypto_secretstream_push]) == false)
+        assert(pcall(lib[crypto_secretstream_push],'','','') == false)
+        assert(pcall(lib[crypto_secretstream_push],state,'','') == false)
+      end)
+
+      it('should encrypt a message', function()
+        local c = lib[crypto_secretstream_push](state,'hello',lib.crypto_secretstream_xchacha20poly1305_TAG_MESSAGE)
+        assert(string.len(c) > lib[ABYTES])
+        assert(string.len(c) <= lib[ABYTES] + 5)
+      end)
+
+      it('should support :message', function()
+        local c = state:message('hello')
+        assert(string.len(c) > lib[ABYTES])
+        assert(string.len(c) <= lib[ABYTES] + 5)
+        local d = state:message('hello','extrastuff')
+        assert(string.len(d) > lib[ABYTES])
+        assert(string.len(d) <= lib[ABYTES] + 5)
+      end)
+
     end)
   end
 
