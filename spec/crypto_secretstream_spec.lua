@@ -41,12 +41,21 @@ describe('library crypto_secretstream', function()
   }) do
 
     local crypto_secretstream_keygen = string.format('%s_keygen',f)
+
     local crypto_secretstream_init_push = string.format('%s_init_push',f)
     local crypto_secretstream_push = string.format('%s_push',f)
+
+    local crypto_secretstream_init_pull = string.format('%s_init_pull',f)
+    local crypto_secretstream_pull = string.format('%s_pull',f)
 
     local KEYBYTES = string.format('%s_KEYBYTES',f)
     local ABYTES = string.format('%s_ABYTES',f)
     local HEADERBYTES = string.format('%s_HEADERBYTES',f)
+    local TAG_MESSAGE = string.format('%s_TAG_MESSAGE',f)
+    local TAG_PUSH = string.format('%s_TAG_PUSH',f)
+    local TAG_REKEY = string.format('%s_TAG_REKEY',f)
+    local TAG_FINAL = string.format('%s_TAG_FINAL',f)
+
 
     describe('function ' .. crypto_secretstream_keygen, function()
       it('should return a random key', function()
@@ -92,6 +101,79 @@ describe('library crypto_secretstream', function()
         local d = state:message('hello','extrastuff')
         assert(string.len(d) > lib[ABYTES])
         assert(string.len(d) <= lib[ABYTES] + 5)
+      end)
+    end)
+
+    describe('function ' .. crypto_secretstream_init_pull, function()
+      it('should error on invalid calls', function()
+        assert(pcall(lib[crypto_secretstream_init_pull]) == false)
+        assert(pcall(lib[crypto_secretstream_init_pull],'','') == false)
+        assert(pcall(lib[crypto_secretstream_init_pull],string.rep('\0',lib[HEADERBYTES]),'') == false)
+      end)
+
+      it('should return an object given a valid key and header', function()
+        local key = lib[crypto_secretstream_keygen]()
+        local _, header = lib[crypto_secretstream_init_push](key)
+        local state = lib[crypto_secretstream_init_pull](header,key)
+        assert(type(state) == 'table' or type(state) == 'userdata')
+      end)
+    end)
+
+    describe('function ' .. crypto_secretstream_pull, function()
+      local key = lib[crypto_secretstream_keygen]()
+      local estate, header = lib[crypto_secretstream_init_push](key)
+
+      local message1 = estate:message('message1')
+      local message2 = estate:rekey('message2')
+      local message3 = estate:push('message3')
+      local message4 = estate:final('message4')
+      it('should error on invalid calls', function()
+        local state = lib[crypto_secretstream_init_pull](header,key)
+        assert(pcall(lib[crypto_secretstream_pull]) == false)
+        assert(pcall(lib[crypto_secretstream_pull],'','','') == false)
+        assert(pcall(lib[crypto_secretstream_pull],state,'','') == false)
+      end)
+
+      it('should decode encrypted messages', function()
+        local state = lib[crypto_secretstream_init_pull](header,key)
+        local m, tag
+
+        m, tag = lib[crypto_secretstream_pull](state,message1)
+        assert(m == 'message1')
+        assert(tag == lib[TAG_MESSAGE])
+
+        m, tag = lib[crypto_secretstream_pull](state,message2)
+        assert(m == 'message2')
+        assert(tag == lib[TAG_REKEY])
+
+        m, tag = lib[crypto_secretstream_pull](state,message3)
+        assert(m == 'message3')
+        assert(tag == lib[TAG_PUSH])
+
+        m, tag = lib[crypto_secretstream_pull](state,message4)
+        assert(m == 'message4')
+        assert(tag == lib[TAG_FINAL])
+      end)
+
+      it('should decode encrypted messages, object-oriented', function()
+        local state = lib[crypto_secretstream_init_pull](header,key)
+        local m, tag
+
+        m, tag = state:pull(message1)
+        assert(m == 'message1')
+        assert(tag == lib[TAG_MESSAGE])
+
+        m, tag = state:pull(message2)
+        assert(m == 'message2')
+        assert(tag == lib[TAG_REKEY])
+
+        m, tag = state:pull(message3)
+        assert(m == 'message3')
+        assert(tag == lib[TAG_PUSH])
+
+        m, tag = state:pull(message4)
+        assert(m == 'message4')
+        assert(tag == lib[TAG_FINAL])
       end)
 
     end)

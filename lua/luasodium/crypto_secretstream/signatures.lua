@@ -35,6 +35,8 @@ local crypto_secretstream_pull_sig = [[
   unsigned long long *,
   unsigned char *,
   const unsigned char *,
+  unsigned long long,
+  const unsigned char *,
   unsigned long long)
 ]]
 
