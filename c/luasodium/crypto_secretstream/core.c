@@ -196,6 +196,57 @@ ls_crypto_secretstream_push(lua_State *L) {
     return 1;
 }
 
+/* handler for calling the userdata like a function */
+
+static int
+ls_crypto_secretstream_push_call(lua_State *L) {
+    int ad = -1;
+    unsigned int i = 0;
+    unsigned char tag = 0;
+    if(lua_isnoneornil(L,2)) {
+        return luaL_error(L, "requires 1 parameter");
+    }
+
+
+    /* get the default tag value (TAG_MESSAGE) */
+
+    tag = lua_tointeger(L,lua_upvalueindex(1));
+
+    /* check for up to 2 more parameters for
+     * a boolean, if a boolean is found and it's true,
+     * change the tag to TAG_FINAL */
+    for(i=3;i<5;i++) {
+        if(lua_isnoneornil(L,i)) {
+            break;
+        }
+        else if(lua_isboolean(L,i)) {
+            if(lua_toboolean(L,i)) {
+                tag = lua_tointeger(L,lua_upvalueindex(2));
+            }
+        } else if(lua_isstring(L,i)) {
+            ad = i;
+        }
+    }
+
+    lua_pushvalue(L,lua_upvalueindex(3));
+    lua_insert(L,1);
+
+    lua_pushinteger(L,tag);
+    lua_insert(L,4);
+
+    if(ad != -1) {
+        lua_pushvalue(L,ad+2);
+    } else {
+        lua_pushnil(L);
+    }
+    lua_insert(L,5);
+
+    lua_settop(L,5);
+
+    lua_call(L,4,1);
+    return 1;
+}
+
 static int
 ls_crypto_secretstream_push_tagged(lua_State *L) {
     if(lua_isnoneornil(L,2)) {
@@ -497,7 +548,14 @@ ls_crypto_secretstream_push_setup(lua_State *L,
     lua_pushcclosure(L,ls_crypto_secretstream_push_tagged,2);
     lua_setfield(L,-2,"final");
 
+
     lua_setfield(L,-2,"__index");
+
+    lua_pushinteger(L, TAG_MESSAGE);
+    lua_pushinteger(L, TAG_FINAL);
+    lua_getfield(L, module_index, push_name);
+    lua_pushcclosure(L,ls_crypto_secretstream_push_call,3);
+    lua_setfield(L,-2,"__call");
 
     lua_pop(L,1); /* pops the metatable, leaves module on top of stack */
 
@@ -532,6 +590,9 @@ ls_crypto_secretstream_push_setup(lua_State *L,
 
     lua_getfield(L,module_index,rekey_name);
     lua_setfield(L,-2,"rekey");
+
+    lua_getfield(L,-1,"pull");
+    lua_setfield(L,-3,"__call");
 
     lua_setfield(L,-2,"__index");
 

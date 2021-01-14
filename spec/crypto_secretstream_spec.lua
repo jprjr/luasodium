@@ -103,6 +103,33 @@ describe('library crypto_secretstream', function()
         assert(string.len(d) > lib[ABYTES])
         assert(string.len(d) <= lib[ABYTES] + 5)
       end)
+
+      it('should be callable', function()
+        local c = state('hello')
+        assert(string.len(c) > lib[ABYTES])
+        assert(string.len(c) <= lib[ABYTES] + 5)
+      end)
+
+      it('should support any order for final', function()
+        local s = lib[crypto_secretstream_init_push](key)
+        local c = s('hello')
+        assert(string.len(c) > lib[ABYTES])
+        assert(string.len(c) <= lib[ABYTES] + 5)
+        local d = s('hello2','extradata')
+        assert(string.len(d) > lib[ABYTES])
+        assert(string.len(d) <= lib[ABYTES] + 6)
+        local e = s('hello2','extradata', true)
+        assert(string.len(e) > lib[ABYTES])
+        assert(string.len(e) <= lib[ABYTES] + 6)
+        local s2 = lib[crypto_secretstream_init_push](key)
+        local g = s2('hello2',true)
+        assert(string.len(g) > lib[ABYTES])
+        assert(string.len(g) <= lib[ABYTES] + 6)
+        local s3 = lib[crypto_secretstream_init_push](key)
+        local h = s3('hello2',true,'extradata')
+        assert(string.len(h) > lib[ABYTES])
+        assert(string.len(h) <= lib[ABYTES] + 6)
+      end)
     end)
 
     describe('function ' .. crypto_secretstream_init_pull, function()
@@ -124,7 +151,7 @@ describe('library crypto_secretstream', function()
       local key = lib[crypto_secretstream_keygen]()
       local estate, header = lib[crypto_secretstream_init_push](key)
 
-      local message1 = estate:message('message1')
+      local message1 = estate('message1')
       local message2 = estate:rekey('message2')
       local message3 = estate:push('message3')
       local message4 = estate:message('message4')
@@ -201,11 +228,52 @@ describe('library crypto_secretstream', function()
 
         state:rekey()
 
-        m, tag = state:pull(message6)
+        m, tag = state(message6)
         assert(m == 'message6')
         assert(tag == lib[TAG_FINAL])
       end)
 
+
+    end)
+
+    describe('__call metamethods', function()
+      it('should allow __call to accept a boolean to finalize message', function()
+        local key = lib[crypto_secretstream_keygen]()
+        local estate, header = lib[crypto_secretstream_init_push](key)
+        local state = lib[crypto_secretstream_init_pull](header,key)
+
+        local m, tag
+
+        m, tag = state(estate('hello'))
+        assert(m == 'hello')
+        assert(tag == lib[TAG_MESSAGE])
+
+        m, tag = state(estate('hello','extradata'),'extradata')
+        assert(m == 'hello')
+        assert(tag == lib[TAG_MESSAGE])
+
+        m, tag = state(estate('hello','extradata',true),'extradata')
+        assert(m == 'hello')
+        assert(tag == lib[TAG_FINAL])
+
+        -- remake to test the other final order
+        key = lib[crypto_secretstream_keygen]()
+        estate, header = lib[crypto_secretstream_init_push](key)
+        state = lib[crypto_secretstream_init_pull](header,key)
+
+        m, tag = state(estate('hello',true,'extradata'),'extradata')
+        assert(m == 'hello')
+        assert(tag == lib[TAG_FINAL])
+
+        key = lib[crypto_secretstream_keygen]()
+        estate, header = lib[crypto_secretstream_init_push](key)
+        state = lib[crypto_secretstream_init_pull](header,key)
+
+        m, tag = state(estate('hello',true))
+        assert(m == 'hello')
+        assert(tag == lib[TAG_FINAL])
+
+      end)
     end)
   end
 

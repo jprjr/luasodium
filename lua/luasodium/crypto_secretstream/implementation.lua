@@ -182,6 +182,8 @@ return function(libs, constants)
     ls_crypto_secretstream_pull_methods.pull  = M[crypto_secretstream_pull]
     ls_crypto_secretstream_pull_methods.rekey = M[crypto_secretstream_rekey]
 
+    ls_crypto_secretstream_pull_mt.__call = M[crypto_secretstream_pull]
+
     local ls_push = M[crypto_secretstream_push]
     local ls_rekey = M[crypto_secretstream_rekey]
 
@@ -214,6 +216,29 @@ return function(libs, constants)
         return ls_rekey(self)
       end
       return ls_push(self,message,TAG_REKEY,ad)
+    end
+
+    ls_crypto_secretstream_push_mt.__call = function(self, message, p1, p2)
+      local tag = TAG_MESSAGE
+      local ad
+
+      if not message then
+        return error('requires 1 parameter')
+      end
+
+      if type(p1) == 'boolean' and p1 == true then
+        tag = TAG_FINAL
+      elseif type(p1) == 'string' then
+        ad = p1
+      end
+
+      if type(p2) == 'boolean' and p2 == true then
+        tag = TAG_FINAL
+      elseif type(p2) == 'string' then
+        ad = p2
+      end
+
+      return ls_push(self,message,tag,ad)
     end
 
     return M
