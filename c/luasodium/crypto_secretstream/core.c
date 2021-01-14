@@ -185,9 +185,11 @@ ls_crypto_secretstream_push(lua_State *L) {
 
     lua_pop(L,1);
 
+    /* LCOV_EXCL_START */
     if(f(state,c,&clen,m,mlen,ad,adlen,tag) == -1) {
         return luaL_error(L,"%s error",fname);
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushlstring(L,(const char *)c,clen);
     sodium_memzero(c,mlen + ABYTES);
@@ -197,53 +199,32 @@ ls_crypto_secretstream_push(lua_State *L) {
 }
 
 /* handler for calling the userdata like a function */
+/* state(string message [, boolean final, string ad]) */
 
 static int
 ls_crypto_secretstream_push_call(lua_State *L) {
-    int ad = -1;
-    unsigned int i = 0;
-    unsigned char tag = 0;
+    unsigned char tag = lua_tointeger(L, lua_upvalueindex(1));
     if(lua_isnoneornil(L,2)) {
         return luaL_error(L, "requires 1 parameter");
     }
 
-
-    /* get the default tag value (TAG_MESSAGE) */
-
-    tag = lua_tointeger(L,lua_upvalueindex(1));
-
-    /* check for up to 2 more parameters for
-     * a boolean, if a boolean is found and it's true,
-     * change the tag to TAG_FINAL */
-    for(i=3;i<5;i++) {
-        if(lua_isnoneornil(L,i)) {
-            break;
-        }
-        else if(lua_isboolean(L,i)) {
-            if(lua_toboolean(L,i)) {
-                tag = lua_tointeger(L,lua_upvalueindex(2));
-            }
-        } else if(lua_isstring(L,i)) {
-            ad = i;
-        }
+    if(!lua_isnone(L,3)) {
+      if(lua_toboolean(L,3)) {
+          tag = lua_tointeger(L, lua_upvalueindex(2));
+      }
+      lua_remove(L,3);
     }
 
     lua_pushvalue(L,lua_upvalueindex(3));
     lua_insert(L,1);
 
+    lua_pushnil(L);
     lua_pushinteger(L,tag);
     lua_insert(L,4);
 
-    if(ad != -1) {
-        lua_pushvalue(L,ad+2);
-    } else {
-        lua_pushnil(L);
-    }
-    lua_insert(L,5);
-
     lua_settop(L,5);
-
     lua_call(L,4,1);
+
     return 1;
 }
 
@@ -354,12 +335,14 @@ ls_crypto_secretstream_init_pull(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
+    /* LCOV_EXCL_START */
     if(f(state,header,key) == -1) {
         lua_pop(L,1);
         lua_pushnil(L);
         lua_pushfstring(L,"%s: invalid header",fname);
         return 2;
     }
+    /* LCOV_EXCL_STOP */
 
     lua_pushvalue(L,lua_upvalueindex(6));
     lua_setmetatable(L,-2);

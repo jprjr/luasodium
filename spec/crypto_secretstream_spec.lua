@@ -78,6 +78,7 @@ describe('library crypto_secretstream', function()
         assert(type(header) == 'string')
         assert(string.len(header) == lib[HEADERBYTES])
       end)
+
     end)
 
     describe('function ' .. crypto_secretstream_push, function()
@@ -87,6 +88,10 @@ describe('library crypto_secretstream', function()
         assert(pcall(lib[crypto_secretstream_push]) == false)
         assert(pcall(lib[crypto_secretstream_push],'','','') == false)
         assert(pcall(lib[crypto_secretstream_push],state,'','') == false)
+        assert(pcall(lib[crypto_secretstream_push],state,true,'') == false)
+        assert(pcall(state) == false)
+        assert(pcall(state.message,state) == false)
+        assert(pcall(state.rekey) == false)
       end)
 
       it('should encrypt a message', function()
@@ -105,30 +110,20 @@ describe('library crypto_secretstream', function()
       end)
 
       it('should be callable', function()
-        local c = state('hello')
-        assert(string.len(c) > lib[ABYTES])
-        assert(string.len(c) <= lib[ABYTES] + 5)
-      end)
-
-      it('should support any order for final', function()
         local s = lib[crypto_secretstream_init_push](key)
         local c = s('hello')
         assert(string.len(c) > lib[ABYTES])
         assert(string.len(c) <= lib[ABYTES] + 5)
-        local d = s('hello2','extradata')
+
+        local s2 = lib[crypto_secretstream_init_push](key)
+        local d = s2('hello2',true)
         assert(string.len(d) > lib[ABYTES])
         assert(string.len(d) <= lib[ABYTES] + 6)
-        local e = s('hello2','extradata', true)
+
+        local s3 = lib[crypto_secretstream_init_push](key)
+        local e = s3('hello2',true,'extradata')
         assert(string.len(e) > lib[ABYTES])
         assert(string.len(e) <= lib[ABYTES] + 6)
-        local s2 = lib[crypto_secretstream_init_push](key)
-        local g = s2('hello2',true)
-        assert(string.len(g) > lib[ABYTES])
-        assert(string.len(g) <= lib[ABYTES] + 6)
-        local s3 = lib[crypto_secretstream_init_push](key)
-        local h = s3('hello2',true,'extradata')
-        assert(string.len(h) > lib[ABYTES])
-        assert(string.len(h) <= lib[ABYTES] + 6)
       end)
     end)
 
@@ -145,6 +140,14 @@ describe('library crypto_secretstream', function()
         local state = lib[crypto_secretstream_init_pull](header,key)
         assert(type(state) == 'table' or type(state) == 'userdata')
       end)
+
+      -- TODO how do I generate a bad header?
+      -- turns out this will always return 0, see
+      -- https://github.com/jedisct1/libsodium/blob/290197ba3ee72245fdab5e971c8de43a82b19874/src/libsodium/crypto_secretstream/xchacha20poly1305/secretstream_xchacha20poly1305.c#L67
+      it('should return nil on a bad header', function()
+        assert(true)
+      end)
+
     end)
 
     describe('function ' .. crypto_secretstream_pull, function()
@@ -164,6 +167,12 @@ describe('library crypto_secretstream', function()
         assert(pcall(lib[crypto_secretstream_pull]) == false)
         assert(pcall(lib[crypto_secretstream_pull],'','','') == false)
         assert(pcall(lib[crypto_secretstream_pull],state,'','') == false)
+        assert(pcall(lib[crypto_secretstream_pull],state,false,'') == false)
+      end)
+
+      it('should return nil on an invalid cipher', function()
+        local state = lib[crypto_secretstream_init_pull](header,key)
+        assert(lib[crypto_secretstream_pull](state,string.rep('\0',lib[ABYTES])) == nil)
       end)
 
       it('should decode encrypted messages', function()
@@ -232,8 +241,18 @@ describe('library crypto_secretstream', function()
         assert(m == 'message6')
         assert(tag == lib[TAG_FINAL])
       end)
+    end)
 
+    describe('function ' .. crypto_secretstream_rekey, function()
+      it('should error on invalid calls', function()
+        assert(pcall(lib[crypto_secretstream_rekey]) == false)
+      end)
 
+      it('should return nil', function()
+        local key = lib[crypto_secretstream_keygen]()
+        local state = lib[crypto_secretstream_init_push](key)
+        assert(lib[crypto_secretstream_rekey](state) == nil)
+      end)
     end)
 
     describe('__call metamethods', function()
@@ -248,30 +267,15 @@ describe('library crypto_secretstream', function()
         assert(m == 'hello')
         assert(tag == lib[TAG_MESSAGE])
 
-        m, tag = state(estate('hello','extradata'),'extradata')
+        m, tag = state(estate('hello',false,'extradata'),'extradata')
+        print(m)
         assert(m == 'hello')
         assert(tag == lib[TAG_MESSAGE])
-
-        m, tag = state(estate('hello','extradata',true),'extradata')
-        assert(m == 'hello')
-        assert(tag == lib[TAG_FINAL])
-
-        -- remake to test the other final order
-        key = lib[crypto_secretstream_keygen]()
-        estate, header = lib[crypto_secretstream_init_push](key)
-        state = lib[crypto_secretstream_init_pull](header,key)
 
         m, tag = state(estate('hello',true,'extradata'),'extradata')
         assert(m == 'hello')
         assert(tag == lib[TAG_FINAL])
 
-        key = lib[crypto_secretstream_keygen]()
-        estate, header = lib[crypto_secretstream_init_push](key)
-        state = lib[crypto_secretstream_init_pull](header,key)
-
-        m, tag = state(estate('hello',true))
-        assert(m == 'hello')
-        assert(tag == lib[TAG_FINAL])
 
       end)
     end)
