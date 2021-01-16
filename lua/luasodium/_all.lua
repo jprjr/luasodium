@@ -1,10 +1,12 @@
 local modules = {
   'crypto_auth',
   'crypto_box',
+  'crypto_generichash',
   'crypto_hash',
   'crypto_onetimeauth',
   'crypto_scalarmult',
   'crypto_secretbox',
+  'crypto_secretstream',
   'crypto_sign',
   'crypto_stream',
   'crypto_verify',
