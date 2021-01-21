@@ -16,6 +16,7 @@ MODS = \
   crypto_onetimeauth \
   crypto_scalarmult \
   crypto_secretbox \
+  crypto_shorthash \
   crypto_stream \
   crypto_sign
 

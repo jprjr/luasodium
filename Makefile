@@ -26,6 +26,7 @@ LUASODIUM_MODS := \
   crypto_scalarmult \
   crypto_secretbox \
   crypto_secretstream \
+  crypto_shorthash \
   crypto_sign \
   crypto_stream \
   crypto_verify \
