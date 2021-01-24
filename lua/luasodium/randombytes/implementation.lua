@@ -55,7 +55,7 @@ return function(libs, constants)
     sodium_lib.randombytes_stir()
   end
 
-  if sodium_lib.sodium_init() == -1 then
+  if tonumber(sodium_lib.sodium_init()) == -1 then
     return error('sodium_init error')
   end
 

@@ -88,6 +88,10 @@ return function(libs, constants)
     }
   end
 
+  if tonumber(sodium_lib.sodium_init()) == -1 then
+    return error('sodium_init error')
+  end
+
   local M = { }
 
   for _,basename in ipairs({
