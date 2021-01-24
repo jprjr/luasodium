@@ -128,11 +128,11 @@ If you'd like to build from source, grab
 one of the release tarballs, and then build with cmake:
 
 ```bash
-wget https://github.com/jprjr/luasodium/releases/download/v1.1.1/luasodium-1.1.1.tar.gz
-tar xf luasodium-1.1.1.tar.gz
+wget https://github.com/jprjr/luasodium/releases/download/v1.3.0/luasodium-1.3.0.tar.gz
+tar xf luasodium-1.3.0.tar.gz
 mkdir build
 cd build
-cmake -DCMAKE_INSTALL_PREFIX=/usr ../luasodium-1.1.1
+cmake -DCMAKE_INSTALL_PREFIX=/usr ../luasodium-1.3.0
 make
 make install
 ```
