@@ -8,6 +8,7 @@ set(LUASODIUM_MODULES
   crypto_generichash
   crypto_hash
   crypto_onetimeauth
+  crypto_pwhash
   crypto_scalarmult
   crypto_secretbox
   crypto_secretstream
