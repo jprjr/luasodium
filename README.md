@@ -51,7 +51,7 @@ Details on what functions were implemented can be found under the
 ### Version 1.1
 
 * All original lower-level functions from NaCl (crypto\_box\_curve25519xsalsa20poly1305,
-crypto\_secretbox\_xsalsa20poly1305).
+crypto\_secretbox\_xsalsa20poly1305). This means version 1.1 has 100% NaCl coverage.
 
 ### Version 1.2
 
