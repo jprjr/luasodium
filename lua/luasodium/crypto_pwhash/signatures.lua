@@ -38,6 +38,14 @@ local signatures = {
   ['crypto_pwhash_str'] = crypto_pwhash_str_sig,
   ['crypto_pwhash_str_verify'] = crypto_pwhash_str_verify_sig,
   ['crypto_pwhash_str_needs_rehash'] = crypto_pwhash_str_needs_rehash_sig,
+  ['crypto_pwhash_argon2i'] = crypto_pwhash_sig,
+  ['crypto_pwhash_argon2i_str'] = crypto_pwhash_str_sig,
+  ['crypto_pwhash_argon2i_str_verify'] = crypto_pwhash_str_verify_sig,
+  ['crypto_pwhash_argon2i_str_needs_rehash'] = crypto_pwhash_str_needs_rehash_sig,
+  ['crypto_pwhash_argon2id'] = crypto_pwhash_sig,
+  ['crypto_pwhash_argon2id_str'] = crypto_pwhash_str_sig,
+  ['crypto_pwhash_argon2id_str_verify'] = crypto_pwhash_str_verify_sig,
+  ['crypto_pwhash_argon2id_str_needs_rehash'] = crypto_pwhash_str_needs_rehash_sig,
 }
 
 return signatures

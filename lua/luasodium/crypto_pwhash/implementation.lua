@@ -9,13 +9,13 @@ return function(libs, constants)
 
   local char_array = ffi.typeof('char[?]')
 
-  local function ls_crypto_pwhash(basename)
+  local function ls_crypto_pwhash(basename,algo)
     local crypto_pwhash = string_format('%s',basename)
     local crypto_pwhash_str = string_format('%s_str',basename)
     local crypto_pwhash_str_verify = string_format('%s_str_verify',basename)
     local crypto_pwhash_str_needs_rehash = string_format('%s_str_needs_rehash',basename)
 
-    local ALG_DEFAULT = constants[string_format('%s_ALG_DEFAULT',basename)]
+    local ALG = constants[string_format('crypto_pwhash_ALG_%s',algo)]
     local SALTBYTES = constants[string_format('%s_SALTBYTES',basename)]
     local STRBYTES = constants[string_format('%s_STRBYTES',basename)]
     local BYTES_MIN = constants[string_format('%s_BYTES_MIN',basename)]
@@ -40,7 +40,7 @@ return function(libs, constants)
           return error('requires 5 parameters')
         end
 
-        alg = alg or ALG_DEFAULT
+        alg = alg or ALG
 
         local passwdlen = string_len(passwd)
         local saltlen = string_len(salt)
@@ -128,12 +128,8 @@ return function(libs, constants)
           return error(string_format('incorrect mem limit, must be between %d and %d', MEMLIMIT_MIN, MEMLIMIT_MAX))
         end
 
-        local res = tonumber(sodium_lib[crypto_pwhash_str_needs_rehash](str,opslimit,memlimit))
+        return tonumber(sodium_lib[crypto_pwhash_str_needs_rehash](str,opslimit,memlimit)) ~= 0
 
-        if res == -1 then
-          return nil, string_format('%s error',crypto_pwhash_str_needs_rehash)
-        end
-        return res == 0
       end,
 
     }
@@ -146,10 +142,22 @@ return function(libs, constants)
 
   local M = { }
 
-  for _,basename in ipairs({
-    'crypto_pwhash',
-  }) do
-    local m = ls_crypto_pwhash(basename)
+  do
+    local m = ls_crypto_pwhash('crypto_pwhash','DEFAULT')
+    for k,v in pairs(m) do
+      M[k] = v
+    end
+  end
+
+  do
+    local m = ls_crypto_pwhash('crypto_pwhash_argon2i','ARGON2I13')
+    for k,v in pairs(m) do
+      M[k] = v
+    end
+  end
+
+  do
+    local m = ls_crypto_pwhash('crypto_pwhash_argon2id','ARGON2ID13')
     for k,v in pairs(m) do
       M[k] = v
     end

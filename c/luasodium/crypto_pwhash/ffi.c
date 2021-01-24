@@ -12,6 +12,14 @@ static const luasodium_function_t ls_crypto_pwhash_functions[] = {
     LS_FUNC(crypto_pwhash_str),
     LS_FUNC(crypto_pwhash_str_verify),
     LS_FUNC(crypto_pwhash_str_needs_rehash),
+    LS_FUNC(crypto_pwhash_argon2i),
+    LS_FUNC(crypto_pwhash_argon2i_str),
+    LS_FUNC(crypto_pwhash_argon2i_str_verify),
+    LS_FUNC(crypto_pwhash_argon2i_str_needs_rehash),
+    LS_FUNC(crypto_pwhash_argon2id),
+    LS_FUNC(crypto_pwhash_argon2id_str),
+    LS_FUNC(crypto_pwhash_argon2id_str_verify),
+    LS_FUNC(crypto_pwhash_argon2id_str_needs_rehash),
     { NULL }
 };
 
@@ -34,6 +42,10 @@ int luaopen_luasodium_crypto_pwhash_ffi(lua_State *L) {
     /* top of stack is the constant table */
     lua_pushliteral(L,crypto_pwhash_STRPREFIX);
     lua_setfield(L,-2,"crypto_pwhash_STRPREFIX");
+    lua_pushliteral(L,crypto_pwhash_argon2i_STRPREFIX);
+    lua_setfield(L,-2,"crypto_pwhash_argon2i_STRPREFIX");
+    lua_pushliteral(L,crypto_pwhash_argon2id_STRPREFIX);
+    lua_setfield(L,-2,"crypto_pwhash_argon2id_STRPREFIX");
 
     if(lua_pcall(L,3,1,0)) {
         return lua_error(L);
