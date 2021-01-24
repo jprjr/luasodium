@@ -31,7 +31,9 @@ local luasodium_c       = require'luasodium.core'     -- uses the C API
 local luasodium_pureffi = require'luasodium.pureffi'  -- uses the FFI API (without any C modules)
 ```
 
-## Status and roadmap
+## Status
+
+### Version 1.0
 
 As of version `1.0.0`, this module covers:
 
@@ -46,8 +48,6 @@ It does not yet cover the entire libsodium API.
 Details on what functions were implemented can be found under the
 [Version 1.0.0 Milestone](https://github.com/jprjr/luasodium/milestone/1?closed=1).
 
-Upcoming releases will (likely) cover:
-
 ### Version 1.1
 
 * All original lower-level functions from NaCl (crypto\_box\_curve25519xsalsa20poly1305,
@@ -58,7 +58,22 @@ crypto\_secretbox\_xsalsa20poly1305).
 * The libsodium `crypto_generichash` API.
 * The libsodium `crypto_secretstream` API.
 
+Details on what functions were implemented can be found under the
+[Version 1.2.0 Milestone](https://github.com/jprjr/luasodium/milestone/3?closed=1).
 
+### Version 1.3
+
+* The libsodium `crypto_shorthash` API.
+* The libsodium `crypto_pwhash` API.
+
+Details on what functions were implemented can be found under the
+[Version 1.3.0 Milestone](https://github.com/jprjr/luasodium/milestone/5?closed=1).
+
+## Roadmap
+
+Version 2.0 won't have any functional changes from version 1.x, but
+will return `nil` on certain non-fatal errors (a message failing to
+decrypt). It will have a major version bump since that's an API change.
 
 ## Caveats
 
