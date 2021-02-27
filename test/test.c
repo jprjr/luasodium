@@ -17,10 +17,6 @@ int main(int argc, const char *argv[]) {
     luaL_openlibs(L);
 
     r = luaL_dofile(L,argv[1]);
-    if(r) {
-        printf("%s\n",lua_tostring(L,-1));
-    }
-
     lua_close(L);
 
     return r;
