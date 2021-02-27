@@ -102,10 +102,10 @@ describe('library crypto_generichash', function()
           assert(string.len(out) == BYTES_MIN)
         end)
 
-        it('throws an error if we choose a bad opslimit for a given algo', function()
+        it('returns nil if we choose a bad opslimit for a given algo', function()
           local salt = string.rep('\0',SALTBYTES)
           -- ARGON2I13 requires 3 ops, we'll set this to 1, which is still OPSLIMIT_MIN
-          assert(pcall(lib[crypto_pwhash],BYTES_MIN,passwd,salt,1,MEMLIMIT_MODERATE,lib.crypto_pwhash_ALG_ARGON2I13) == false)
+          assert(lib[crypto_pwhash](BYTES_MIN,passwd,salt,1,MEMLIMIT_MODERATE,lib.crypto_pwhash_ALG_ARGON2I13) == nil)
         end)
       end
     end)

@@ -120,7 +120,9 @@ ls_crypto_pwhash(lua_State *L) {
     /* LCOV_EXCL_STOP */
 
     if(f(out,outlen,passwd,passwdlen,salt,opslimit,memlimit,alg) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
 
     lua_pushlstring(L,(const char *)out,outlen);
@@ -195,7 +197,9 @@ ls_crypto_pwhash_str(lua_State *L) {
     /* it shouldn't be possible to pass a bad ops/memlimit here */
     /* LCOV_EXCL_START */
     if(f(out,passwd,passwdlen,opslimit,memlimit) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
