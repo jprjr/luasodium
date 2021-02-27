@@ -29,7 +29,7 @@ return function(libs, constants)
         local out = char_array(BYTES)
         if tonumber(sodium_lib[crypto_auth](
           out,message,string_len(message),key)) == -1 then
-          return error(string_format('%s error',crypto_auth))
+          return nil, string_format('%s error',crypto_auth)
         end
 
         local out_str = ffi_string(out,BYTES)

@@ -38,7 +38,7 @@ return function(libs, constants)
 
         q = char_array(BYTES)
         if sodium_lib[crypto_scalarmult](q,n,p) == -1 then
-          return error(string_format('%s error',crypto_scalarmult))
+          return nil, string_format('%s error',crypto_scalarmult)
         end
         local q_str = ffi_string(q,BYTES)
         sodium_lib.sodium_memzero(q,BYTES)
@@ -60,7 +60,7 @@ return function(libs, constants)
         end
         q = char_array(BYTES)
         if sodium_lib[crypto_scalarmult_base](q,n) == -1 then
-          return error(string_format('%s error',crypto_scalarmult_base))
+          return nil, string_format('%s error',crypto_scalarmult_base)
         end
         local q_str = ffi_string(q,BYTES)
         sodium_lib.sodium_memzero(q,BYTES)

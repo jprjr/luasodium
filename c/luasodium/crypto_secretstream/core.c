@@ -54,7 +54,6 @@ ls_crypto_secretstream_keygen(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     f(k);
 
@@ -93,14 +92,6 @@ ls_crypto_secretstream_init_push(lua_State *L) {
           KEYBYTES);
     }
 
-    state = lua_newuserdata(L, STATEBYTES);
-
-    /* LCOV_EXCL_START */
-    if(state == NULL) {
-        return luaL_error(L,"out of memory");
-    }
-    /* LCOV_EXCL_STOP */
-
     header = lua_newuserdata(L, HEADERBYTES);
 
     /* LCOV_EXCL_START */
@@ -109,11 +100,19 @@ ls_crypto_secretstream_init_push(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,1);
+    state = lua_newuserdata(L, STATEBYTES);
+
+    /* LCOV_EXCL_START */
+    if(state == NULL) {
+        return luaL_error(L,"out of memory");
+    }
+    /* LCOV_EXCL_STOP */
 
     /* LCOV_EXCL_START */
     if(f(state,header,key) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -183,11 +182,11 @@ ls_crypto_secretstream_push(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,1);
-
     /* LCOV_EXCL_START */
     if(f(state,c,&clen,m,mlen,ad,adlen,tag) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -337,7 +336,6 @@ ls_crypto_secretstream_init_pull(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(state,header,key) == -1) {
-        lua_pop(L,1);
         lua_pushnil(L);
         lua_pushfstring(L,"%s: invalid header",fname);
         return 2;
@@ -406,8 +404,6 @@ ls_crypto_secretstream_pull(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-
-    lua_pop(L,1);
 
     if(f(state,m,&mlen,&tag,c,clen,ad,adlen) == -1) {
         lua_pushnil(L);

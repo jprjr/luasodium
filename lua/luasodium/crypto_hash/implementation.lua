@@ -23,7 +23,7 @@ return function(libs, constants)
         local hash = char_array(BYTES)
         if tonumber(sodium_lib[crypto_hash](
             hash,message,string_len(message))) == -1 then
-          return error(string_format('%s error',crypto_hash))
+          return nil, string_format('%s error',crypto_hash)
         end
 
         local hash_str = ffi_string(hash,BYTES)
@@ -54,7 +54,7 @@ return function(libs, constants)
       [crypto_hash_init] = function()
         local state = ffi.gc(clib.malloc(STATEBYTES),ls_crypto_hash_free)
         if tonumber(sodium_lib[crypto_hash_init](state)) == -1 then
-          return error(string_format('%s error',crypto_hash_init))
+          return nil, string_format('%s error',crypto_hash_init)
         end
         return setmetatable({
           state = state,
@@ -88,7 +88,7 @@ return function(libs, constants)
         local h = char_array(BYTES)
         if tonumber(sodium_lib[crypto_hash_final](
           ls_state.state,h)) == -1 then
-          return error(string_format('%s error',crypto_hash_final))
+          return nil, string_format('%s error',crypto_hash_final)
         end
 
         local h_str = ffi_string(h,BYTES)

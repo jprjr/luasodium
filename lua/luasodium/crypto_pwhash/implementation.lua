@@ -68,7 +68,7 @@ return function(libs, constants)
         local out = char_array(outlen)
 
         if tonumber(sodium_lib[crypto_pwhash](out,outlen,passwd,passwdlen,salt,opslimit,memlimit,alg)) == -1 then
-          return error(string_format('%s error',crypto_pwhash))
+          return nil, string_format('%s error',crypto_pwhash)
         end
         local out_str = ffi_string(out,outlen)
         sodium_lib.sodium_memzero(out,outlen)
@@ -95,7 +95,7 @@ return function(libs, constants)
 
         local out = char_array(STRBYTES)
         if tonumber(sodium_lib[crypto_pwhash_str](out,passwd,passwdlen,opslimit,memlimit)) == -1 then
-          return error(string_format('%s error',crypto_pwhash_str))
+          return nil, string_format('%s error',crypto_pwhash_str)
         end
         local out_str = ffi_string(out)
         sodium_lib.sodium_memzero(out,STRBYTES)

@@ -49,7 +49,7 @@ return function(libs, constants)
 
         if tonumber(sodium_lib[crypto_shorthash](
           out,message,string_len(message),key)) == -1 then
-          return error(string_format('%s error',crypto_shorthash))
+          return nil, string_format('%s error',crypto_shorthash)
         end
 
         local out_str = ffi_string(out,BYTES)

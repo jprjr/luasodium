@@ -70,7 +70,7 @@ return function(libs, constants)
         local header = char_array(HEADERBYTES)
 
         if tonumber(sodium_lib[crypto_secretstream_init_push](state,header,key)) == -1 then
-          return error(string_format('%s error', crypto_secretstream_init_push))
+          return nil, string_format('%s error', crypto_secretstream_init_push)
         end
 
         local ls_state = setmetatable({
@@ -104,7 +104,7 @@ return function(libs, constants)
         if tonumber(sodium_lib[crypto_secretstream_push](
           ls_state.state,c,clen,
           message,mlen,ad,adlen,tag)) == -1 then
-          return error(string_format('%s error',crypto_secretstream_push))
+          return nil, string_format('%s error',crypto_secretstream_push)
         end
 
         local c_str = ffi_string(c,clen[0])

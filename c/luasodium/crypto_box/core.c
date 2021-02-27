@@ -148,11 +148,11 @@ ls_crypto_box_keypair(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,2);
-
     /* LCOV_EXCL_START */
     if(f(pk,sk) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -242,8 +242,6 @@ ls_crypto_box(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,2);
-
     sodium_memzero(tmp_m,ZEROBYTES);
     sodium_memzero(c,BOXZEROBYTES);
 
@@ -251,7 +249,9 @@ ls_crypto_box(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(c,tmp_m,mlen+ZEROBYTES,nonce,pk,sk) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -342,15 +342,15 @@ ls_crypto_box_open(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,2);
-
     sodium_memzero(tmp_c,BOXZEROBYTES);
     sodium_memzero(m,ZEROBYTES);
 
     memcpy(&tmp_c[BOXZEROBYTES],c,clen);
 
     if(f(m,tmp_c,clen+BOXZEROBYTES,nonce,pk,sk) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
 
     lua_pushlstring(L,(const char *)&m[ZEROBYTES],mlen);
@@ -406,11 +406,12 @@ ls_crypto_box_beforenm(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     /* LCOV_EXCL_START */
     if(f(k,pk,sk) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -487,8 +488,6 @@ ls_crypto_box_afternm(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,2);
-
     sodium_memzero(tmp_m,ZEROBYTES);
     sodium_memzero(c,BOXZEROBYTES);
 
@@ -496,7 +495,9 @@ ls_crypto_box_afternm(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(c,tmp_m,mlen+ZEROBYTES,nonce,k) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -578,15 +579,15 @@ ls_crypto_box_open_afternm(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,2);
-
     sodium_memzero(tmp_c,BOXZEROBYTES);
     sodium_memzero(m,ZEROBYTES);
 
     memcpy(&tmp_c[BOXZEROBYTES],c,clen);
 
     if(f(m,tmp_c,clen+BOXZEROBYTES,nonce,k) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
 
     lua_pushlstring(L,(const char *)&m[ZEROBYTES],mlen);
@@ -645,11 +646,11 @@ ls_crypto_box_seed_keypair(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,2);
-
     /* LCOV_EXCL_START */
     if(f(pk,sk,seed) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -726,11 +727,11 @@ ls_crypto_box_easy(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,1);
-
     /* LCOV_EXCL_START */
     if(f(c,m,mlen,n,pk,sk) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -808,10 +809,10 @@ ls_crypto_box_open_easy(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,1);
-
     if(f(m,c,clen,n,pk,sk) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
 
     lua_pushlstring(L,(const char *)m,mlen);
@@ -890,11 +891,11 @@ ls_crypto_box_detached(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,2);
-
     /* LCOV_EXCL_START */
     if(f(c,mac,m,mlen,n,pk,sk) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -975,10 +976,10 @@ ls_crypto_box_open_detached(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,1);
-
     if(f(m,c,mac,clen,n,pk,sk) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
 
     lua_pushlstring(L,(const char *)m,clen);
@@ -1042,11 +1043,11 @@ ls_crypto_box_easy_afternm(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,1);
-
     /* LCOV_EXCL_START */
     if(f(c,m,mlen,n,k) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -1114,10 +1115,10 @@ ls_crypto_box_open_easy_afternm(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,1);
-
     if(f(m,c,clen,n,k) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
 
     lua_pushlstring(L,(const char *)m,mlen);
@@ -1186,11 +1187,11 @@ ls_crypto_box_detached_afternm(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,2);
-
     /* LCOV_EXCL_START */
     if(f(c,mac,m,mlen,n,k) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -1261,11 +1262,11 @@ ls_crypto_box_open_detached_afternm(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,1);
-
     /* LCOV_EXCL_START */
     if(f(m,c,mac,clen,n,k) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
