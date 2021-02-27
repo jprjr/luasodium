@@ -286,9 +286,9 @@ describe('library crypto_box', function()
         assert(decrypted == message)
       end)
 
-      it('should error on decryption failure', function()
+      it('should return nil on decryption failure', function()
         local encrypted = string.rep('\0',lib[MACBYTES]) .. cipher
-        assert(pcall(lib[crypto_box_open],encrypted,nonce,sender_pk,receiver_sk) == false)
+        assert(lib[crypto_box_open](encrypted,nonce,sender_pk,receiver_sk) == nil)
       end)
     end)
 
@@ -321,9 +321,9 @@ describe('library crypto_box', function()
         assert(decrypted == message)
       end)
 
-      it('should error on decryption failure', function()
+      it('should return nil on decryption failure', function()
         local encrypted = string.rep('\0',lib[MACBYTES]) .. cipher
-        assert(pcall(lib[crypto_box_open_afternm],encrypted,nonce,beforenm_decrypt) == false)
+        assert(lib[crypto_box_open_afternm](encrypted,nonce,beforenm_decrypt) == nil)
       end)
     end)
   end
@@ -438,9 +438,9 @@ describe('library crypto_box', function()
         assert(decrypted == message)
       end)
 
-      it('should error on decryption failure', function()
+      it('should return nil on decryption failure', function()
         local encrypted = string.rep('\0',lib[MACBYTES]) .. cipher
-        assert(pcall(lib[crypto_box_open_easy],encrypted,nonce,sender_pk,receiver_sk) == false)
+        assert(lib[crypto_box_open_easy](encrypted,nonce,sender_pk,receiver_sk) == nil)
       end)
     end)
 
@@ -475,9 +475,9 @@ describe('library crypto_box', function()
         assert(decrypted == message)
       end)
 
-      it('should error on decryption failure', function()
+      it('should return nil on decryption failure', function()
         local tag = string.rep('\0',lib[MACBYTES])
-        assert(pcall(lib[crypto_box_open_detached],cipher,tag,nonce,sender_pk,receiver_sk) == false)
+        assert(lib[crypto_box_open_detached](cipher,tag,nonce,sender_pk,receiver_sk) == nil)
       end)
     end)
 
@@ -510,9 +510,9 @@ describe('library crypto_box', function()
         assert(decrypted == message)
       end)
 
-      it('should error on decryption failure', function()
+      it('should return nil on decryption failure', function()
         local encrypted = string.rep('\0',lib[MACBYTES]) .. cipher
-        assert(pcall(lib[crypto_box_open_easy_afternm],encrypted,nonce,beforenm_decrypt) == false)
+        assert(lib[crypto_box_open_easy_afternm](encrypted,nonce,beforenm_decrypt) == nil)
       end)
     end)
 
@@ -548,9 +548,9 @@ describe('library crypto_box', function()
         assert(decrypted == message)
       end)
 
-      it('should error on decryption failure', function()
+      it('should return nil on decryption failure', function()
         local tag = string.rep('\0',lib[MACBYTES])
-        assert(pcall(lib[crypto_box_open_detached_afternm],cipher,tag,nonce,beforenm_decrypt) == false)
+        assert(lib[crypto_box_open_detached_afternm](cipher,tag,nonce,beforenm_decrypt) == nil)
       end)
     end)
   end

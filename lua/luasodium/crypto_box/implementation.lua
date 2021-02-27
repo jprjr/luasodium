@@ -30,7 +30,7 @@ return function(libs, constants)
         local pk = char_array(PUBLICKEYBYTES)
         local sk = char_array(SECRETKEYBYTES)
         if tonumber(sodium_lib[crypto_box_keypair](pk,sk)) == -1 then
-          return error(string_format('%s error',crypto_box_keypair))
+          return nil, string_format('%s error',crypto_box_keypair)
         end
 
         local pk_str = ffi_string(pk,PUBLICKEYBYTES)
@@ -74,7 +74,7 @@ return function(libs, constants)
         if sodium_lib[crypto_box](
           c,tmp_m,mlen+ZEROBYTES,
           nonce,pk,sk) == -1  then
-          return error(string_format('%s error',crypto_box))
+          return nil, string_format('%s error',crypto_box)
         end
         local c_str = ffi_string(c + BOXZEROBYTES,clen)
         sodium_lib.sodium_memzero(tmp_m,mlen + ZEROBYTES)
@@ -122,7 +122,7 @@ return function(libs, constants)
         if sodium_lib[crypto_box_open](
           m,tmp_c,clen+BOXZEROBYTES,
           nonce,pk,sk) == -1  then
-          return error(string_format('%s error',crypto_box_open))
+          return nil, string_format('%s error',crypto_box_open)
         end
 
         local m_str = ffi_string(m+ZEROBYTES,mlen)
@@ -152,7 +152,7 @@ return function(libs, constants)
         k = char_array(BEFORENMBYTES)
 
         if tonumber(sodium_lib[crypto_box_beforenm](k,pk,sk)) == -1  then
-          return error(string_format('%s error',crypto_box_beforenm))
+          return nil, string_format('%s error',crypto_box_beforenm)
         end
 
         local k_str = ffi_string(k,BEFORENMBYTES)
@@ -189,7 +189,7 @@ return function(libs, constants)
         if sodium_lib[crypto_box_afternm](
           c,tmp_m,mlen+ZEROBYTES,
           nonce,k) == -1  then
-          return error(string_format('%s',crypto_box_afternm))
+          return nil, string_format('%s',crypto_box_afternm)
         end
         local c_str = ffi_string(c + BOXZEROBYTES,clen)
         sodium_lib.sodium_memzero(tmp_m,mlen + ZEROBYTES)
@@ -231,7 +231,7 @@ return function(libs, constants)
         if sodium_lib[crypto_box_open_afternm](
           m,tmp_c,clen+BOXZEROBYTES,
           nonce,k) == -1  then
-          return error(string_format('%s',crypto_box_open_afternm))
+          return nil, string_format('%s',crypto_box_open_afternm)
         end
 
         local m_str = ffi_string(m+ZEROBYTES,mlen)
@@ -262,7 +262,7 @@ return function(libs, constants)
         local pk = char_array(PUBLICKEYBYTES)
         local sk = char_array(SECRETKEYBYTES)
         if tonumber(sodium_lib[crypto_box_seed_keypair](pk,sk,seed)) == -1 then
-          return error(string_format('%s error',crypto_box_seed_keypair))
+          return nil, string_format('%s error',crypto_box_seed_keypair)
         end
 
         local pk_str = ffi_string(pk,PUBLICKEYBYTES)
@@ -322,7 +322,7 @@ return function(libs, constants)
         c = char_array(clen)
 
         if tonumber(sodium_lib[crypto_box_easy](c,m,mlen,n,pk,sk)) == -1 then
-          return error(string_format('%s error',crypto_box_easy))
+          return nil, string_format('%s error',crypto_box_easy)
         end
 
         local c_str = ffi_string(c,clen)
@@ -364,7 +364,7 @@ return function(libs, constants)
         m = char_array(mlen)
 
         if tonumber(sodium_lib[crypto_box_open_easy](m,c,clen,n,pk,sk)) == -1 then
-          return error(string_format('%s error',crypto_box_open_easy))
+          return nil, string_format('%s error',crypto_box_open_easy)
         end
 
         local m_str = ffi_string(m,mlen)
@@ -401,7 +401,7 @@ return function(libs, constants)
         mac = char_array(MACBYTES)
 
         if tonumber(sodium_lib[crypto_box_detached](c,mac,m,mlen,n,pk,sk)) == -1 then
-          return error(string_format('%s error',crypto_box_detached))
+          return nil, string_format('%s error',crypto_box_detached)
         end
 
         local c_str = ffi_string(c,mlen)
@@ -448,7 +448,7 @@ return function(libs, constants)
         m = char_array(clen)
 
         if tonumber(sodium_lib[crypto_box_open_detached](m,c,mac,clen,n,pk,sk)) == -1 then
-          return error(string_format('%s error',crypto_box_open_detached))
+          return nil, string_format('%s error',crypto_box_open_detached)
         end
 
         local m_str = ffi_string(m,clen)
@@ -480,7 +480,7 @@ return function(libs, constants)
         c = char_array(clen)
 
         if tonumber(sodium_lib[crypto_box_easy_afternm](c,m,mlen,n,k)) == -1 then
-          return error(string_format('%s error',crypto_box_easy_afternm))
+          return nil, string_format('%s error',crypto_box_easy_afternm)
         end
         local c_str = ffi_string(c,clen)
         sodium_lib.sodium_memzero(c,clen)
@@ -517,7 +517,7 @@ return function(libs, constants)
         m = char_array(mlen)
 
         if tonumber(sodium_lib[crypto_box_open_easy_afternm](m,c,clen,n,k)) == -1 then
-          return error(string_format('%s error',crypto_box_open_easy_afternm))
+          return nil, string_format('%s error',crypto_box_open_easy_afternm)
         end
 
         local m_str = ffi_string(m,mlen)
@@ -549,7 +549,7 @@ return function(libs, constants)
         mac = char_array(MACBYTES)
 
         if tonumber(sodium_lib[crypto_box_detached_afternm](c,mac,m,mlen,n,k)) == -1 then
-          return error(string_format('%s error',crypto_box_open_easy_afternm))
+          return nil, string_format('%s error',crypto_box_open_easy_afternm)
         end
 
         local c_str = ffi_string(c,mlen)
@@ -591,7 +591,7 @@ return function(libs, constants)
         m = char_array(clen)
 
         if tonumber(sodium_lib[crypto_box_open_detached_afternm](m,c,mac,clen,n,k)) == -1 then
-          return error(string_format('%s error',crypto_box_open_detached_afternm))
+          return nil, string_format('%s error',crypto_box_open_detached_afternm)
         end
         local m_str = ffi_string(m,clen)
         sodium_lib.sodium_memzero(m,clen)
