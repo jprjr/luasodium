@@ -39,7 +39,7 @@ return function(libs, constants)
         local c = char_array(size)
 
         if tonumber(sodium_lib[crypto_stream](c,size,nonce,key)) == -1 then
-          return error(string_format('%s error', crypto_stream))
+          return nil, string_format('%s error', crypto_stream)
         end
 
         local c_str = ffi_string(c,size)
@@ -69,7 +69,7 @@ return function(libs, constants)
         local c = char_array(mlen)
 
         if tonumber(sodium_lib[crypto_stream_xor](c,message,mlen,nonce,key)) == -1 then
-          return error(string_format('%s error',crypto_stream_xor))
+          return nil, string_format('%s error',crypto_stream_xor)
         end
 
         local c_str = ffi_string(c,mlen)

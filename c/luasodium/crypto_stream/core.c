@@ -64,7 +64,9 @@ ls_crypto_stream(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(c,clen,n,k) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -120,7 +122,9 @@ ls_crypto_stream_xor(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(c,m,mlen,n,k) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
