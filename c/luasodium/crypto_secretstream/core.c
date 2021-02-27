@@ -92,18 +92,18 @@ ls_crypto_secretstream_init_push(lua_State *L) {
           KEYBYTES);
     }
 
-    state = lua_newuserdata(L, STATEBYTES);
-
-    /* LCOV_EXCL_START */
-    if(state == NULL) {
-        return luaL_error(L,"out of memory");
-    }
-    /* LCOV_EXCL_STOP */
-
     header = lua_newuserdata(L, HEADERBYTES);
 
     /* LCOV_EXCL_START */
     if(header == NULL) {
+        return luaL_error(L,"out of memory");
+    }
+    /* LCOV_EXCL_STOP */
+
+    state = lua_newuserdata(L, STATEBYTES);
+
+    /* LCOV_EXCL_START */
+    if(state == NULL) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
