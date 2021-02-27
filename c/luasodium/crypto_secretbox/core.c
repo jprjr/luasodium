@@ -151,7 +151,9 @@ ls_crypto_secretbox(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(c,tmp_m,mlen+ZEROBYTES,nonce,key) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -240,7 +242,9 @@ ls_crypto_secretbox_open(lua_State *L) {
     memcpy(&tmp_c[BOXZEROBYTES],c,clen);
 
     if(f(m,tmp_c,clen+BOXZEROBYTES,nonce,key) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
 
     lua_pushlstring(L,(const char *)&m[ZEROBYTES],mlen);
@@ -305,7 +309,9 @@ ls_crypto_secretbox_easy(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(output,input,inputlen,nonce,key) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -373,7 +379,9 @@ ls_crypto_secretbox_open_easy(lua_State *L) {
     /* LCOV_EXCL_STOP */
 
     if(f(output,input,inputlen,nonce,key) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
 
     lua_pushlstring(L,(const char *)output,outputlen);
@@ -435,7 +443,9 @@ ls_crypto_secretbox_detached(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(output,mac,input,inputlen,nonce,key) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -506,7 +516,9 @@ ls_crypto_secretbox_open_detached(lua_State *L) {
     /* LCOV_EXCL_STOP */
 
     if(f(output,input,mac,inputlen,nonce,key) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
 
     lua_pushlstring(L,(const char *)output,inputlen);
