@@ -82,7 +82,7 @@ ls_crypto_sign_keypair(lua_State *L) {
     SECRETKEYBYTES = (size_t)lua_tointeger(L,lua_upvalueindex(4));
 
     pk = (unsigned char *)lua_newuserdata(L,PUBLICKEYBYTES);
-    
+
     /* LCOV_EXCL_START */
     if(pk == NULL) {
         return luaL_error(L,"out of memory");
@@ -90,7 +90,7 @@ ls_crypto_sign_keypair(lua_State *L) {
     /* LCOV_EXCL_STOP */
 
     sk = (unsigned char *)lua_newuserdata(L,SECRETKEYBYTES);
-    
+
     /* LCOV_EXCL_START */
     if(sk == NULL) {
         return luaL_error(L,"out of memory");
@@ -99,7 +99,9 @@ ls_crypto_sign_keypair(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(pk,sk) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -160,7 +162,9 @@ ls_crypto_sign_seed_keypair(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(pk,sk,seed) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -217,7 +221,9 @@ ls_crypto_sign(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(sm,&smlen,m,mlen,sk) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -310,7 +316,9 @@ ls_crypto_sign_detached(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(sig,&siglen,m,mlen,sk) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -374,7 +382,9 @@ ls_crypto_sign_init(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(state) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -464,7 +474,9 @@ ls_crypto_sign_final_create(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(state,sig,&siglen,sk) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -550,7 +562,9 @@ ls_crypto_sign_sk_to_seed(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(seed,sk) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -596,7 +610,9 @@ ls_crypto_sign_sk_to_pk(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(pk,sk) == -1) {
-        return luaL_error(L,"%s error", fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error", fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 

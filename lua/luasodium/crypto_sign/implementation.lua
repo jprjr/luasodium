@@ -35,7 +35,7 @@ return function(libs, constants)
         local smlen = ffi.new('size_t[1]')
 
         if tonumber(sodium_lib[crypto_sign](sm,smlen,m,mlen,sk)) == -1 then
-          return error(string_format('%s error',crypto_sign))
+          return nil, string_format('%s error',crypto_sign)
         end
 
         local sm_str = ffi_string(sm,smlen[0])
@@ -72,7 +72,7 @@ return function(libs, constants)
         local sk = char_array(SECRETKEYBYTES)
 
         if tonumber(sodium_lib[crypto_sign_keypair](pk,sk)) == -1 then
-          return error(string_format('%s error',crypto_sign_keypair))
+          return nil, string_format('%s error',crypto_sign_keypair)
         end
 
         local pk_str = ffi_string(pk,PUBLICKEYBYTES)
@@ -110,7 +110,7 @@ return function(libs, constants)
         local siglen = ffi.new('size_t[1]')
 
         if tonumber(sodium_lib[crypto_sign_detached](sig,siglen,m,mlen,sk)) == -1 then
-          return error(string_format('%s error',crypto_sign_detached))
+          return nil, string_format('%s error',crypto_sign_detached)
         end
 
         local sig_str = ffi_string(sig,siglen[0])
@@ -158,7 +158,7 @@ return function(libs, constants)
       [crypto_sign_init] = function()
         local state = ffi.gc(clib.malloc(STATEBYTES),ls_crypto_sign_free)
         if tonumber(sodium_lib[crypto_sign_init](state)) == -1 then
-          return error(string_format('%s error', crypto_sign_init))
+          return nil, string_format('%s error', crypto_sign_init)
         end
 
         return setmetatable({
@@ -200,7 +200,7 @@ return function(libs, constants)
 
         if tonumber(sodium_lib[crypto_sign_final_create](
           ls_state.state,sig,siglen,sk)) == -1 then
-          return error(string_format('%s error',crypto_sign_final_create))
+          return nil, string_format('%s error',crypto_sign_final_create)
         end
 
         local sig_str = ffi_string(sig,siglen[0])
@@ -258,7 +258,7 @@ return function(libs, constants)
         local sk = char_array(SECRETKEYBYTES)
 
         if tonumber(sodium_lib[crypto_sign_seed_keypair](pk,sk,seed)) == -1 then
-          return error(string_format('%s error',crypto_sign_seed_keypair))
+          return nil, string_format('%s error',crypto_sign_seed_keypair)
         end
 
         local pk_str = ffi_string(pk,PUBLICKEYBYTES)
@@ -295,7 +295,7 @@ return function(libs, constants)
 
         if tonumber(sodium_lib[crypto_sign_sk_to_seed](
           seed,sk)) == -1 then
-          return error(string_format('%s error',crypto_sign_sk_to_seed))
+          return nil, string_format('%s error',crypto_sign_sk_to_seed)
         end
         local seed_str = ffi_string(seed,SEEDBYTES)
         sodium_lib.sodium_memzero(seed,SEEDBYTES)
@@ -316,7 +316,7 @@ return function(libs, constants)
 
         if tonumber(sodium_lib[crypto_sign_sk_to_pk](
           pk,sk)) == -1 then
-          return error(string_format('%s error',crypto_sign_sk_to_pk))
+          return nil, string_format('%s error',crypto_sign_sk_to_pk)
         end
         local pk_str = ffi_string(pk,PUBLICKEYBYTES)
         sodium_lib.sodium_memzero(pk,PUBLICKEYBYTES)
