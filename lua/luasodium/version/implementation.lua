@@ -1,5 +1,5 @@
-local _VERSION_MAJOR = 1
-local _VERSION_MINOR = 3
+local _VERSION_MAJOR = 2
+local _VERSION_MINOR = 0
 local _VERSION_PATCH = 0
 
 local _VERSION = string.format('%d.%d.%d',
