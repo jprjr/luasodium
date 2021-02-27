@@ -79,7 +79,7 @@ return function(libs)
       tmp_hex,hex_len,
       ignore,out_bin_len,
       hex_end) ~= 0 then
-      return error('error in hex2bin')
+      return nil, 'error in hex2bin'
     end
 
     if hex_end[0] < tmp_hex + hex_len then
@@ -139,7 +139,7 @@ return function(libs)
       tmp_base64,base64_len,
       ignore,out_bin_len,
       base64_end,variant) ~= 0 then
-      return error('error in base642bin')
+      return nil, 'error in base642bin'
     end
 
     if base64_end[0] < tmp_base64 + base64_len then
@@ -237,7 +237,7 @@ return function(libs)
 
     if sodium_lib.sodium_pad(outlen,r,
       nlen,blocksize,rounded) ~= 0 then
-      return error('sodium_pad error')
+      return nil, 'sodium_pad error'
     end
 
     local r_str = ffi_string(r,outlen[0])
@@ -249,9 +249,13 @@ return function(libs)
     local nlen = string_len(n)
     local outlen = ffi.new('size_t[1]')
 
+    if not blocksize then
+      return error('requires 2 arguments')
+    end
+
     if sodium_lib.sodium_unpad(outlen,n,
       nlen,blocksize) ~= 0 then
-      return error('sodium_unpad error')
+      return nil, 'sodium_unpad error'
     end
 
     return ffi_string(n,outlen[0])
