@@ -69,11 +69,6 @@ Details on what functions were implemented can be found under the
 Details on what functions were implemented can be found under the
 [Version 1.3.0 Milestone](https://github.com/jprjr/luasodium/milestone/5?closed=1).
 
-## Roadmap
-
-Version 2.0 won't have any functional changes from version 1.x, but
-will return `nil` on certain non-fatal errors (a message failing to
-decrypt). It will have a major version bump since that's an API change.
 
 ## Caveats
 
@@ -159,11 +154,13 @@ This is meant to follow the Libsodium API closely, with a few idioms.
 
 All functions and constants use their original, full name from `libsodium`.
 
-### Idiom: Throw errors.
+### Idiom: Throw errors on programming errors
 
-If a function is missing a parameter, has a wrong parameter type,
-or a call into `libsodium` returns an error value, a Lua error
-is thrown.
+If a function is missing a parameter or has a wrong parameter type,
+a Lua error is thrown.
+
+If a call into libsodium returns an error value (example, a message
+fails to decrypt), then `nil` is returned.
 
 ### Idiom: Auto-allocate strings/buffers.
 
