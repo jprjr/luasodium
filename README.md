@@ -69,6 +69,11 @@ Details on what functions were implemented can be found under the
 Details on what functions were implemented can be found under the
 [Version 1.3.0 Milestone](https://github.com/jprjr/luasodium/milestone/5?closed=1).
 
+### Version 2.0
+
+No functional changes, but an API change. `libsodium` errors no
+longer throw errors, they return `nil` and an error message.
+
 
 ## Caveats
 
