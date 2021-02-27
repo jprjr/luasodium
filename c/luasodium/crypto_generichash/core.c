@@ -117,7 +117,9 @@ ls_crypto_generichash(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(out,outlen,in,inlen,key,keylen) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -193,7 +195,9 @@ ls_crypto_generichash_init(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(state, key, keylen, outlen) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 
@@ -285,7 +289,9 @@ ls_crypto_generichash_final(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(state,out,outlen) == -1) {
-        return luaL_error(L,"%s error",fname);
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
     }
     /* LCOV_EXCL_STOP */
 

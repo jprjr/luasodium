@@ -81,7 +81,7 @@ return function(libs, constants)
 
         if tonumber(sodium_lib[crypto_generichash](
           out,outlen,message,string_len(message),key,keylen)) == -1 then
-          return error(string_format('%s error',crypto_generichash))
+          return nil, string_format('%s error',crypto_generichash)
         end
 
         local out_str = ffi_string(out,outlen)
@@ -117,7 +117,7 @@ return function(libs, constants)
         local state = ffi.gc(clib.malloc(STATEBYTES),ls_crypto_generichash_free)
 
         if tonumber(sodium_lib[crypto_generichash_init](state,key,keylen,outlen)) == -1 then
-          return error(string_format('%s error',crypto_generichash_init))
+          return nil, string_format('%s error',crypto_generichash_init)
         end
 
         return setmetatable({
@@ -158,7 +158,7 @@ return function(libs, constants)
 
         if tonumber(sodium_lib[crypto_generichash_final](ls_state.state,
           out,outlen)) == -1 then
-          return error(string_format('%s error',crypto_generichash_final))
+          return nil, string_format('%s error',crypto_generichash_final)
         end
 
         local out_str = ffi_string(out,outlen)
