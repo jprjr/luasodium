@@ -69,7 +69,6 @@ ls_crypto_secretbox_keygen(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     f(k);
     lua_pushlstring(L,(const char *)k,KEYBYTES);
@@ -144,8 +143,6 @@ ls_crypto_secretbox(lua_State *L) {
         return lua_error(L);
     }
     /* LCOV_EXCL_STOP */
-
-    lua_pop(L,2);
 
     sodium_memzero(tmp_m, ZEROBYTES);
     sodium_memzero(c,     BOXZEROBYTES);
@@ -237,8 +234,6 @@ ls_crypto_secretbox_open(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,2);
-
     sodium_memzero(tmp_c,BOXZEROBYTES);
     sodium_memzero(m,ZEROBYTES);
 
@@ -307,8 +302,6 @@ ls_crypto_secretbox_easy(lua_State *L) {
         return lua_error(L);
     }
     /* LCOV_EXCL_STOP */
-
-    lua_pop(L,1);
 
     /* LCOV_EXCL_START */
     if(f(output,input,inputlen,nonce,key) == -1) {
@@ -379,8 +372,6 @@ ls_crypto_secretbox_open_easy(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,1);
-
     if(f(output,input,inputlen,nonce,key) == -1) {
         return luaL_error(L,"%s error",fname);
     }
@@ -441,8 +432,6 @@ ls_crypto_secretbox_detached(lua_State *L) {
         return lua_error(L);
     }
     /* LCOV_EXCL_STOP */
-
-    lua_pop(L,1);
 
     /* LCOV_EXCL_START */
     if(f(output,mac,input,inputlen,nonce,key) == -1) {
@@ -515,8 +504,6 @@ ls_crypto_secretbox_open_detached(lua_State *L) {
         return lua_error(L);
     }
     /* LCOV_EXCL_STOP */
-
-    lua_pop(L,1);
 
     if(f(output,input,mac,inputlen,nonce,key) == -1) {
         return luaL_error(L,"%s error",fname);

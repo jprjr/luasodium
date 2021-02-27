@@ -97,8 +97,6 @@ ls_crypto_sign_keypair(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,2);
-
     /* LCOV_EXCL_START */
     if(f(pk,sk) == -1) {
         return luaL_error(L,"%s error",fname);
@@ -160,8 +158,6 @@ ls_crypto_sign_seed_keypair(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,2);
-
     /* LCOV_EXCL_START */
     if(f(pk,sk,seed) == -1) {
         return luaL_error(L,"%s error",fname);
@@ -218,7 +214,6 @@ ls_crypto_sign(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     /* LCOV_EXCL_START */
     if(f(sm,&smlen,m,mlen,sk) == -1) {
@@ -265,7 +260,6 @@ ls_crypto_sign_open(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     if(f(m,&mlen,sm,smlen,pk) == 0) {
         lua_pushlstring(L,(const char *)m,mlen);
@@ -313,7 +307,6 @@ ls_crypto_sign_detached(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     /* LCOV_EXCL_START */
     if(f(sig,&siglen,m,mlen,sk) == -1) {
@@ -381,7 +374,6 @@ ls_crypto_sign_init(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(f(state) == -1) {
-        lua_pop(L,1);
         return luaL_error(L,"%s error",fname);
     }
     /* LCOV_EXCL_STOP */
@@ -470,8 +462,6 @@ ls_crypto_sign_final_create(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,1);
-
     /* LCOV_EXCL_START */
     if(f(state,sig,&siglen,sk) == -1) {
         return luaL_error(L,"%s error",fname);
@@ -558,8 +548,6 @@ ls_crypto_sign_sk_to_seed(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,1);
-
     /* LCOV_EXCL_START */
     if(f(seed,sk) == -1) {
         return luaL_error(L,"%s error",fname);
@@ -605,8 +593,6 @@ ls_crypto_sign_sk_to_pk(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-
-    lua_pop(L,1);
 
     /* LCOV_EXCL_START */
     if(f(pk,sk) == -1) {

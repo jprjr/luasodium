@@ -41,7 +41,6 @@ ls_crypto_generichash_keygen(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     f(k);
 
@@ -115,7 +114,6 @@ ls_crypto_generichash(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     /* LCOV_EXCL_START */
     if(f(out,outlen,in,inlen,key,keylen) == -1) {
@@ -189,14 +187,12 @@ ls_crypto_generichash_init(lua_State *L) {
 
     /* LCOV_EXCL_START */
     if(state == NULL) {
-        lua_pop(L,2);
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
 
     /* LCOV_EXCL_START */
     if(f(state, key, keylen, outlen) == -1) {
-        lua_pop(L,2);
         return luaL_error(L,"%s error",fname);
     }
     /* LCOV_EXCL_STOP */
@@ -235,7 +231,6 @@ ls_crypto_generichash_update(lua_State *L) {
 
     lua_getfield(L,1,"state");
     state = lua_touserdata(L,-1);
-    lua_pop(L,1);
 
     in = (const unsigned char *)lua_tolstring(L,2,&inlen);
 
@@ -271,7 +266,6 @@ ls_crypto_generichash_final(lua_State *L) {
 
     lua_getfield(L, 1, "state");
     state = lua_touserdata(L,-1);
-    lua_pop(L,1);
 
     if(lua_isnumber(L,2)) {
         outlen = (size_t) lua_tointeger(L,2);
@@ -288,8 +282,6 @@ ls_crypto_generichash_final(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-
-    lua_pop(L,1);
 
     /* LCOV_EXCL_START */
     if(f(state,out,outlen) == -1) {

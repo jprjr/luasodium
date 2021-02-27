@@ -63,7 +63,6 @@ ls_sodium_bin2hex(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,1);
     sodium_bin2hex(hex,hex_len+1,(const unsigned char *)bin,bin_len);
     lua_pushstring(L,hex);
     sodium_memzero(hex,hex_len + 1);
@@ -107,8 +106,6 @@ ls_sodium_hex2bin(lua_State *L) {
         return lua_error(L);
     }
     /* LCOV_EXCL_STOP */
-
-    lua_pop(L,1);
 
     /* LCOV_EXCL_START */
     if(sodium_hex2bin(
@@ -168,8 +165,6 @@ ls_sodium_bin2base64(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,1);
-
     sodium_bin2base64(b64,b64_len,
       (const unsigned char *)bin, bin_len,
       (const int)variant);
@@ -227,8 +222,6 @@ ls_sodium_base642bin(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,1);
-
     /* LCOV_EXCL_START */
     if(sodium_base642bin(
         bin,bin_len,
@@ -270,8 +263,6 @@ ls_sodium_increment(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,1);
-
     memcpy(r,n,nlen);
 
     sodium_increment((unsigned char *)r,nlen);
@@ -310,8 +301,6 @@ ls_sodium_add(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,1);
-
     memcpy(r,a,alen);
     sodium_add((unsigned char *)r,(const unsigned char *)b,alen);
     lua_pushlstring(L,r,alen);
@@ -348,8 +337,6 @@ ls_sodium_sub(lua_State *L) {
         return lua_error(L);
     }
     /* LCOV_EXCL_STOP */
-
-    lua_pop(L,1);
 
     memcpy(r,a,alen);
     sodium_sub((unsigned char *)r,(const unsigned char *)b,alen);
@@ -422,7 +409,6 @@ ls_sodium_pad(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    lua_pop(L,1);
     memcpy(r,n,nlen);
 
     /* LCOV_EXCL_START */

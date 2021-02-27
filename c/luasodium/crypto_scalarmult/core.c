@@ -47,7 +47,6 @@ ls_crypto_scalarmult_base(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     /* LCOV_EXCL_START */
     if(f(q,n) == -1) {
@@ -103,8 +102,6 @@ ls_crypto_scalarmult(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-
-    lua_pop(L,1);
 
     /* LCOV_EXCL_START */
     if(f(q,n,p) == -1) {

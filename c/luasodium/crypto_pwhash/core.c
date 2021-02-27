@@ -118,7 +118,6 @@ ls_crypto_pwhash(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     if(f(out,outlen,passwd,passwdlen,salt,opslimit,memlimit,alg) == -1) {
         return luaL_error(L,"%s error",fname);
@@ -192,7 +191,6 @@ ls_crypto_pwhash_str(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     /* it shouldn't be possible to pass a bad ops/memlimit here */
     /* LCOV_EXCL_START */

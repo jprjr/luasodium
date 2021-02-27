@@ -61,7 +61,6 @@ ls_crypto_stream(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     /* LCOV_EXCL_START */
     if(f(c,clen,n,k) == -1) {
@@ -118,7 +117,6 @@ ls_crypto_stream_xor(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     /* LCOV_EXCL_START */
     if(f(c,m,mlen,n,k) == -1) {
@@ -148,7 +146,6 @@ ls_crypto_stream_keygen(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     f(k);
 

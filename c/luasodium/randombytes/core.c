@@ -39,7 +39,6 @@ ls_randombytes_buf(lua_State *L) {
         return lua_error(L);
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     randombytes_buf(buf,s);
     lua_pushlstring(L,buf,s);
@@ -74,7 +73,6 @@ ls_randombytes_buf_deterministic(lua_State *L) {
         return lua_error(L);
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     randombytes_buf_deterministic(buf,s,(const unsigned char *)seed);
 

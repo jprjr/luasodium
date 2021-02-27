@@ -55,7 +55,6 @@ ls_crypto_auth(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     /* LCOV_EXCL_START */
     if(f(out,in,inlen,k) == -1) {
@@ -118,13 +117,12 @@ ls_crypto_auth_keygen(lua_State *L) {
     KEYBYTES = lua_tointeger(L,lua_upvalueindex(2));
 
     k = (unsigned char *)lua_newuserdata(L,KEYBYTES);
-    
+
     /* LCOV_EXCL_START */
     if(k == NULL) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     f(k);
 

@@ -48,7 +48,6 @@ ls_crypto_shorthash(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     /* LCOV_EXCL_START */
     if(f(out,in,inlen,k) == -1) {
@@ -77,7 +76,6 @@ ls_crypto_shorthash_keygen(lua_State *L) {
         return luaL_error(L,"out of memory");
     }
     /* LCOV_EXCL_STOP */
-    lua_pop(L,1);
 
     f(k);
 
