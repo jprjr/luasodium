@@ -46,7 +46,7 @@ return function(libs, constants)
         local auth = char_array(BYTES)
         if tonumber(sodium_lib[crypto_onetimeauth](
             auth,message,string_len(message),key)) == -1 then
-            return error(string_format('%s error', crypto_onetimeauth))
+            return nil, string_format('%s error', crypto_onetimeauth)
         end
 
         local auth_str = ffi_string(auth,BYTES)
@@ -97,7 +97,7 @@ return function(libs, constants)
 
         local state = ffi.gc(clib.malloc(STATEBYTES),ls_crypto_onetimeauth_free)
         if tonumber(sodium_lib[crypto_onetimeauth_init](state,key)) == -1 then
-          return error(string_format('%s error',crypto_onetimeauth_init))
+          return nil, string_format('%s error',crypto_onetimeauth_init)
         end
         return setmetatable({
           state = state
@@ -131,7 +131,7 @@ return function(libs, constants)
         local auth = char_array(BYTES)
         if tonumber(sodium_lib[crypto_onetimeauth_final](
           ls_state.state,auth)) == -1 then
-          return error(string_format('%s error',crypto_onetimeauth_final))
+          return nil, string_format('%s error',crypto_onetimeauth_final)
         end
 
         local auth_str = ffi_string(auth,BYTES)
