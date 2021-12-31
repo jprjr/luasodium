@@ -46,7 +46,7 @@ crypto\_secretbox\_easy).
 It does not yet cover the entire libsodium API.
 
 Details on what functions were implemented can be found under the
-[Version 1.0.0 Milestone](https://github.com/jprjr/luasodium/milestone/1?closed=1).
+[Version 1.0.0 Milestone](https://github.com/jprjr/luasodium/milestone/1).
 
 ### Version 1.1
 
@@ -59,7 +59,7 @@ crypto\_secretbox\_xsalsa20poly1305). This means version 1.1 has 100% NaCl cover
 * The libsodium `crypto_secretstream` API.
 
 Details on what functions were implemented can be found under the
-[Version 1.2.0 Milestone](https://github.com/jprjr/luasodium/milestone/3?closed=1).
+[Version 1.2.0 Milestone](https://github.com/jprjr/luasodium/milestone/3).
 
 ### Version 1.3
 
@@ -67,12 +67,19 @@ Details on what functions were implemented can be found under the
 * The libsodium `crypto_pwhash` API.
 
 Details on what functions were implemented can be found under the
-[Version 1.3.0 Milestone](https://github.com/jprjr/luasodium/milestone/5?closed=1).
+[Version 1.3.0 Milestone](https://github.com/jprjr/luasodium/milestone/5).
 
 ### Version 2.0
 
 No functional changes, but an API change. `libsodium` errors no
 longer throw errors, they return `nil` and an error message.
+
+### Version 2.1
+
+* The libsodium `crypto_aead` API.
+
+Details on what functions were implemented can be found under the
+[Version 2.1.0 Milestone](https://github.com/jprjr/luasodium/milestone/6).
 
 
 ## Caveats
