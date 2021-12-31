@@ -3,6 +3,7 @@ project(luasodium)
 
 # set to whatever modules we're building
 set(LUASODIUM_MODULES
+  crypto_aead
   crypto_auth
   crypto_box
   crypto_generichash

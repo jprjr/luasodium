@@ -9,6 +9,7 @@ CFLAGS = -Wall -Wextra $(shell $(PKGCONFIG) --cflags libsodium)
 LDFLAGS = $(shell $(PKGCONFIG) --libs libsodium)
 
 MODS = \
+  crypto_aead \
   crypto_auth \
   crypto_box \
   crypto_generichash \

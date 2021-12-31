@@ -1,4 +1,5 @@
 local modules = {
+  'crypto_aead',
   'crypto_auth',
   'crypto_box',
   'crypto_generichash',
