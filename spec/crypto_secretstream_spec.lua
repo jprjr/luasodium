@@ -268,7 +268,6 @@ describe('library crypto_secretstream', function()
         assert(tag == lib[TAG_MESSAGE])
 
         m, tag = state(estate('hello',false,'extradata'),'extradata')
-        print(m)
         assert(m == 'hello')
         assert(tag == lib[TAG_MESSAGE])
 
