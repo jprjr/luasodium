@@ -29,5 +29,69 @@ typedef struct luasodium_function_s {
 #define LS_PUBLIC
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+LS_PUBLIC
+int luaopen_luasodium(lua_State *L);
+
+LS_PUBLIC
+int luaopen_luasodium_core(lua_State *L);
+
+LS_PUBLIC
+int luaopen_luasodium_crypto_aead_core(lua_State *L);
+
+LS_PUBLIC
+int luaopen_luasodium_crypto_auth_core(lua_State *L);
+
+LS_PUBLIC
+int luaopen_luasodium_crypto_box_core(lua_State *L);
+
+LS_PUBLIC
+int luaopen_luasodium_crypto_generichash_core(lua_State *L);
+
+LS_PUBLIC
+int luaopen_luasodium_crypto_hash_core(lua_State *L);
+
+LS_PUBLIC
+int luaopen_luasodium_crypto_onetimeauth_core(lua_State *L);
+
+LS_PUBLIC
+int luaopen_luasodium_crypto_pwhash_core(lua_State *L);
+
+LS_PUBLIC
+int luaopen_luasodium_crypto_scalarmult_core(lua_State *L);
+
+LS_PUBLIC
+int luaopen_luasodium_crypto_secretbox_core(lua_State *L);
+
+LS_PUBLIC
+int luaopen_luasodium_crypto_secretstream_core(lua_State *L);
+
+LS_PUBLIC
+int luaopen_luasodium_crypto_shorthash_core(lua_State *L);
+
+LS_PUBLIC
+int luaopen_luasodium_crypto_sign_core(lua_State *L);
+
+LS_PUBLIC
+int luaopen_luasodium_crypto_stream_core(lua_State *L);
+
+LS_PUBLIC
+int luaopen_luasodium_crypto_verify_core(lua_State *L);
+
+LS_PUBLIC
+int luaopen_luasodium_randombytes_core(lua_State *L);
+
+LS_PUBLIC
+int luaopen_luasodium_utils_core(lua_State *L);
+
+LS_PUBLIC
+int luaopen_luasodium_version_core(lua_State *L);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
