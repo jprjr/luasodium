@@ -1,7 +1,6 @@
-return function(libs)
+return function(sodium_lib)
   local string_len = string.len
   local string_format = string.format
-  local sodium_lib = libs.sodium
 
   local function ls_crypto_verify(f,l)
     return function(x,y)

@@ -131,7 +131,7 @@ ls_crypto_generichash(lua_State *L) {
 
 static int
 ls_crypto_generichash_init(lua_State *L) {
-    void *state = NULL;
+    void **state = NULL;
     const unsigned char *key = NULL;
 
     size_t keylen = 0;
@@ -183,18 +183,24 @@ ls_crypto_generichash_init(lua_State *L) {
 
     lua_newtable(L);
 
-    state = lua_newuserdata(L, STATEBYTES);
-    lua_pushvalue(L, lua_upvalueindex(10));
-    lua_setmetatable(L,-2);
+    state = (void **)lua_newuserdata(L, sizeof(void *));
 
     /* LCOV_EXCL_START */
     if(state == NULL) {
         return luaL_error(L,"out of memory");
     }
+    *state = NULL;
+    *state = sodium_malloc(STATEBYTES);
+    if(*state == NULL) {
+        return luaL_error(L,"out of memory");
+    }
     /* LCOV_EXCL_STOP */
 
+    lua_pushvalue(L, lua_upvalueindex(10));
+    lua_setmetatable(L,-2);
+
     /* LCOV_EXCL_START */
-    if(f(state, key, keylen, outlen) == -1) {
+    if(f(*state, key, keylen, outlen) == -1) {
         lua_pushnil(L);
         lua_pushfstring(L,"%s error",fname);
         return 2;
@@ -214,7 +220,7 @@ ls_crypto_generichash_init(lua_State *L) {
 
 static int
 ls_crypto_generichash_update(lua_State *L) {
-    void *state = NULL;
+    void **state = NULL;
     const unsigned char *in = NULL;
     size_t inlen = 0;
 
@@ -239,7 +245,7 @@ ls_crypto_generichash_update(lua_State *L) {
     in = (const unsigned char *)lua_tolstring(L,2,&inlen);
 
     /* LCOV_EXCL_START */
-    lua_pushboolean(L, f(state,in,inlen) == 0);
+    lua_pushboolean(L, f(*state,in,inlen) == 0);
     /* LCOV_EXCL_STOP */
 
     return 1;
@@ -247,7 +253,7 @@ ls_crypto_generichash_update(lua_State *L) {
 
 static int
 ls_crypto_generichash_final(lua_State *L) {
-    void *state = NULL;
+    void **state = NULL;
     unsigned char *out = NULL;
     size_t outlen = 0;
 
@@ -288,7 +294,7 @@ ls_crypto_generichash_final(lua_State *L) {
     /* LCOV_EXCL_STOP */
 
     /* LCOV_EXCL_START */
-    if(f(state,out,outlen) == -1) {
+    if(f(*state,out,outlen) == -1) {
         lua_pushnil(L);
         lua_pushfstring(L,"%s error",fname);
         return 2;
@@ -302,8 +308,11 @@ ls_crypto_generichash_final(lua_State *L) {
 
 static int
 ls_crypto_generichash__gc(lua_State *L) {
-    void *state = lua_touserdata(L,1);
-    sodium_memzero(state,lua_tointeger(L, lua_upvalueindex(1)));
+    void **state = lua_touserdata(L,1);
+    if(*state != NULL) {
+        sodium_free(*state);
+        *state = NULL;
+    }
     return 0;
 }
 
@@ -335,8 +344,7 @@ ls_crypto_generichash_setup(lua_State *L,
     lua_newtable(L);
     ud_metatable_index = lua_gettop(L);
 
-    lua_pushinteger(L, STATEBYTES);
-    lua_pushcclosure(L, ls_crypto_generichash__gc, 1);
+    lua_pushcclosure(L, ls_crypto_generichash__gc, 0);
     lua_setfield(L, ud_metatable_index, "__gc");
 
     lua_pushstring(L, init_name);

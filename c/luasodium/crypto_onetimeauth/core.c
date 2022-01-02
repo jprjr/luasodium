@@ -147,7 +147,7 @@ ls_crypto_onetimeauth_keygen(lua_State *L) {
 
 static int
 ls_crypto_onetimeauth_init(lua_State *L) {
-    void *state = NULL;
+    void **state = NULL;
     const unsigned char *k = NULL;
     size_t klen = 0;
 
@@ -172,17 +172,21 @@ ls_crypto_onetimeauth_init(lua_State *L) {
           KEYBYTES);
     }
 
-    state = lua_newuserdata(L,
-      STATEBYTES);
+    state = (void **)lua_newuserdata(L, sizeof(void *));
 
     /* LCOV_EXCL_START */
     if(state == NULL) {
         return luaL_error(L,"out of memory");
     }
-    /* LCOV_EXCL_STOP */
 
-    /* LCOV_EXCL_START */
-    if(f(state,k) == -1) {
+    *state = NULL;
+    *state = sodium_malloc(STATEBYTES);
+
+    if(*state == NULL) {
+        return luaL_error(L,"out of memory");
+    }
+
+    if(f(*state,k) == -1) {
         lua_pushnil(L);
         lua_pushfstring(L,"%s error",fname);
         return 2;
@@ -197,7 +201,7 @@ ls_crypto_onetimeauth_init(lua_State *L) {
 
 static int
 ls_crypto_onetimeauth_update(lua_State *L) {
-    void *state = NULL;
+    void **state = NULL;
     const unsigned char *m   = NULL;
     size_t mlen = 0;
 
@@ -218,17 +222,17 @@ ls_crypto_onetimeauth_update(lua_State *L) {
     }
     lua_pop(L,2);
 
-    state = (void *)lua_touserdata(L,1);
+    state = (void **)lua_touserdata(L,1);
     m   = (const unsigned char *)lua_tolstring(L,2,&mlen);
 
     lua_pushboolean(L,f(
-      state,m,mlen) != -1);
+      *state,m,mlen) != -1);
     return 1;
 }
 
 static int
 ls_crypto_onetimeauth_final(lua_State *L) {
-    void *state = NULL;
+    void **state = NULL;
     unsigned char *h = NULL;
 
     const char *fname = NULL;
@@ -251,7 +255,7 @@ ls_crypto_onetimeauth_final(lua_State *L) {
     }
     lua_pop(L,2);
 
-    state = lua_touserdata(L,1);
+    state = (void **)lua_touserdata(L,1);
 
     h = (unsigned char *)lua_newuserdata(L,BYTES);
 
@@ -259,10 +263,8 @@ ls_crypto_onetimeauth_final(lua_State *L) {
     if(h == NULL) {
         return luaL_error(L,"out of memory");
     }
-    /* LCOV_EXCL_STOP */
 
-    /* LCOV_EXCL_START */
-    if(f(state,h) == -1) {
+    if(f(*state,h) == -1) {
         lua_pushnil(L);
         lua_pushfstring(L,"%s error",fname);
         return 2;
@@ -277,9 +279,11 @@ ls_crypto_onetimeauth_final(lua_State *L) {
 
 static int
 ls_crypto_onetimeauth_state__gc(lua_State *L) {
-    void *state = lua_touserdata(L,1);
-    size_t STATEBYTES = (size_t)lua_tointeger(L,lua_upvalueindex(1));
-    sodium_memzero(state,STATEBYTES);
+    void **state = (void **) lua_touserdata(L,1);
+    if(*state != NULL) {
+        sodium_free(*state);
+        *state = NULL;
+    }
     return 0;
 }
 
@@ -336,8 +340,7 @@ ls_crypto_onetimeauth_state_setup(lua_State *L,
     lua_setfield(L,module_index,initname);
 
     /* __gc method */
-    lua_pushinteger(L,STATEBYTES);
-    lua_pushcclosure(L,ls_crypto_onetimeauth_state__gc,1);
+    lua_pushcclosure(L,ls_crypto_onetimeauth_state__gc,0);
     lua_setfield(L,-2,"__gc");
 
     lua_pushlightuserdata(L,update_ptr);

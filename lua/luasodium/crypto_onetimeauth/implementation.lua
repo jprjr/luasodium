@@ -1,12 +1,9 @@
-return function(libs, constants)
+return function(sodium_lib, constants)
   local ffi = require'ffi'
   local string_len = string.len
   local string_format = string.format
   local ffi_string = ffi.string
   local tonumber = tonumber
-
-  local sodium_lib = libs.sodium
-  local clib = libs.C
 
   local char_array = ffi.typeof('char[?]')
 
@@ -20,11 +17,6 @@ return function(libs, constants)
     local BYTES = constants[string_format('%s_BYTES',basename)]
     local KEYBYTES = constants[string_format('%s_KEYBYTES',basename)]
     local STATEBYTES = tonumber(sodium_lib[string_format('%s_statebytes',basename)]())
-
-    local ls_crypto_onetimeauth_free = function(state)
-      sodium_lib.sodium_memzero(state,STATEBYTES)
-      clib.free(state)
-    end
 
     local ls_crypto_onetimeauth_methods = {}
     local ls_crypto_onetimeauth_mt = {
@@ -95,7 +87,7 @@ return function(libs, constants)
           ))
         end
 
-        local state = ffi.gc(clib.malloc(STATEBYTES),ls_crypto_onetimeauth_free)
+        local state = ffi.gc(sodium_lib.sodium_malloc(STATEBYTES),sodium_lib.sodium_free)
         if tonumber(sodium_lib[crypto_onetimeauth_init](state,key)) == -1 then
           return nil, string_format('%s error',crypto_onetimeauth_init)
         end

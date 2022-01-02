@@ -17,16 +17,14 @@ local function lib_loader(signatures)
     return false
   end
 
-  local libs = {
-    C = ffi.C
-  }
+  local lib
 
   do
     local ok = pcall(test_cspace)
     if ok then
-      libs.sodium = libs.C
+      lib = ffi.C
     else
-      libs.sodium = ffi.load('sodium')
+      lib = ffi.load('sodium')
     end
   end
 
@@ -34,7 +32,7 @@ local function lib_loader(signatures)
     ffi.cdef(string_format(sig,f))
   end
 
-  return libs
+  return lib
 end
 
 return lib_loader

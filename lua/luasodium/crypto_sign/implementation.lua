@@ -1,13 +1,10 @@
-return function(libs, constants)
+return function(sodium_lib, constants)
   local ffi = require'ffi'
   local string_len = string.len
   local string_format = string.format
   local ffi_string = ffi.string
 
   local char_array = ffi.typeof('char[?]')
-
-  local sodium_lib = libs.sodium
-  local clib = libs.C
 
   -- handles the main 3 functions - keypair, sign, open
   local function ls_crypto_sign(basename)
@@ -144,11 +141,6 @@ return function(libs, constants)
     local crypto_sign_final_verify = string_format('%s_final_verify',basename)
     local STATEBYTES = tonumber(sodium_lib[string_format('%s_statebytes',basename)]())
 
-    local ls_crypto_sign_free = function(state)
-      sodium_lib.sodium_memzero(state,STATEBYTES)
-      clib.free(state)
-    end
-
     local ls_crypto_sign_methods = {}
     local ls_crypto_sign_mt = {
       __index = ls_crypto_sign_methods
@@ -156,7 +148,7 @@ return function(libs, constants)
 
     local M = {
       [crypto_sign_init] = function()
-        local state = ffi.gc(clib.malloc(STATEBYTES),ls_crypto_sign_free)
+        local state = ffi.gc(sodium_lib.sodium_malloc(STATEBYTES),sodium_lib.sodium_free)
         if tonumber(sodium_lib[crypto_sign_init](state)) == -1 then
           return nil, string_format('%s error', crypto_sign_init)
         end

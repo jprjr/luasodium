@@ -63,7 +63,7 @@ ls_crypto_hash(lua_State *L) {
 
 static int
 ls_crypto_hash_init(lua_State *L) {
-    void *state = NULL;
+    void **state = NULL;
 
     const char *fname = NULL;
     ls_crypto_hash_init_ptr f = NULL;
@@ -73,16 +73,20 @@ ls_crypto_hash_init(lua_State *L) {
     f = (ls_crypto_hash_init_ptr)lua_touserdata(L,lua_upvalueindex(2));
     STATEBYTES = (size_t)lua_tointeger(L,lua_upvalueindex(3));
 
-    state = lua_newuserdata(L, STATEBYTES);
+    state = (void **)lua_newuserdata(L, sizeof(void *));
 
     /* LCOV_EXCL_START */
     if(state == NULL) {
         return luaL_error(L,"out of memory");
     }
-    /* LCOV_EXCL_STOP */
+    *state = NULL;
+    *state = sodium_malloc(STATEBYTES);
 
-    /* LCOV_EXCL_START */
-    if(f(state) == -1) {
+    if(*state == NULL) {
+        return luaL_error(L,"out of memory");
+    }
+
+    if(f(*state) == -1) {
         lua_pushnil(L);
         lua_pushfstring(L,"%s error",fname);
         return 2;
@@ -97,7 +101,7 @@ ls_crypto_hash_init(lua_State *L) {
 
 static int
 ls_crypto_hash_update(lua_State *L) {
-    void *state = NULL;
+    void **state = NULL;
     const unsigned char *m   = NULL;
     size_t mlen = 0;
 
@@ -116,15 +120,15 @@ ls_crypto_hash_update(lua_State *L) {
     }
     lua_pop(L,2);
 
-    f     = (ls_crypto_hash_update_ptr)lua_touserdata(L,lua_upvalueindex(1));
+    f = (ls_crypto_hash_update_ptr)lua_touserdata(L,lua_upvalueindex(1));
 
-    state = (crypto_hash_sha256_state *)lua_touserdata(L,1);
+    state = (void **)lua_touserdata(L,1);
     m   = (const unsigned char *)lua_tolstring(L,2,&mlen);
 
     lua_pushboolean(L,
     /* LCOV_EXCL_START */
       (f(
-      state,m,mlen) != -1)
+      *state,m,mlen) != -1)
     /* LCOV_EXCL_STOP */
     );
     return 1;
@@ -132,7 +136,7 @@ ls_crypto_hash_update(lua_State *L) {
 
 static int
 ls_crypto_hash_final(lua_State *L) {
-    void *state = NULL;
+    void **state = NULL;
     unsigned char *h = NULL;
 
     const char *fname = NULL;
@@ -156,7 +160,7 @@ ls_crypto_hash_final(lua_State *L) {
     f = (ls_crypto_hash_final_ptr) lua_touserdata(L,lua_upvalueindex(2));
     BYTES = (size_t)lua_tointeger(L,lua_upvalueindex(3));
 
-    state = lua_touserdata(L,1);
+    state = (void **)lua_touserdata(L,1);
 
     h = lua_newuserdata(L,BYTES);
 
@@ -167,7 +171,7 @@ ls_crypto_hash_final(lua_State *L) {
     /* LCOV_EXCL_STOP */
 
     /* LCOV_EXCL_START */
-    if(f(state,h) == -1) {
+    if(f(*state,h) == -1) {
         lua_pushnil(L);
         lua_pushfstring(L,"%s error",fname);
         return 2;
@@ -182,8 +186,11 @@ ls_crypto_hash_final(lua_State *L) {
 
 static int
 ls_crypto_hash_state__gc(lua_State *L) {
-    void *state = lua_touserdata(L,1);
-    sodium_memzero(state,(size_t)lua_tointeger(L,lua_upvalueindex(1)));
+    void **state = (void **)lua_touserdata(L,1);
+    if(*state != NULL) {
+        sodium_free(*state);
+        *state = NULL;
+    }
     return 0;
 }
 
@@ -223,8 +230,7 @@ ls_crypto_hash_state_setup(lua_State *L,
     lua_setfield(L,module_index,initname);
 
     /* let's add the gc method to the metatable */
-    lua_pushinteger(L,STATEBYTES);
-    lua_pushcclosure(L,ls_crypto_hash_state__gc,1);
+    lua_pushcclosure(L,ls_crypto_hash_state__gc,0);
     lua_setfield(L,metatable_index,"__gc");
 
     /* now let's add the update/final methods to the module */

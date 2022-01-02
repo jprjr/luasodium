@@ -1,4 +1,4 @@
-return function(libs)
+return function(sodium_lib)
   local ffi = require'ffi'
 
   local tonumber = tonumber
@@ -16,8 +16,6 @@ return function(libs)
     sodium_base64_VARIANT_URLSAFE = 5,
     sodium_base64_VARIANT_URLSAFE_NO_PADDING = 7,
   }
-
-  local sodium_lib = libs.sodium
 
   local sodium_base64_VARIANT_ORIGINAL = constants.sodium_base64_VARIANT_ORIGINAL
   local sodium_base64_VARIANT_ORIGINAL_NO_PADDING = constants.sodium_base64_VARIANT_ORIGINAL_NO_PADDING

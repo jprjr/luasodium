@@ -362,7 +362,7 @@ ls_crypto_sign_verify_detached(lua_State *L) {
 
 static int
 ls_crypto_sign_init(lua_State *L) {
-    void *state = NULL;
+    void **state = NULL;
 
     const char *fname = NULL;
     ls_crypto_sign_init_ptr f = NULL;
@@ -372,16 +372,19 @@ ls_crypto_sign_init(lua_State *L) {
     f = (ls_crypto_sign_init_ptr) lua_touserdata(L, lua_upvalueindex(2));
     STATEBYTES = (size_t) lua_tointeger(L, lua_upvalueindex(3));
 
-    state = lua_newuserdata(L, STATEBYTES);
+    state = (void **)lua_newuserdata(L, sizeof(void *));
 
     /* LCOV_EXCL_START */
     if(state == NULL) {
         return luaL_error(L, "out of memory");
     }
-    /* LCOV_EXCL_STOP */
+    *state = NULL;
+    *state = sodium_malloc(STATEBYTES);
+    if(*state == NULL) {
+        return luaL_error(L, "out of memory");
+    }
 
-    /* LCOV_EXCL_START */
-    if(f(state) == -1) {
+    if(f(*state) == -1) {
         lua_pushnil(L);
         lua_pushfstring(L,"%s error",fname);
         return 2;
@@ -396,7 +399,7 @@ ls_crypto_sign_init(lua_State *L) {
 
 static int
 ls_crypto_sign_update(lua_State *L) {
-    void *state = NULL;
+    void **state = NULL;
     const unsigned char *m   = NULL;
     size_t mlen = 0;
 
@@ -417,17 +420,17 @@ ls_crypto_sign_update(lua_State *L) {
 
     f = (ls_crypto_sign_update_ptr) lua_touserdata(L, lua_upvalueindex(1));
 
-    state = lua_touserdata(L,1);
+    state = (void **) lua_touserdata(L,1);
     m   = (const unsigned char *)lua_tolstring(L,2,&mlen);
 
     lua_pushboolean(L,f(
-      state,m,mlen) != -1);
+      *state,m,mlen) != -1);
     return 1;
 }
 
 static int
 ls_crypto_sign_final_create(lua_State *L) {
-    void *state = NULL;
+    void **state = NULL;
     unsigned char *sig = NULL;
     const unsigned char *sk   = NULL;
     unsigned long long siglen = 0;
@@ -456,7 +459,7 @@ ls_crypto_sign_final_create(lua_State *L) {
     SECRETKEYBYTES = (size_t) lua_tointeger(L, lua_upvalueindex(3));
     BYTES = (size_t) lua_tointeger(L, lua_upvalueindex(4));
 
-    state = lua_touserdata(L,1);
+    state = (void **) lua_touserdata(L,1);
     sk  = (const unsigned char *)lua_tolstring(L,2,&sklen);
 
     if(sklen != SECRETKEYBYTES) {
@@ -473,7 +476,7 @@ ls_crypto_sign_final_create(lua_State *L) {
     /* LCOV_EXCL_STOP */
 
     /* LCOV_EXCL_START */
-    if(f(state,sig,&siglen,sk) == -1) {
+    if(f(*state,sig,&siglen,sk) == -1) {
         lua_pushnil(L);
         lua_pushfstring(L,"%s error",fname);
         return 2;
@@ -487,7 +490,7 @@ ls_crypto_sign_final_create(lua_State *L) {
 
 static int
 ls_crypto_sign_final_verify(lua_State *L) {
-    void *state  = NULL;
+    void **state  = NULL;
     const unsigned char *sig  = NULL;
     const unsigned char *pk   = NULL;
     size_t siglen = 0;
@@ -512,7 +515,7 @@ ls_crypto_sign_final_verify(lua_State *L) {
     f = (ls_crypto_sign_final_verify_ptr) lua_touserdata(L, lua_upvalueindex(1));
     PUBLICKEYBYTES = (size_t) lua_tointeger(L, lua_upvalueindex(2));
 
-    state = lua_touserdata(L,1);
+    state = (void **) lua_touserdata(L,1);
     sig = (const unsigned char *)lua_tolstring(L,2,&siglen);
     pk  = (const unsigned char *)lua_tolstring(L,3,&pklen);
 
@@ -521,7 +524,7 @@ ls_crypto_sign_final_verify(lua_State *L) {
           PUBLICKEYBYTES);
     }
 
-    lua_pushboolean(L,f(state,sig,pk) == 0);
+    lua_pushboolean(L,f(*state,sig,pk) == 0);
     return 1;
 }
 
@@ -623,8 +626,11 @@ ls_crypto_sign_sk_to_pk(lua_State *L) {
 
 static int
 ls_crypto_sign_state__gc(lua_State *L) {
-    void *state = lua_touserdata(L,1);
-    sodium_memzero(state,(size_t)lua_tointeger(L, lua_upvalueindex(1)));
+    void **state = (void **) lua_touserdata(L,1);
+    if(*state != NULL) {
+        sodium_free(*state);
+        *state = NULL;
+    }
     return 0;
 }
 
@@ -659,8 +665,7 @@ ls_crypto_sign_state_setup(lua_State *L,
     lua_pushcclosure(L,ls_crypto_sign_init,4);
     lua_setfield(L,module_index,initname);
 
-    lua_pushinteger(L, STATEBYTES);
-    lua_pushcclosure(L, ls_crypto_sign_state__gc,1);
+    lua_pushcclosure(L, ls_crypto_sign_state__gc,0);
     lua_setfield(L,metatable_index,"__gc");
 
     lua_pushlightuserdata(L,update_ptr);

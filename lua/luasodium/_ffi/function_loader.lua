@@ -1,20 +1,16 @@
--- returns a 'libs' table
 -- used by the ffi-in-a-c-module
 return function(signatures,pointers)
 
   local ffi = require'ffi'
   local string_format = string.format
 
-  local libs = {
-    sodium = {}
-  }
-  libs.C = libs.sodium
+  local lib = {}
 
   for k,f in pairs(pointers) do
     if signatures[k] then
-      libs.sodium[k] = ffi.cast(string_format(signatures[k],'(*)'),f)
+      lib[k] = ffi.cast(string_format(signatures[k],'(*)'),f)
     end
   end
 
-  return libs
+  return lib
 end

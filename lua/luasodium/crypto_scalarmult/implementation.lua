@@ -1,4 +1,4 @@
-return function(libs, constants)
+return function(sodium_lib, constants)
 
   local ffi = require'ffi'
   local string_len = string.len
@@ -6,8 +6,6 @@ return function(libs, constants)
   local ffi_string = ffi.string
 
   local char_array = ffi.typeof('char[?]')
-
-  local sodium_lib = libs.sodium
 
   local function ls_crypto_scalarmult(basename)
     local crypto_scalarmult = string_format('%s',basename)

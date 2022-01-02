@@ -9,10 +9,10 @@ return function(modname)
 
   default_signatures(signatures)
 
-  local libs = lib_loader(signatures)
-  local constants = constant_loader(libs.sodium,constant_keys)
+  local lib = lib_loader(signatures)
+  local constants = constant_loader(lib,constant_keys)
 
-  return implementation(libs,constants)
+  return implementation(lib,constants)
 end
 
 

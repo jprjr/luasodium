@@ -1,12 +1,9 @@
-return function(libs, constants)
+return function(sodium_lib, constants)
   local ffi = require'ffi'
   local string_len = string.len
   local string_format = string.format
   local ffi_string = ffi.string
   local tonumber = tonumber
-
-  local sodium_lib = libs.sodium
-  local clib = libs.C
 
   local char_array = ffi.typeof('char[?]')
 
@@ -26,11 +23,6 @@ return function(libs, constants)
     local TAG_PUSH = tonumber(sodium_lib[string_format('%s_tag_push',basename)]())
     local TAG_REKEY = tonumber(sodium_lib[string_format('%s_tag_rekey',basename)]())
     local TAG_FINAL = tonumber(sodium_lib[string_format('%s_tag_final',basename)]())
-
-    local ls_crypto_secretstream_free = function(state)
-      sodium_lib.sodium_memzero(state,STATEBYTES)
-      clib.free(state)
-    end
 
     local ls_crypto_secretstream_push_methods = {}
     local ls_crypto_secretstream_push_mt = {
@@ -66,7 +58,7 @@ return function(libs, constants)
             KEYBYTES))
         end
 
-        local state = ffi.gc(clib.malloc(STATEBYTES),ls_crypto_secretstream_free)
+        local state = ffi.gc(sodium_lib.sodium_malloc(STATEBYTES),sodium_lib.sodium_free)
         local header = char_array(HEADERBYTES)
 
         if tonumber(sodium_lib[crypto_secretstream_init_push](state,header,key)) == -1 then
@@ -129,7 +121,7 @@ return function(libs, constants)
             KEYBYTES))
         end
 
-        local state = ffi.gc(clib.malloc(STATEBYTES),ls_crypto_secretstream_free)
+        local state = ffi.gc(sodium_lib.sodium_malloc(STATEBYTES),sodium_lib.sodium_free)
 
         if tonumber(sodium_lib[crypto_secretstream_init_pull](state,header,key)) == -1 then
           return nil, string_format('%s: invalid header',crypto_secretstream_init_pull)

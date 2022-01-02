@@ -4,8 +4,8 @@
 static const luasodium_function_t ls_crypto_onetimeauth_functions[] = {
     LS_FUNC(sodium_init),
     LS_FUNC(sodium_memzero),
-    LS_FUNC(malloc),
-    LS_FUNC(free),
+    LS_FUNC(sodium_malloc),
+    LS_FUNC(sodium_free),
     LS_FUNC(crypto_onetimeauth),
     LS_FUNC(crypto_onetimeauth_verify),
     LS_FUNC(crypto_onetimeauth_keygen),
