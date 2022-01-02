@@ -77,7 +77,7 @@ c/luasodium$(DLL): $(LUASODIUM_OBJS)
 c/luasodium$(LIB): $(LUASODIUM_OBJS)
 	ar rcs $@ $^
 
-test-%: $(LUASODIUM_DLLS)
+test-%: $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
 	busted -c --lua=$(shell which $(LUA)) --lpath 'lua/?.lua' --cpath 'c/?.so' spec/$(@:test-%=%)_spec.lua
 
 test: $(LUASODIUM_TESTS)
