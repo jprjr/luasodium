@@ -174,7 +174,7 @@ coverage:
 	rm -f luacov.stats.out luacov.report.out
 	mkdir -p coverage
 	$(MAKE) -f Makefile clean
-	$(MAKE) -f Makefile LDFLAGS="--coverage $(shell $(PKGCONFIG) --libs libsodium)" CFLAGS="-fPIC -Wall -Wextra -g -O0 -fprofile-arcs -ftest-coverage --coverage $(shell $(PKGCONFIG) --cflags $(LUA)) $(shell $(PKGCONFIG) --libs libsodium)" LUA=$(LUA)
+	$(MAKE) -f Makefile LDFLAGS="--coverage $(shell $(PKGCONFIG) --libs libsodium)" CFLAGS="-fPIC -Wall -Wextra -g -O0 -fprofile-arcs -ftest-coverage --coverage $(shell $(PKGCONFIG) --cflags $(LUA)) $(shell $(PKGCONFIG) --cflags libsodium)" LUA=$(LUA)
 	$(MAKE) -f Makefile LUA=$(LUA) TESTMODE=core coverage-run
 	$(MAKE) -f Makefile LUA=$(LUA) TESTMODE=core coverage-collect-c
 	$(MAKE) -f Makefile LUA=$(LUA) TESTMODE=core coverage-collect-lua
