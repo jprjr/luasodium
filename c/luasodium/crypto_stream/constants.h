@@ -7,6 +7,14 @@ static const luasodium_constant_t ls_crypto_stream_constants[] = {
     LS_CONST(crypto_stream_salsa20_NONCEBYTES),
     LS_CONST(crypto_stream_salsa2012_KEYBYTES),
     LS_CONST(crypto_stream_salsa2012_NONCEBYTES),
+    LS_CONST(crypto_stream_salsa208_KEYBYTES),
+    LS_CONST(crypto_stream_salsa208_NONCEBYTES),
+    LS_CONST(crypto_stream_chacha20_KEYBYTES),
+    LS_CONST(crypto_stream_chacha20_NONCEBYTES),
+    LS_CONST(crypto_stream_chacha20_ietf_KEYBYTES),
+    LS_CONST(crypto_stream_chacha20_ietf_NONCEBYTES),
+    LS_CONST(crypto_stream_xchacha20_KEYBYTES),
+    LS_CONST(crypto_stream_xchacha20_NONCEBYTES),
     { NULL, 0 },
 };
 
