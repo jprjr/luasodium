@@ -130,7 +130,17 @@ configure_file(
   COPYONLY
 )
 
+configure_file(
+  "lua/sodium.lua"
+  "${CMAKE_BINARY_DIR}/sodium.lua"
+  COPYONLY
+)
+
 install(FILES "lua/luasodium.lua"
+  DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/"
+)
+
+install(FILES "lua/sodium.lua"
   DESTINATION "${LUAMODULE_INSTALL_LIB_DIR}/"
 )
 
