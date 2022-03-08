@@ -20,6 +20,10 @@ static const luasodium_function_t ls_crypto_pwhash_functions[] = {
     LS_FUNC(crypto_pwhash_argon2id_str),
     LS_FUNC(crypto_pwhash_argon2id_str_verify),
     LS_FUNC(crypto_pwhash_argon2id_str_needs_rehash),
+    LS_FUNC(crypto_pwhash_scryptsalsa208sha256),
+    LS_FUNC(crypto_pwhash_scryptsalsa208sha256_str),
+    LS_FUNC(crypto_pwhash_scryptsalsa208sha256_str_verify),
+    LS_FUNC(crypto_pwhash_scryptsalsa208sha256_str_needs_rehash),
     { NULL }
 };
 
@@ -48,6 +52,8 @@ int luaopen_luasodium_crypto_pwhash_ffi(lua_State *L) {
     lua_setfield(L,-2,"crypto_pwhash_argon2i_STRPREFIX");
     lua_pushliteral(L,crypto_pwhash_argon2id_STRPREFIX);
     lua_setfield(L,-2,"crypto_pwhash_argon2id_STRPREFIX");
+    lua_pushliteral(L,crypto_pwhash_scryptsalsa208sha256_STRPREFIX);
+    lua_setfield(L,-2,"crypto_pwhash_scryptsalsa208sha256_STRPREFIX");
 
     /* LCOV_EXCL_START */
     if(lua_pcall(L,3,1,0)) {

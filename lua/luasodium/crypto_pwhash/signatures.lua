@@ -10,6 +10,17 @@ int %s(
   int)
 ]]
 
+local crypto_pwhash_noalg_sig = [[
+int %s(
+  unsigned char * const,
+  unsigned long long,
+  const char * const,
+  unsigned long long,
+  const unsigned char * const,
+  unsigned long long,
+  size_t)
+]]
+
 local crypto_pwhash_str_sig = [[
 int %s(
   char *,
@@ -46,6 +57,10 @@ local signatures = {
   ['crypto_pwhash_argon2id_str'] = crypto_pwhash_str_sig,
   ['crypto_pwhash_argon2id_str_verify'] = crypto_pwhash_str_verify_sig,
   ['crypto_pwhash_argon2id_str_needs_rehash'] = crypto_pwhash_str_needs_rehash_sig,
+  ['crypto_pwhash_scryptsalsa208sha256'] = crypto_pwhash_noalg_sig,
+  ['crypto_pwhash_scryptsalsa208sha256_str'] = crypto_pwhash_str_sig,
+  ['crypto_pwhash_scryptsalsa208sha256_str_verify'] = crypto_pwhash_str_verify_sig,
+  ['crypto_pwhash_scryptsalsa208sha256_str_needs_rehash'] = crypto_pwhash_str_needs_rehash_sig,
 }
 
 return signatures

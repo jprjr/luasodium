@@ -50,6 +50,20 @@ local constant_keys = {
   'crypto_pwhash_argon2id_PASSWD_MIN',
   'crypto_pwhash_argon2id_SALTBYTES',
   'crypto_pwhash_argon2id_STRBYTES',
+  'crypto_pwhash_scryptsalsa208sha256_BYTES_MAX',
+  'crypto_pwhash_scryptsalsa208sha256_BYTES_MIN',
+  'crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_INTERACTIVE',
+  'crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_MAX',
+  'crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_MIN',
+  'crypto_pwhash_scryptsalsa208sha256_MEMLIMIT_SENSITIVE',
+  'crypto_pwhash_scryptsalsa208sha256_OPSLIMIT_INTERACTIVE',
+  'crypto_pwhash_scryptsalsa208sha256_OPSLIMIT_MAX',
+  'crypto_pwhash_scryptsalsa208sha256_OPSLIMIT_MIN',
+  'crypto_pwhash_scryptsalsa208sha256_OPSLIMIT_SENSITIVE',
+  'crypto_pwhash_scryptsalsa208sha256_PASSWD_MAX',
+  'crypto_pwhash_scryptsalsa208sha256_PASSWD_MIN',
+  'crypto_pwhash_scryptsalsa208sha256_SALTBYTES',
+  'crypto_pwhash_scryptsalsa208sha256_STRBYTES',
   -- 'crypto_pwhash_STRPREFIX' -- handled in implementation since
   -- it's a string, and the constant loader assumes everything is
   -- a size_t

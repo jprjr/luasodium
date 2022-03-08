@@ -12,6 +12,15 @@ typedef int (*ls_crypto_pwhash_ptr)(
   size_t,
   int);
 
+typedef int (*ls_crypto_pwhash_noalg_ptr)(
+  unsigned char * const,
+  unsigned long long,
+  const char * const,
+  unsigned long long,
+  const unsigned char * const,
+  unsigned long long,
+  size_t);
+
 typedef int (*ls_crypto_pwhash_str_ptr)(
   char *,
   const char * const,
@@ -120,6 +129,101 @@ ls_crypto_pwhash(lua_State *L) {
     /* LCOV_EXCL_STOP */
 
     if(f(out,outlen,passwd,passwdlen,salt,opslimit,memlimit,alg) == -1) {
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
+    }
+
+    lua_pushlstring(L,(const char *)out,outlen);
+    sodium_memzero(out,outlen);
+    return 1;
+}
+
+/* crypto_pwhash(length, passwd, salt, opslimit, memlimit) */
+static int
+ls_crypto_pwhash_noalg(lua_State *L) {
+    unsigned char *out = NULL;
+    const char *passwd = NULL;
+    const unsigned char *salt = NULL;
+
+    size_t outlen = 0;
+    size_t passwdlen = 0;
+    size_t saltlen = 0;
+    size_t opslimit = 0;
+    size_t memlimit = 0;
+
+    const char *fname = NULL;
+    ls_crypto_pwhash_noalg_ptr f = NULL;
+    size_t BYTES_MIN = 0;
+    size_t BYTES_MAX = 0;
+    size_t OPSLIMIT_MIN = 0;
+    size_t OPSLIMIT_MAX = 0;
+    size_t MEMLIMIT_MIN = 0;
+    size_t MEMLIMIT_MAX = 0;
+    size_t PASSWD_MIN = 0;
+    size_t PASSWD_MAX = 0;
+    size_t SALTBYTES = 0;
+
+    if(lua_isnoneornil(L,5)) {
+        return luaL_error(L,"requires 5 parameters");
+    }
+
+    fname = lua_tostring(L,lua_upvalueindex(1));
+    f = (ls_crypto_pwhash_noalg_ptr)lua_touserdata(L,lua_upvalueindex(2));
+    BYTES_MIN = (size_t)lua_tointeger(L,lua_upvalueindex(3));
+    BYTES_MAX = (size_t)lua_tointeger(L,lua_upvalueindex(4));
+    OPSLIMIT_MIN = (size_t)lua_tointeger(L,lua_upvalueindex(5));
+    OPSLIMIT_MAX = (size_t)lua_tointeger(L,lua_upvalueindex(6));
+    MEMLIMIT_MIN = (size_t)lua_tointeger(L,lua_upvalueindex(7));
+    MEMLIMIT_MAX = (size_t)lua_tointeger(L,lua_upvalueindex(8));
+    PASSWD_MIN = (size_t)lua_tointeger(L,lua_upvalueindex(9));
+    PASSWD_MAX = (size_t)lua_tointeger(L,lua_upvalueindex(10));
+    SALTBYTES = (size_t)lua_tointeger(L,lua_upvalueindex(11));
+
+    outlen = (size_t)lua_tointeger(L,1);
+    if(outlen < BYTES_MIN || outlen > BYTES_MAX) {
+        return luaL_error(L,"incorrect outlen, must be between %d and %d",
+          BYTES_MIN, BYTES_MAX);
+    }
+
+    passwd = lua_tolstring(L,2,&passwdlen);
+
+    /* PASSWD_MIN == 0, not going to test > PASSWD_MAX */
+    /* LCOV_EXCL_START */
+    if(passwdlen < PASSWD_MIN || passwdlen > PASSWD_MAX) {
+        return luaL_error(L,"incorrect passwdlen, must be between %d and %d",
+          PASSWD_MIN, PASSWD_MAX);
+    }
+    /* LCOV_EXCL_STOP */
+
+    salt = (const unsigned char *)lua_tolstring(L,3,&saltlen);
+
+    if(saltlen != SALTBYTES) {
+        return luaL_error(L,"incorrect salt length, must be: %d",
+          SALTBYTES);
+    }
+
+    opslimit = (size_t) lua_tointeger(L,4);
+    if(opslimit < OPSLIMIT_MIN || opslimit > OPSLIMIT_MAX) {
+        return luaL_error(L,"incorrect ops limit, must be between %d and %d",
+          OPSLIMIT_MIN, OPSLIMIT_MAX);
+    }
+
+    memlimit = (size_t) lua_tointeger(L,5);
+    if(memlimit < MEMLIMIT_MIN || memlimit > MEMLIMIT_MAX) {
+        return luaL_error(L,"incorrect mem limit, must be between %d and %d",
+          MEMLIMIT_MIN, MEMLIMIT_MAX);
+    }
+
+    out = lua_newuserdata(L,outlen);
+
+    /* LCOV_EXCL_START */
+    if(out == NULL) {
+        return luaL_error(L,"out of memory");
+    }
+    /* LCOV_EXCL_STOP */
+
+    if(f(out,outlen,passwd,passwdlen,salt,opslimit,memlimit) == -1) {
         lua_pushnil(L);
         lua_pushfstring(L,"%s error",fname);
         return 2;
@@ -302,6 +406,21 @@ ls_crypto_pwhash_str_needs_rehash(lua_State *L) {
   lua_pushcclosure(L, ls_crypto_pwhash, 12); \
   lua_setfield(L, -2, #x )
 
+#define LS_CRYPTO_PWHASH_NOALG(x) \
+  lua_pushliteral(L, #x); \
+  lua_pushlightuserdata(L, x); \
+  lua_pushinteger(L, x ## _BYTES_MIN); \
+  lua_pushinteger(L, x ## _BYTES_MAX); \
+  lua_pushinteger(L, x ## _OPSLIMIT_MIN); \
+  lua_pushinteger(L, x ## _OPSLIMIT_MAX); \
+  lua_pushinteger(L, x ## _MEMLIMIT_MIN); \
+  lua_pushinteger(L, x ## _MEMLIMIT_MAX); \
+  lua_pushinteger(L, x ## _PASSWD_MIN); \
+  lua_pushinteger(L, x ## _PASSWD_MAX); \
+  lua_pushinteger(L, x ## _SALTBYTES); \
+  lua_pushcclosure(L, ls_crypto_pwhash_noalg, 11); \
+  lua_setfield(L, -2, #x )
+
 #define LS_CRYPTO_PWHASH_STR(x) \
   lua_pushliteral(L, #x "_str"); \
   lua_pushlightuserdata(L, x ## _str); \
@@ -350,6 +469,9 @@ int luaopen_luasodium_crypto_pwhash_core(lua_State *L) {
     lua_pushliteral(L,crypto_pwhash_argon2id_STRPREFIX);
     lua_setfield(L,-2,"crypto_pwhash_argon2id_STRPREFIX");
 
+    lua_pushliteral(L,crypto_pwhash_scryptsalsa208sha256_STRPREFIX);
+    lua_setfield(L,-2,"crypto_pwhash_scryptsalsa208sha256_STRPREFIX");
+
     LS_CRYPTO_PWHASH(crypto_pwhash,DEFAULT);
     LS_CRYPTO_PWHASH_STR(crypto_pwhash);
     LS_CRYPTO_PWHASH_STR_VERIFY(crypto_pwhash);
@@ -364,6 +486,11 @@ int luaopen_luasodium_crypto_pwhash_core(lua_State *L) {
     LS_CRYPTO_PWHASH_STR(crypto_pwhash_argon2id);
     LS_CRYPTO_PWHASH_STR_VERIFY(crypto_pwhash_argon2id);
     LS_CRYPTO_PWHASH_STR_NEEDS_REHASH(crypto_pwhash_argon2id);
+
+    LS_CRYPTO_PWHASH_NOALG(crypto_pwhash_scryptsalsa208sha256);
+    LS_CRYPTO_PWHASH_STR(crypto_pwhash_scryptsalsa208sha256);
+    LS_CRYPTO_PWHASH_STR_VERIFY(crypto_pwhash_scryptsalsa208sha256);
+    LS_CRYPTO_PWHASH_STR_NEEDS_REHASH(crypto_pwhash_scryptsalsa208sha256);
 
     return 1;
 }
