@@ -96,3 +96,9 @@ int luaopen_luasodium(lua_State *L) {
     fallback:
     return luaopen_luasodium_core(L);
 }
+
+/* allows doing just require'sodium' */
+LS_PUBLIC
+int luaopen_sodium(lua_State *L) {
+    return luaopen_luasodium(L);
+}

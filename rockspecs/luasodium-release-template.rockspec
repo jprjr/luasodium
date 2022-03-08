@@ -14,6 +14,7 @@ description = {
 build = {
   type = "builtin",
   modules = {
+    ["sodium"] = "lua/sodium.lua",
     ["luasodium.core"] = "lua/luasodium/core.lua",
     ["luasodium.ffi"] = "lua/luasodium/ffi.lua",
     ["luasodium.pureffi"] = "lua/luasodium/pureffi.lua",
