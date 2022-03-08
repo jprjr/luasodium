@@ -81,6 +81,16 @@ longer throw errors, they return `nil` and an error message.
 Details on what functions were implemented can be found under the
 [Version 2.1.0 Milestone](https://github.com/jprjr/luasodium/milestone/6).
 
+### Version 2.2
+
+This version no longer uses `malloc`/`free` and instead uses `sodium_malloc`
+and `sodium_free`, for data allocations that require alignment. This
+simplifies the FFI version somewhat - it no longer needs to load
+the C library's `malloc`/`free`, and no longer needs wrappers to call
+`sodium_memzero` when structures are garbage collected, since
+`sodium_free` will take care of that.
+
+This version also adds the scrypt pwhash functions.
 
 ## Caveats
 
