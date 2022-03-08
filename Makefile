@@ -12,7 +12,7 @@ LDFLAGS += $(shell $(PKGCONFIG) --libs libsodium)
 CFLAGS += -fPIC -Wall -Wextra -g -O2
 CFLAGS += $(shell $(PKGCONFIG) --cflags $(LUA))
 
-VERSION = $(shell git describe --tags --abbrev=0)
+VERSION = $(shell git describe --tags --abbrev=0 || echo 0.0.0)
 VERSION_NUM   = $(subst v,,$(VERSION))
 VERSION_PARTS = $(subst ., ,$(VERSION_NUM))
 VERSION_MAJOR = $(word 1,$(VERSION_PARTS))
