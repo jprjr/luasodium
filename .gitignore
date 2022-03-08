@@ -17,6 +17,9 @@ c/luasodium/*/ffi-implementation.h
 c/luasodium/*/ffi-signatures.h
 c/luasodium/ffi-default-signatures.h
 c/luasodium/ffi-function-loader.h
+/c/luasodium/version/constants.h
+/lua/luasodium/version/implementation.lua
+/cmake/modules/LuasodiumVersion.cmake
 /dist
 /luasodium.lua
 /luasodium

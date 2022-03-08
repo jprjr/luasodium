@@ -47,6 +47,23 @@ set(LUASODIUM_FFIMODULES
 # to off if you want to build static binaries with this library.
 option(BUILD_SHARED_LIBS "Build modules as shared libraries" ON)
 
+if(NOT LUASODIUM_VERSION)
+  find_package(Git)
+  if(GIT_FOUND)
+    execute_process(
+      COMMAND ${GIT_EXECUTABLE} describe --tags --abbrev=0
+      RESULT_VARIABLE VERSION_RESULT
+      OUTPUT_VARIABLE LUASODIUM_VERSION)
+  else()
+    set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules ${CMAKE_MODULE_PATH})
+    include(LuasodiumVersion)
+  endif()
+endif()
+
+string(REGEX REPLACE "v?([0-9]+)\\..*" "\\1" LUASODIUM_VERSION_MAJOR "${LUASODIUM_VERSION}")
+string(REGEX REPLACE "v?[0-9]+\\.([0-9])+.*" "\\1" LUASODIUM_VERSION_MINOR "${LUASODIUM_VERSION}")
+string(REGEX REPLACE "v?[0-9]+\\.[0-9]+\\.([0-9]+).*" "\\1" LUASODIUM_VERSION_PATCH "${LUASODIUM_VERSION}")
+
 # try to find libsodium via pkg-config
 find_package(PkgConfig)
 if(PKG_CONFIG_FOUND)
@@ -90,6 +107,22 @@ endif()
 
 set(CMODULE_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/lib/lua/${LUA_VERSION}")
 set(LUAMODULE_INSTALL_LIB_DIR "${CMAKE_INSTALL_PREFIX}/share/lua/${LUA_VERSION}")
+
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/version/constants.h")
+  configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/version/constants.h.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/c/luasodium/version/constants.h"
+    @ONLY
+  )
+endif()
+
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/lua/luasodium/version/implementation.lua")
+  configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/lua/luasodium/version/implementation.lua.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/lua/luasodium/version/implementation.lua"
+    @ONLY
+  )
+endif()
 
 configure_file(
   "lua/luasodium.lua"

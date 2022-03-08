@@ -12,7 +12,12 @@ LDFLAGS += $(shell $(PKGCONFIG) --libs libsodium)
 CFLAGS += -fPIC -Wall -Wextra -g -O2
 CFLAGS += $(shell $(PKGCONFIG) --cflags $(LUA))
 
-VERSION = $(shell $(LUA) tools/version.lua)
+VERSION = $(shell git describe --tags --abbrev=0)
+VERSION_NUM   = $(subst v,,$(VERSION))
+VERSION_PARTS = $(subst ., ,$(VERSION_NUM))
+VERSION_MAJOR = $(word 1,$(VERSION_PARTS))
+VERSION_MINOR = $(word 2,$(VERSION_PARTS))
+VERSION_PATCH = $(word 3,$(VERSION_PARTS))
 
 DLL=.so
 LIB=.a
@@ -55,12 +60,21 @@ INSTALL_LUAS = install-lua-luasodium $(addprefix install-lua-,$(LUASODIUM_MODS))
 INSTALL_DLLS = install-dll-core install-dll-ffi $(addprefix install-dll-,$(LUASODIUM_MODS))
 INSTALL_LIBS = install-lib-core install-lib-ffi $(addprefix install-lib-,$(LUASODIUM_MODS))
 
+VERSION_FILES = cmake/modules/LuasodiumVersion.cmake c/luasodium/version/constants.h lua/luasodium/version/implementation.lua
+
 TESTMODE=core
 
-.PHONY: all clean release test github-release coverage install install-lua-luasodium $(INSTALL_LUAS) $(INSTALL_DLLS) $(INSTALL_LIBS)
+.PHONY: all clean release test github-release coverage install install-lua-luasodium $(INSTALL_LUAS) $(INSTALL_DLLS) $(INSTALL_LIBS) $(VERSION_FILES)
 .SUFFIXES:
 
 all: $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
+
+define VERSION_TEMPLATE
+$(1):
+	sed -e "s/@LUASODIUM_VERSION_MAJOR@/$(VERSION_MAJOR)/; s/@LUASODIUM_VERSION_MINOR@/$(VERSION_MINOR)/; s/@LUASODIUM_VERSION_PATCH@/$(VERSION_PATCH)/" < $(1).in > $(1)
+endef
+
+$(foreach f,$(VERSION_FILES),$(eval $(call VERSION_TEMPLATE,$(f))))
 
 c/luasodium/luasodium.o: c/luasodium/luasodium.c
 	$(CC) $(CFLAGS) -o $@ -c $<
@@ -89,51 +103,51 @@ clean:
 	rm -f $(LUASODIUM_GCDA)
 	rm -f $(LUASODIUM_GCNO)
 
-release:
-	rm -rf luasodium-$(VERSION) dist/luasodium-$(VERSION)
-	rm -rf dist/luasodium-$(VERSION).tar.gz
-	rm -rf dist/luasodium-$(VERSION).tar.xz
+release: $(VERSION_FILES)
+	rm -rf luasodium-$(VERSION_NUM) dist/luasodium-$(VERSION_NUM)
+	rm -rf dist/luasodium-$(VERSION_NUM).tar.gz
+	rm -rf dist/luasodium-$(VERSION_NUM).tar.xz
 	rm -f $(LUASODIUM_OBJS) $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
 	rm -f $(LUASODIUM_GCNO)
 	rm -f $(LUASODIUM_GCDA)
 	make -C tools clean
 	mkdir -p dist
-	mkdir -p luasodium-$(VERSION)/
-	rsync -a c luasodium-$(VERSION)/
-	rsync -a lua luasodium-$(VERSION)/
-	rsync -a rockspecs luasodium-$(VERSION)/
-	rsync -a spec luasodium-$(VERSION)/
-	rsync -a test luasodium-$(VERSION)/
-	rsync -a tools luasodium-$(VERSION)/
-	rsync -a README.md luasodium-$(VERSION)/README.md
-	rsync -a LICENSE luasodium-$(VERSION)/LICENSE
-	rsync -a Makefile luasodium-$(VERSION)/Makefile
-	rsync -a CMakeLists.txt luasodium-$(VERSION)/CMakeLists.txt
-	rsync -a dist.ini luasodium-$(VERSION)/dist.ini
-	sed 's/@VERSION@/$(VERSION)/g' < rockspecs/luasodium-release-template.rockspec > luasodium-$(VERSION)/rockspecs/luasodium-$(VERSION)-1.rockspec
-	sed 's/@VERSION@/$(VERSION)/g' < dist.ini > luasodium-$(VERSION)/dist.ini
-	tar cvf dist/luasodium-$(VERSION).tar luasodium-$(VERSION)
-	gzip -k dist/luasodium-$(VERSION).tar
-	xz dist/luasodium-$(VERSION).tar
-	mv luasodium-$(VERSION) dist/luasodium-$(VERSION)
+	mkdir -p luasodium-$(VERSION_NUM)/
+	rsync -a --exclude '*.in' cmake luasodium-$(VERSION_NUM)/
+	rsync -a --exclude '*.in' c luasodium-$(VERSION_NUM)/
+	rsync -a --exclude '*.in' lua luasodium-$(VERSION_NUM)/
+	rsync -a --exclude '*.in' spec luasodium-$(VERSION_NUM)/
+	rsync -a --exclude '*.in' test luasodium-$(VERSION_NUM)/
+	rsync -a --exclude '*.in' tools luasodium-$(VERSION_NUM)/
+	rsync -a README.md luasodium-$(VERSION_NUM)/README.md
+	rsync -a LICENSE luasodium-$(VERSION_NUM)/LICENSE
+	rsync -a Makefile luasodium-$(VERSION_NUM)/Makefile
+	rsync -a CMakeLists.txt luasodium-$(VERSION_NUM)/CMakeLists.txt
+	rsync -a dist.ini luasodium-$(VERSION_NUM)/dist.ini
+	sed 's/@VERSION@/$(VERSION_NUM)/g' < rockspecs/luasodium-release-template.rockspec > luasodium-$(VERSION_NUM)/luasodium-$(VERSION_NUM)-1.rockspec
+	sed 's/@VERSION@/$(VERSION_NUM)/g' < dist.ini > luasodium-$(VERSION_NUM)/dist.ini
+	tar cvf dist/luasodium-$(VERSION_NUM).tar luasodium-$(VERSION_NUM)
+	gzip -k dist/luasodium-$(VERSION_NUM).tar
+	xz dist/luasodium-$(VERSION_NUM).tar
+	mv luasodium-$(VERSION_NUM) dist/luasodium-$(VERSION_NUM)
 
 github-release:
 	source $(HOME)/.github-token && github-release release \
 	  --user jprjr \
 	  --repo luasodium \
-	  --tag v$(VERSION)
+	  --tag v$(VERSION_NUM)
 	source $(HOME)/.github-token && github-release upload \
 	  --user jprjr \
 	  --repo luasodium \
-	  --tag v$(VERSION) \
-	  --name luasodium-$(VERSION).tar.gz \
-	  --file dist/luasodium-$(VERSION).tar.gz
+	  --tag v$(VERSION_NUM) \
+	  --name luasodium-$(VERSION_NUM).tar.gz \
+	  --file dist/luasodium-$(VERSION_NUM).tar.gz
 	source $(HOME)/.github-token && github-release upload \
 	  --user jprjr \
 	  --repo luasodium \
-	  --tag v$(VERSION) \
-	  --name luasodium-$(VERSION).tar.xz \
-	  --file dist/luasodium-$(VERSION).tar.xz
+	  --tag v$(VERSION_NUM) \
+	  --name luasodium-$(VERSION_NUM).tar.xz \
+	  --file dist/luasodium-$(VERSION_NUM).tar.xz
 
 define LUA_INSTALL
 install-lua-$(1):
@@ -186,4 +200,8 @@ coverage:
 	gcovr --html-details coverage/index.html $(addprefix --add-tracefile ,$(foreach cmode,core ffi,$(cmode)-c-coverage.json) $(foreach lmode,core ffi pureffi,$(lmode)-lua-coverage.json))
 	gcovr --xml coverage/index.xml $(addprefix --add-tracefile ,$(foreach cmode,core ffi,$(cmode)-c-coverage.json) $(foreach lmode,core ffi pureffi,$(lmode)-lua-coverage.json))
 
-
+echo:
+	echo $(VERSION)
+	echo $(VERSION_MAJOR)
+	echo $(VERSION_MINOR)
+	echo $(VERSION_PATCH)
