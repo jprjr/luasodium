@@ -42,8 +42,7 @@ LUASODIUM_MODS := \
   version
 
 LUASODIUM_LUAS := \
-  lua/luasodium.lua \
-  $(addsuffix .lua,$(addprefix lua/luasodium/,$(LUASODIUM_MODS)))
+  lua/luasodium/version/implementation.lua
 
 LUASODIUM_CORES = $(foreach lib,$(LUASODIUM_MODS),$(addprefix $(lib)/,core ffi))
 LUASODIUM_TESTS = $(addprefix test-,$(LUASODIUM_MODS))
@@ -67,7 +66,7 @@ TESTMODE=core
 .PHONY: all clean release test github-release coverage install install-lua-luasodium $(INSTALL_LUAS) $(INSTALL_DLLS) $(INSTALL_LIBS) $(VERSION_FILES)
 .SUFFIXES:
 
-all: $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
+all: $(LUASODIUM_DLLS) $(LUASODIUM_LIBS) $(LUASODIUM_LUAS)
 
 define VERSION_TEMPLATE
 $(1):
@@ -91,7 +90,7 @@ c/luasodium$(DLL): $(LUASODIUM_OBJS)
 c/luasodium$(LIB): $(LUASODIUM_OBJS)
 	ar rcs $@ $^
 
-test-%: $(LUASODIUM_DLLS) $(LUASODIUM_LIBS)
+test-%: $(LUASODIUM_DLLS) $(LUASODIUM_LIBS) $(LUASODIUM_LUAS)
 	busted -c --lua=$(shell which $(LUA)) --lpath 'lua/?.lua' --cpath 'c/?.so' spec/$(@:test-%=%)_spec.lua
 
 test: $(LUASODIUM_TESTS)
@@ -102,6 +101,7 @@ clean:
 	rm -f $(LUASODIUM_LIBS)
 	rm -f $(LUASODIUM_GCDA)
 	rm -f $(LUASODIUM_GCNO)
+	rm -f $(VERSION_FILES)
 
 release: $(VERSION_FILES)
 	rm -rf luasodium-$(VERSION_NUM) dist/luasodium-$(VERSION_NUM)
