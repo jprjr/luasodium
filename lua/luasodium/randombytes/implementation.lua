@@ -1,4 +1,4 @@
-return function(sodium_lib, constants)
+return function(libs, constants)
   local ffi = require'ffi'
   local string_len = string.len
   local tonumber = tonumber
@@ -6,6 +6,8 @@ return function(sodium_lib, constants)
   local type = type
 
   local char_array = ffi.typeof('char[?]')
+
+  local sodium_lib = libs.sodium
 
   local randombytes_SEEDBYTES = constants.randombytes_SEEDBYTES
 

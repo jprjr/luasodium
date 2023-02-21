@@ -4,8 +4,8 @@
 static const luasodium_function_t ls_crypto_secretstream_functions[] = {
     LS_FUNC(sodium_init),
     LS_FUNC(sodium_memzero),
-    LS_FUNC(sodium_malloc),
-    LS_FUNC(sodium_free),
+    LS_FUNC(malloc),
+    LS_FUNC(free),
     LS_FUNC(crypto_secretstream_xchacha20poly1305_keygen),
     LS_FUNC(crypto_secretstream_xchacha20poly1305_init_push),
     LS_FUNC(crypto_secretstream_xchacha20poly1305_push),

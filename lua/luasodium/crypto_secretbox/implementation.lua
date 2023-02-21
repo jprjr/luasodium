@@ -1,10 +1,12 @@
-return function(sodium_lib, constants)
+return function(libs, constants)
   local ffi = require'ffi'
   local string_len = string.len
   local string_format = string.format
   local ffi_string = ffi.string
 
   local char_array = ffi.typeof('char[?]')
+
+  local sodium_lib = libs.sodium
 
   local function ls_crypto_secretbox_keygen(basename)
     local crypto_secretbox_keygen = string_format('%s_keygen',basename)

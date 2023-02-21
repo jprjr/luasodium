@@ -437,8 +437,8 @@ ls_crypto_aead_beforenm__gc(lua_State *L) {
     void **state = (void **)lua_touserdata(L,1);
     if(*state != NULL) {
         sodium_free(*state);
-        *state = NULL;
     }
+    *state = NULL;
     return 0;
 }
 
@@ -533,7 +533,7 @@ ls_crypto_aead_encrypt_afternm(lua_State *L) {
     NPUBBYTES = (size_t)lua_tointeger(L,lua_upvalueindex(3));
     ABYTES = (size_t)lua_tointeger(L,lua_upvalueindex(4));
 
-    ctx  = (void **)lua_touserdata(L,1);
+    ctx  = lua_touserdata(L,1);
     m    = (const unsigned char *)lua_tolstring(L,2,&mlen);
     npub = (const unsigned char *)lua_tolstring(L,3,&npublen);
 
@@ -601,7 +601,7 @@ ls_crypto_aead_decrypt_afternm(lua_State *L) {
     NPUBBYTES = (size_t)lua_tointeger(L,lua_upvalueindex(3));
     ABYTES = (size_t)lua_tointeger(L,lua_upvalueindex(4));
 
-    ctx  = (void **)lua_touserdata(L,1);
+    ctx  = lua_touserdata(L,1);
     c    = (const unsigned char *)lua_tolstring(L,2,&clen);
     npub = (const unsigned char *)lua_tolstring(L,3,&npublen);
 
@@ -678,7 +678,7 @@ ls_crypto_aead_encrypt_detached_afternm(lua_State *L) {
     NPUBBYTES = (size_t)lua_tointeger(L,lua_upvalueindex(3));
     ABYTES = (size_t)lua_tointeger(L,lua_upvalueindex(4));
 
-    ctx  = (void **)lua_touserdata(L,1);
+    ctx  = lua_touserdata(L,1);
     m    = (const unsigned char *)lua_tolstring(L,2,&mlen);
     npub = (const unsigned char *)lua_tolstring(L,3,&npublen);
 
@@ -756,7 +756,7 @@ ls_crypto_aead_decrypt_detached_afternm(lua_State *L) {
     NPUBBYTES = (size_t)lua_tointeger(L,lua_upvalueindex(3));
     ABYTES = (size_t)lua_tointeger(L,lua_upvalueindex(4));
 
-    ctx  = (void **)lua_touserdata(L,1);
+    ctx  = lua_touserdata(L,1);
     c    = (const unsigned char *)lua_tolstring(L,2,&clen);
     mac  = (const unsigned char *)lua_tolstring(L,3,&maclen);
     npub = (const unsigned char *)lua_tolstring(L,4,&npublen);

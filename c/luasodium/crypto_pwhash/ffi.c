@@ -35,11 +35,9 @@ int luaopen_luasodium_crypto_pwhash_ffi(lua_State *L) {
 
     lua_getglobal(L,"require");
     lua_pushliteral(L,"luasodium._ffi.ffi_loader");
-    /* LCOV_EXCL_START */
     if(lua_pcall(L,1,1,0)) {
         return lua_error(L);
     }
-    /* LCOV_EXCL_STOP */
 
     lua_pushstring(L,"crypto_pwhash");
     ls_lua_push_functions(L,ls_crypto_pwhash_functions);
@@ -55,10 +53,8 @@ int luaopen_luasodium_crypto_pwhash_ffi(lua_State *L) {
     lua_pushliteral(L,crypto_pwhash_scryptsalsa208sha256_STRPREFIX);
     lua_setfield(L,-2,"crypto_pwhash_scryptsalsa208sha256_STRPREFIX");
 
-    /* LCOV_EXCL_START */
     if(lua_pcall(L,3,1,0)) {
         return lua_error(L);
     }
-    /* LCOV_EXCL_STOP */
     return 1;
 }

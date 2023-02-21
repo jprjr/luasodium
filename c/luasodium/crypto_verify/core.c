@@ -25,7 +25,7 @@ ls_crypto_verify(lua_State *L) {
         return luaL_error(L,"requires 2 parameters");
     }
 
-    f = (ls_verify_func_ptr) lua_touserdata(L,lua_upvalueindex(1));
+    f = lua_touserdata(L,lua_upvalueindex(1));
     len = lua_tointeger(L,lua_upvalueindex(2));
 
     x = (const unsigned char *)lua_tolstring(L,1,&xlen);

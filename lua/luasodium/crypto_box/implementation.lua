@@ -1,9 +1,10 @@
-return function(sodium_lib, constants)
+return function(libs, constants)
 
   local ffi = require'ffi'
   local string_len = string.len
   local string_format = string.format
   local ffi_string = ffi.string
+  local sodium_lib = libs.sodium
 
   local char_array = ffi.typeof('char[?]')
 
