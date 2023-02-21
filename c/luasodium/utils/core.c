@@ -1,7 +1,5 @@
 #include "../luasodium-c.h"
 #include "../internals/ls_lua_set_functions.h"
-#include "../internals/ls_lua_set_constants.h"
-#include "constants.h"
 
 #include <string.h>
 
@@ -479,7 +477,14 @@ luaopen_luasodium_utils_core(lua_State *L) {
     /* LCOV_EXCL_STOP */
     lua_newtable(L);
 
-    ls_lua_set_constants(L,ls_utils_constants,lua_gettop(L));
+    lua_pushinteger(L,sodium_base64_VARIANT_ORIGINAL);
+    lua_setfield(L,-2,"sodium_base64_VARIANT_ORIGINAL");
+    lua_pushinteger(L,sodium_base64_VARIANT_ORIGINAL_NO_PADDING);
+    lua_setfield(L,-2,"sodium_base64_VARIANT_ORIGINAL_NO_PADDING");
+    lua_pushinteger(L,sodium_base64_VARIANT_URLSAFE);
+    lua_setfield(L,-2,"sodium_base64_VARIANT_URLSAFE");
+    lua_pushinteger(L,sodium_base64_VARIANT_URLSAFE_NO_PADDING);
+    lua_setfield(L,-2,"sodium_base64_VARIANT_URLSAFE_NO_PADDING");
     ls_lua_set_functions(L,ls_utils_functions,0);
 
     return 1;

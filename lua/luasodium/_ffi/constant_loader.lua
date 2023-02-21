@@ -6,13 +6,28 @@
 -- constants.
 local function constant_loader(sodium_lib, constant_keys)
   local ffi = require'ffi'
-  local tonumber = tonumber
 
   local constants = {}
 
   for _,c in ipairs(constant_keys) do
-    ffi.cdef('size_t ' .. c:lower() .. '(void);')
-    constants[c] = tonumber(sodium_lib[c:lower()]())
+    local n
+
+    if type(c) == 'string' then
+      ffi.cdef('size_t ' .. c:lower() .. '(void);')
+      constants[c] = tonumber(sodium_lib[c:lower()]())
+    elseif type(c) == 'table' then
+      n = c.name
+      if c['type'] == 0 then
+        ffi.cdef('int ' .. n:lower() .. '(void);')
+        constants[n] = tonumber(sodium_lib[n:lower()]())
+      elseif c['type'] == 1 then
+        ffi.cdef('size_t ' .. n:lower() .. '(void);')
+        constants[n] = tonumber(sodium_lib[n:lower()]())
+      elseif c['type'] == 2 then
+        ffi.cdef('const char * ' .. n:lower() .. '(void);')
+        constants[n] = ffi.string(sodium_lib[n:lower()]())
+      end
+    end
   end
 
   return constants

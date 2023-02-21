@@ -1,8 +1,4 @@
-#include "../luasodium.h"
-
-#include "../internals/ls_lua_push_constants.h"
-#include "../internals/ls_lua_push_functions.h"
-
+#include "../luasodium-ffi.h"
 #include "constants.h"
 
 static const luasodium_function_t ls_crypto_pwhash_functions[] = {
@@ -30,31 +26,5 @@ static const luasodium_function_t ls_crypto_pwhash_functions[] = {
 
 LS_PUBLIC
 int luaopen_luasodium_crypto_pwhash_ffi(lua_State *L) {
-    /* use our own variant of LOAD_FFI since we have a string
-     * constant to include */
-
-    lua_getglobal(L,"require");
-    lua_pushliteral(L,"luasodium._ffi.ffi_loader");
-    if(lua_pcall(L,1,1,0)) {
-        return lua_error(L);
-    }
-
-    lua_pushstring(L,"crypto_pwhash");
-    ls_lua_push_functions(L,ls_crypto_pwhash_functions);
-    ls_lua_push_constants(L,ls_crypto_pwhash_constants);
-
-    /* top of stack is the constant table */
-    lua_pushliteral(L,crypto_pwhash_STRPREFIX);
-    lua_setfield(L,-2,"crypto_pwhash_STRPREFIX");
-    lua_pushliteral(L,crypto_pwhash_argon2i_STRPREFIX);
-    lua_setfield(L,-2,"crypto_pwhash_argon2i_STRPREFIX");
-    lua_pushliteral(L,crypto_pwhash_argon2id_STRPREFIX);
-    lua_setfield(L,-2,"crypto_pwhash_argon2id_STRPREFIX");
-    lua_pushliteral(L,crypto_pwhash_scryptsalsa208sha256_STRPREFIX);
-    lua_setfield(L,-2,"crypto_pwhash_scryptsalsa208sha256_STRPREFIX");
-
-    if(lua_pcall(L,3,1,0)) {
-        return lua_error(L);
-    }
-    return 1;
+    return LS_LOAD_FFI(L, crypto_pwhash);
 }

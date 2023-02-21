@@ -6,10 +6,27 @@
 #define LUASODIUM_VERSION_PATCH @LUASODIUM_VERSION_PATCH@
 #define LUASODIUM_VERSION XSTR(LUASODIUM_VERSION_MAJOR) "." XSTR(LUASODIUM_VERSION_MINOR) "." XSTR(LUASODIUM_VERSION_PATCH)
 
+static size_t luasodium_version_major(void) {
+    return LUASODIUM_VERSION_MAJOR;
+}
+
+static size_t luasodium_version_minor(void) {
+    return LUASODIUM_VERSION_MINOR;
+}
+
+static size_t luasodium_version_patch(void) {
+    return LUASODIUM_VERSION_PATCH;
+}
+
+static const char * luasodium_version(void) {
+    return LUASODIUM_VERSION;
+}
+
 static const luasodium_constant_t ls_version_constants[] = {
-    { "_VERSION_MAJOR", LUASODIUM_VERSION_MAJOR },
-    { "_VERSION_MINOR", LUASODIUM_VERSION_MINOR },
-    { "_VERSION_PATCH", LUASODIUM_VERSION_PATCH },
-    { NULL, 0},
+    { "_VERSION_MAJOR", (ls_func_ptr)luasodium_version_major, 0 },
+    { "_VERSION_MINOR", (ls_func_ptr)luasodium_version_minor, 0 },
+    { "_VERSION_PATCH", (ls_func_ptr)luasodium_version_patch, 0 },
+    { "_VERSION", (ls_func_ptr)luasodium_version, 2 },
+    { NULL, 0, 0 },
 };
 
