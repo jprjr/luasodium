@@ -7,6 +7,7 @@ return function(libs, constants)
   local tonumber = tonumber
 
   local sodium_lib = libs.sodium
+  local clib = libs.C
 
   local char_array = ffi.typeof('char[?]')
 
@@ -190,7 +191,8 @@ return function(libs, constants)
     local STATEBYTES = tonumber(sodium_lib[string_format('%s_statebytes',basename)]())
 
     local ls_crypto_aead_beforenm__gc = function(state)
-      sodium_lib.sodium_free(state)
+      sodium_lib.sodium_memzero(state,STATEBYTES)
+      clib.free(state)
     end
 
     local ls_crypto_aead_methods = {}
@@ -203,7 +205,22 @@ return function(libs, constants)
         if string_len(k) ~= KEYBYTES then
           return error(string_format('wrong key size, expected: %d',KEYBYTES))
         end
-        local state = ffi.gc(sodium_lib.sodium_malloc(STATEBYTES),ls_crypto_aead_beforenm__gc)
+
+        -- the pre-computation interface requires a 16-byte alignment, see
+        -- https://doc.libsodium.org/secret-key_cryptography/aead/aes-256-gcm/aes-gcm_with_precomputation
+        --
+        -- an example for ensuring alignment with standard malloc is here:
+        -- https://stackoverflow.com/questions/227897/how-to-allocate-aligned-memory-only-using-the-standard-library
+        --
+        -- Internally luajit's bitwise ops use a 32-bit signed type, so doing the
+        -- addition + masking in the linked answer may not work.
+        --
+        -- We'll do the equivalent with standard math ops
+        local state = ffi.gc(clib.malloc(STATEBYTES+15),ls_crypto_aead_beforenm__gc)
+        local state_uintptr = ffi.cast("uintptr_t",state)
+        state_uintptr = state_uintptr + 15
+        state_uintptr = state_uintptr - (state_uintptr % 16)
+        state = ffi.cast("void *", state_uintptr)
         sodium_lib[crypto_aead_beforenm](state,k)
 
         local ls_state = setmetatable({

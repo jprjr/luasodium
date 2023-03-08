@@ -13,12 +13,6 @@ local signatures = {
   ['free'] = [[
     void (%s)(void *ptr)
   ]],
-  ['sodium_malloc'] = [[
-    void * (%s)(const size_t len)
-  ]],
-  ['sodium_free'] = [[
-    void (%s)(void *ptr)
-  ]],
 }
 
 local function add_signatures(tbl)
