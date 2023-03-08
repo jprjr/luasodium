@@ -432,19 +432,28 @@ ls_crypto_aead_decrypt_detached(lua_State *L) {
     return 1;
 }
 
+/*
+per https://doc.libsodium.org/secret-key_cryptography/aead/aes-256-gcm/aes-gcm_with_precomputation:
+
+    A 16 bytes alignment is required for the address of ctx. The size of this value can be obtained using sizeof(crypto_aead_aes256gcm_state), or crypto_aead_aes256gcm_statebytes().
+
+As far as I know this is the only place in libsodium that requires
+alignment. lua_newuserdata does not guarantee alignment so we perform our own
+
+https://stackoverflow.com/questions/227897/how-to-allocate-aligned-memory-only-using-the-standard-library - we can add (alignment-1) bytes
+and do some masking to ensure the pointer is aligned
+*/
+
 static int
 ls_crypto_aead_beforenm__gc(lua_State *L) {
-    void **state = (void **)lua_touserdata(L,1);
-    if(*state != NULL) {
-        sodium_free(*state);
-    }
-    *state = NULL;
+    void *state = (void *)lua_touserdata(L,1);
+    sodium_memzero(state,(size_t)lua_tointeger(L,lua_upvalueindex(1)));
     return 0;
 }
 
 static int
 ls_crypto_aead_beforenm(lua_State *L) {
-    void **state = NULL;
+    void *state     = NULL;
 
     const char *fname = NULL;
     ls_crypto_aead_beforenm_ptr f = NULL;
@@ -470,7 +479,7 @@ ls_crypto_aead_beforenm(lua_State *L) {
           KEYBYTES);
     }
 
-    state = (void **)lua_newuserdata(L, sizeof(void *));
+    state = (void *)lua_newuserdata(L, STATEBYTES+15);
 
     /* LCOV_EXCL_START */
     if(state == NULL) {
@@ -478,16 +487,10 @@ ls_crypto_aead_beforenm(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
-    *state = NULL;
-    *state = sodium_malloc(STATEBYTES);
+    /* ensure aligned */
+    state = (void *)(((uintptr_t)state+15) & ~ (uintptr_t)0x0F);
 
-    /* LCOV_EXCL_START */
-    if(*state == NULL) {
-        return luaL_error(L, "out of memory");
-    }
-    /* LCOV_EXCL_STOP */
-
-    f(*state, k);
+    f(state, k);
 
     lua_pushvalue(L,lua_upvalueindex(5));
     lua_setmetatable(L,-2);
@@ -507,7 +510,7 @@ ls_crypto_aead_encrypt_afternm(lua_State *L) {
     size_t NPUBBYTES = 0;
     size_t ABYTES = 0;
 
-    void **ctx = NULL;
+    void *ctx = NULL;
     const unsigned char *m = NULL;
     const unsigned char *ad = NULL;
     const unsigned char *npub = NULL;
@@ -555,9 +558,10 @@ ls_crypto_aead_encrypt_afternm(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
+    ctx = (void *)(((uintptr_t)ctx+15) & ~ (uintptr_t)0x0F);
     f(c,&clen,m,(unsigned long long)mlen,
       ad,(unsigned long long)adlen,
-      NULL,npub,*ctx);
+      NULL,npub,ctx);
 
     lua_pushlstring(L,(const char *)c,clen);
     sodium_memzero(c, mlen + ABYTES);
@@ -575,7 +579,7 @@ ls_crypto_aead_decrypt_afternm(lua_State *L) {
     size_t NPUBBYTES = 0;
     size_t ABYTES = 0;
 
-    void **ctx = NULL;
+    void *ctx = NULL;
     const unsigned char *c = NULL;
     const unsigned char *ad = NULL;
     const unsigned char *npub = NULL;
@@ -628,9 +632,10 @@ ls_crypto_aead_decrypt_afternm(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
+    ctx = (void *)(((uintptr_t)ctx+15) & ~ (uintptr_t)0x0F);
     if(f(m,&mlen,NULL,c,(unsigned long long)clen,
       ad,(unsigned long long)adlen,
-      npub,*ctx) == -1) {
+      npub,ctx) == -1) {
         lua_pushnil(L);
         lua_pushfstring(L,"%s error",fname);
         return 2;
@@ -652,7 +657,7 @@ ls_crypto_aead_encrypt_detached_afternm(lua_State *L) {
     size_t NPUBBYTES = 0;
     size_t ABYTES = 0;
 
-    void **ctx = NULL;
+    void *ctx = NULL;
     const unsigned char *m = NULL;
     const unsigned char *ad = NULL;
     const unsigned char *npub = NULL;
@@ -707,9 +712,10 @@ ls_crypto_aead_encrypt_detached_afternm(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
+    ctx = (void *)(((uintptr_t)ctx+15) & ~ (uintptr_t)0x0F);
     f(c,mac,&maclen,m,(unsigned long long)mlen,
       ad,(unsigned long long)adlen,
-      NULL,npub,*ctx);
+      NULL,npub,ctx);
 
     lua_pushlstring(L,(const char *)c,mlen);
     lua_pushlstring(L,(const char *)mac,ABYTES);
@@ -728,7 +734,7 @@ ls_crypto_aead_decrypt_detached_afternm(lua_State *L) {
     size_t NPUBBYTES = 0;
     size_t ABYTES = 0;
 
-    void **ctx = NULL;
+    void *ctx = NULL;
     const unsigned char *c = NULL;
     const unsigned char *mac = NULL;
     const unsigned char *ad = NULL;
@@ -783,9 +789,10 @@ ls_crypto_aead_decrypt_detached_afternm(lua_State *L) {
     }
     /* LCOV_EXCL_STOP */
 
+    ctx = (void *)(((uintptr_t)ctx+15) & ~ (uintptr_t)0x0F);
     if(f(m,NULL,c,(unsigned long long)clen,
       mac, ad,(unsigned long long)adlen,
-      npub,*ctx) == -1) {
+      npub,ctx) == -1) {
         lua_pushnil(L);
         lua_pushfstring(L,"%s error",fname);
         return 2;
