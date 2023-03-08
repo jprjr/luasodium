@@ -1,5 +1,5 @@
 local constant_keys = {
-  'randombytes_SEEDBYTES'
+  { ['type'] = 1, ['name'] = 'randombytes_SEEDBYTES' },
 }
 
 return constant_keys

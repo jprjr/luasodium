@@ -1,15 +1,15 @@
 local constant_keys = {
-  'crypto_secretbox_KEYBYTES',
-  'crypto_secretbox_MACBYTES',
-  'crypto_secretbox_NONCEBYTES',
-  'crypto_secretbox_ZEROBYTES',
-  'crypto_secretbox_BOXZEROBYTES',
+  { ['type'] = 1, ['name'] = 'crypto_secretbox_KEYBYTES' },
+  { ['type'] = 1, ['name'] = 'crypto_secretbox_MACBYTES' },
+  { ['type'] = 1, ['name'] = 'crypto_secretbox_NONCEBYTES' },
+  { ['type'] = 1, ['name'] = 'crypto_secretbox_ZEROBYTES' },
+  { ['type'] = 1, ['name'] = 'crypto_secretbox_BOXZEROBYTES' },
 
-  'crypto_secretbox_xsalsa20poly1305_KEYBYTES',
-  'crypto_secretbox_xsalsa20poly1305_NONCEBYTES',
-  'crypto_secretbox_xsalsa20poly1305_MACBYTES',
-  'crypto_secretbox_xsalsa20poly1305_ZEROBYTES',
-  'crypto_secretbox_xsalsa20poly1305_BOXZEROBYTES',
+  { ['type'] = 1, ['name'] = 'crypto_secretbox_xsalsa20poly1305_KEYBYTES' },
+  { ['type'] = 1, ['name'] = 'crypto_secretbox_xsalsa20poly1305_NONCEBYTES' },
+  { ['type'] = 1, ['name'] = 'crypto_secretbox_xsalsa20poly1305_MACBYTES' },
+  { ['type'] = 1, ['name'] = 'crypto_secretbox_xsalsa20poly1305_ZEROBYTES' },
+  { ['type'] = 1, ['name'] = 'crypto_secretbox_xsalsa20poly1305_BOXZEROBYTES' },
 
 }
 

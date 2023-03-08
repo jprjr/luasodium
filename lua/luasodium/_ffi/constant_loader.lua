@@ -10,24 +10,21 @@ local function constant_loader(sodium_lib, constant_keys)
   local constants = {}
 
   for _,c in ipairs(constant_keys) do
-    local n
+    local n = c.name
+    local val
 
-    if type(c) == 'string' then
-      ffi.cdef('size_t ' .. c:lower() .. '(void);')
-      constants[c] = tonumber(sodium_lib[c:lower()]())
-    elseif type(c) == 'table' then
-      n = c.name
-      if c['type'] == 0 then
-        ffi.cdef('int ' .. n:lower() .. '(void);')
-        constants[n] = tonumber(sodium_lib[n:lower()]())
-      elseif c['type'] == 1 then
-        ffi.cdef('size_t ' .. n:lower() .. '(void);')
-        constants[n] = tonumber(sodium_lib[n:lower()]())
-      elseif c['type'] == 2 then
-        ffi.cdef('const char * ' .. n:lower() .. '(void);')
-        constants[n] = ffi.string(sodium_lib[n:lower()]())
-      end
+    if c['type'] == 0 then
+      ffi.cdef('int ' .. n:lower() .. '(void);')
+      val = tonumber(sodium_lib[n:lower()]())
+    elseif c['type'] == 1 then
+      ffi.cdef('size_t ' .. n:lower() .. '(void);')
+      val = tonumber(sodium_lib[n:lower()]())
+    elseif c['type'] == 2 then
+      ffi.cdef('const char * ' .. n:lower() .. '(void);')
+      val = ffi.string(sodium_lib[n:lower()]())
     end
+
+    constants[n] = val
   end
 
   return constants
