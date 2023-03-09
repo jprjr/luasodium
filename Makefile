@@ -135,7 +135,7 @@ github-release:
 	source $(HOME)/.github-token && github-release release \
 	  --user jprjr \
 	  --repo luasodium \
-	  --tag v$(VERSION_NUM)
+	  --tag v$(VERSION_NUM) || true
 	source $(HOME)/.github-token && github-release upload \
 	  --user jprjr \
 	  --repo luasodium \
