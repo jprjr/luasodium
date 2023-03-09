@@ -4,8 +4,6 @@
 static const luasodium_function_t ls_crypto_sign_functions[] = {
     LS_FUNC(sodium_init),
     LS_FUNC(sodium_memzero),
-    LS_FUNC(malloc),
-    LS_FUNC(free),
     LS_FUNC(crypto_sign_keypair),
     LS_FUNC(crypto_sign_seed_keypair),
     LS_FUNC(crypto_sign),

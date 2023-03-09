@@ -1,13 +1,10 @@
-return function(libs, constants)
+return function(sodium_lib, constants)
 
   local ffi = require'ffi'
   local string_len = string.len
   local string_format = string.format
   local ffi_string = ffi.string
   local tonumber = tonumber
-
-  local sodium_lib = libs.sodium
-  local clib = libs.C
 
   local char_array = ffi.typeof('char[?]')
 
@@ -192,7 +189,6 @@ return function(libs, constants)
 
     local ls_crypto_aead_beforenm__gc = function(state)
       sodium_lib.sodium_memzero(state,STATEBYTES)
-      clib.free(state)
     end
 
     local ls_crypto_aead_methods = {}
@@ -216,7 +212,7 @@ return function(libs, constants)
         -- addition + masking in the linked answer may not work.
         --
         -- We'll do the equivalent with standard math ops
-        local state_unaligned = ffi.gc(clib.malloc(STATEBYTES+15),ls_crypto_aead_beforenm__gc)
+        local state_unaligned = ffi.gc(char_array(STATEBYTES+15),ls_crypto_aead_beforenm__gc)
         local state_uintptr = ffi.cast("uintptr_t",state_unaligned)
         state_uintptr = state_uintptr + 15
         state_uintptr = state_uintptr - (state_uintptr % 16)

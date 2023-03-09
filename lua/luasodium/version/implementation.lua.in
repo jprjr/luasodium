@@ -7,7 +7,7 @@ local _VERSION = string.format('%d.%d.%d',
   _VERSION_MINOR,
   _VERSION_PATCH)
 
-return function(libs)
+return function(sodium_lib)
   local M = {
     _VERSION = _VERSION,
     _VERSION_MAJOR = _VERSION_MAJOR,
@@ -18,24 +18,24 @@ return function(libs)
   -- this may be running from my generic 'show version' script
   -- *or* from the regular C API. if libs is empty, we're not in
   -- an FFI environment, so return.
-  if not libs then return M end
+  if not sodium_lib then return M end
 
   local ffi = require'ffi'
 
   local function ls_sodium_version_string()
-    return ffi.string(libs.sodium.sodium_version_string())
+    return ffi.string(sodium_lib.sodium_version_string())
   end
 
   local function ls_sodium_library_version_major()
-    return tonumber(libs.sodium.sodium_library_version_major())
+    return tonumber(sodium_lib.sodium_library_version_major())
   end
 
   local function ls_sodium_library_version_minor()
-    return tonumber(libs.sodium.sodium_library_version_minor())
+    return tonumber(sodium_lib.sodium_library_version_minor())
   end
 
   local function ls_sodium_library_minimal()
-    return tonumber(libs.sodium.sodium_library_minimal())
+    return tonumber(sodium_lib.sodium_library_minimal())
   end
 
   M.sodium_version_string = ls_sodium_version_string

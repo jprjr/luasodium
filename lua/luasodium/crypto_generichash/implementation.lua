@@ -1,12 +1,9 @@
-return function(libs, constants)
+return function(sodium_lib, constants)
   local ffi = require'ffi'
   local string_len = string.len
   local string_format = string.format
   local ffi_string = ffi.string
   local tonumber = tonumber
-
-  local sodium_lib = libs.sodium
-  local clib = libs.C
 
   local char_array = ffi.typeof('char[?]')
 
@@ -29,7 +26,6 @@ return function(libs, constants)
 
     local ls_crypto_generichash_free = function(state)
       sodium_lib.sodium_memzero(state,STATEBYTES)
-      clib.free(state)
     end
 
     local ls_crypto_generichash_methods = {}
@@ -114,7 +110,7 @@ return function(libs, constants)
           outlen = BYTES
         end
 
-        local state = ffi.gc(clib.malloc(STATEBYTES),ls_crypto_generichash_free)
+        local state = ffi.gc(char_array(STATEBYTES),ls_crypto_generichash_free)
 
         if tonumber(sodium_lib[crypto_generichash_init](state,key,keylen,outlen)) == -1 then
           return nil, string_format('%s error',crypto_generichash_init)
