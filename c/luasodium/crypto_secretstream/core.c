@@ -202,14 +202,14 @@ ls_crypto_secretstream_push(lua_State *L) {
 
 static int
 ls_crypto_secretstream_push_call(lua_State *L) {
-    unsigned char tag = lua_tointeger(L, lua_upvalueindex(1));
+    unsigned char tag = (unsigned char)lua_tointeger(L, lua_upvalueindex(1));
     if(lua_isnoneornil(L,2)) {
         return luaL_error(L, "requires 1 parameter");
     }
 
     if(!lua_isnone(L,3)) {
       if(lua_toboolean(L,3)) {
-          tag = lua_tointeger(L, lua_upvalueindex(2));
+          tag = (unsigned char)lua_tointeger(L, lua_upvalueindex(2));
       }
       lua_remove(L,3);
     }
