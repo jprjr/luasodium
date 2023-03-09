@@ -65,7 +65,7 @@ jobs:
       run: 'cmake --build build-windows --config Debug'
 
     - name: cmake test
-      run: 'cd build-windows && ctest -C Debug -V'
+      run: 'cd build-windows && ctest --output-on-failure -C Debug -V'
 
   build-osx:
     runs-on: macos-latest
@@ -84,4 +84,4 @@ jobs:
       run: 'cmake --build build-osx'
 
     - name: cmake test
-      run: 'cd build-osx && ctest -V'
+      run: 'cd build-osx && ctest --output-on-failure -C Debug -V'
