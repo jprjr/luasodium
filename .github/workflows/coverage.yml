@@ -64,6 +64,9 @@ jobs:
     - name: cmake build
       run: 'cmake --build build-windows --config Debug'
 
+    - name: HACK figure out secretstream issue
+      run: 'cd build-windows && Debug\ls_test_spec.exe ..\spec\crypto_secretstream_spec.lua'
+
     - name: cmake test
       run: 'cd build-windows && ctest -C Debug --output-on-failure -VV'
 
