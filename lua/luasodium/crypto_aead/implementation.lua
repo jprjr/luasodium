@@ -216,15 +216,16 @@ return function(libs, constants)
         -- addition + masking in the linked answer may not work.
         --
         -- We'll do the equivalent with standard math ops
-        local state = ffi.gc(clib.malloc(STATEBYTES+15),ls_crypto_aead_beforenm__gc)
-        local state_uintptr = ffi.cast("uintptr_t",state)
+        local state_unaligned = ffi.gc(clib.malloc(STATEBYTES+15),ls_crypto_aead_beforenm__gc)
+        local state_uintptr = ffi.cast("uintptr_t",state_unaligned)
         state_uintptr = state_uintptr + 15
         state_uintptr = state_uintptr - (state_uintptr % 16)
-        state = ffi.cast("void *", state_uintptr)
+        local state = ffi.cast("void *", state_uintptr)
         sodium_lib[crypto_aead_beforenm](state,k)
 
         local ls_state = setmetatable({
           state = state,
+          state_unaligned = state_unaligned,
         }, ls_crypto_aead_mt)
 
         return ls_state
