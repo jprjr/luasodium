@@ -18,6 +18,8 @@ return function(modname,pointers,constant_ptrs)
         constants[k] = tonumber((ffi.cast('size_t (*)(void)',f))())
     elseif t['type'] == 2 then
         constants[k] = ffi.string((ffi.cast('const char * (*)(void)',f))())
+    elseif t['type'] == 3 then
+        constants[k] = tonumber((ffi.cast('unsigned char (*)(void)',f))())
     end
   end
 

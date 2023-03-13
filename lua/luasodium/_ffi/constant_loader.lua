@@ -22,6 +22,9 @@ local function constant_loader(sodium_lib, constant_keys)
     elseif c['type'] == 2 then
       ffi.cdef('const char * ' .. n:lower() .. '(void);')
       val = ffi.string(sodium_lib[n:lower()]())
+    elseif c['type'] == 3 then
+      ffi.cdef('unsigned char ' .. n:lower() .. '(void);')
+      val = tonumber(sodium_lib[n:lower()]())
     end
 
     constants[n] = val
