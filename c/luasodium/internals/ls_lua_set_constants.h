@@ -5,10 +5,10 @@
 
 static void
 ls_lua_set_constants(lua_State *L, const luasodium_constant_t *c,int index) {
-    size_t (*f)(void) = NULL;
-    int (*i)(void) = NULL;
-    const char* (*str)(void) = NULL;
-	unsigned char (*uchar)(void) = NULL;
+    /* 0 */ int (*i)(void) = NULL;
+    /* 1 */ size_t (*f)(void) = NULL;
+    /* 2 */ const char* (*str)(void) = NULL;
+    /* 3 */ unsigned char (*uchar)(void) = NULL;
 
     for(; c->name != NULL; c++) {
         switch(c->type) {
