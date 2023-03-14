@@ -92,6 +92,21 @@ the C library's `malloc`/`free`, and no longer needs wrappers to call
 
 This version also adds the scrypt pwhash functions.
 
+### Version 2.3
+
+This version removes the use of `sodium_malloc` and `sodium_free`
+introduced in version 2.2. Per the libsodium docs:
+
+> These are not general-purpose allocation functions. In particular, they are slower than malloc() and friends and require 3 or 4 extra pages of virtual memory.
+
+I experienced segfaults, etc from running out of memory.
+
+Rather than revert to the FFI version requiring `malloc` and `free`,
+it instead uses LuaJIT's own memory management, with wrappers
+to call `sodium_memzero` when garbage-collected.
+
+This version also adds the `crypto_kx` functions.
+
 ## Caveats
 
 `libsodium` includes functions for secure programming, like allocating
