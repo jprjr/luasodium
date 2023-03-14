@@ -14,6 +14,7 @@ MODS = \
   crypto_box \
   crypto_generichash \
   crypto_hash \
+  crypto_kx \
   crypto_onetimeauth \
   crypto_scalarmult \
   crypto_secretbox \

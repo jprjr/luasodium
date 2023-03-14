@@ -57,6 +57,9 @@ LS_PUBLIC
 int luaopen_luasodium_crypto_hash_core(lua_State *L);
 
 LS_PUBLIC
+int luaopen_luasodium_crypto_kx_core(lua_State *L);
+
+LS_PUBLIC
 int luaopen_luasodium_crypto_onetimeauth_core(lua_State *L);
 
 LS_PUBLIC

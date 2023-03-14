@@ -4,6 +4,7 @@ local modules = {
   'crypto_box',
   'crypto_generichash',
   'crypto_hash',
+  'crypto_kx',
   'crypto_onetimeauth',
   'crypto_pwhash',
   'crypto_scalarmult',

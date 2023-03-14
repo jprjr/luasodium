@@ -27,6 +27,8 @@ int luaopen_luasodium_core(lua_State *L) {
     copydown(L);
     luaopen_luasodium_crypto_hash_core(L);
     copydown(L);
+    luaopen_luasodium_crypto_kx_core(L);
+    copydown(L);
     luaopen_luasodium_crypto_onetimeauth_core(L);
     copydown(L);
     luaopen_luasodium_crypto_pwhash_core(L);
