@@ -20,10 +20,7 @@ jobs:
     - name: install luajit
       uses: leafo/gh-actions-lua@v10.0.0
       with:
-        luaVersion: "luajit-2.1.0-beta3"
-
-    - name: create luajit symlink
-      run: ln -s luajit-2.1.0-beta3 .lua/bin/luajit
+        luaVersion: "luajit-openresty"
 
     - name: Install LuaRocks
       uses: leafo/gh-actions-luarocks@v4.3.0
