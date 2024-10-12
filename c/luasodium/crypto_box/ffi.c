@@ -29,6 +29,22 @@ static const luasodium_function_t ls_crypto_box_functions[] = {
     LS_FUNC(crypto_box_open_easy_afternm),
     LS_FUNC(crypto_box_detached_afternm),
     LS_FUNC(crypto_box_open_detached_afternm),
+    LS_FUNC(crypto_box_seal),
+    LS_FUNC(crypto_box_seal_open),
+
+    LS_FUNC(crypto_box_curve25519xchacha20poly1305_keypair),
+    LS_FUNC(crypto_box_curve25519xchacha20poly1305_seed_keypair),
+    LS_FUNC(crypto_box_curve25519xchacha20poly1305_beforenm),
+    LS_FUNC(crypto_box_curve25519xchacha20poly1305_easy),
+    LS_FUNC(crypto_box_curve25519xchacha20poly1305_open_easy),
+    LS_FUNC(crypto_box_curve25519xchacha20poly1305_detached),
+    LS_FUNC(crypto_box_curve25519xchacha20poly1305_open_detached),
+    LS_FUNC(crypto_box_curve25519xchacha20poly1305_easy_afternm),
+    LS_FUNC(crypto_box_curve25519xchacha20poly1305_open_easy_afternm),
+    LS_FUNC(crypto_box_curve25519xchacha20poly1305_detached_afternm),
+    LS_FUNC(crypto_box_curve25519xchacha20poly1305_open_detached_afternm),
+    LS_FUNC(crypto_box_curve25519xchacha20poly1305_seal),
+    LS_FUNC(crypto_box_curve25519xchacha20poly1305_seal_open),
     { NULL }
 };
 

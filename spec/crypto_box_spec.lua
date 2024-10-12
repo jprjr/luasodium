@@ -162,6 +162,51 @@ local expected_results = {
        16, 97, 18, 38, 131,
     },
   },
+  ['crypto_box_curve25519xchacha20poly1305_easy'] = {
+    ['sender_pk'] = {
+       91, 245, 92, 115, 184, 46, 190, 34,
+       190, 128, 243, 67, 6, 103, 175, 87,
+       15, 174, 37, 86, 166, 65, 94, 107,
+       48, 212, 6, 83, 0, 170, 148, 125,
+    },
+    ['sender_sk'] = {
+       80, 70, 173, 193, 219, 168, 56, 134,
+       123, 43, 187, 253, 208, 195, 66, 62,
+       88, 181, 121, 112, 181, 38, 122, 144,
+       245, 121, 96, 146, 74, 135, 241, 150,
+    },
+    ['receiver_pk'] = {
+       209, 250, 63, 1, 130, 107, 216, 183,
+       142, 5, 124, 8, 108, 123, 34, 199,
+       173, 67, 88, 202, 145, 128, 153, 205,
+       123, 126, 93, 58, 205, 126, 40, 91,
+    },
+    ['receiver_sk'] = {
+       39, 205, 105, 53, 134, 71, 22, 167,
+       157, 116, 221, 95, 171, 189, 137, 100,
+       48, 64, 81, 202, 65, 163, 28, 70,
+       89, 21, 142, 187, 124, 61, 11, 151,
+    },
+    ['beforenm_encrypt'] = {
+       79, 210, 122, 111, 106, 80, 79, 68,
+       44, 50, 141, 138, 31, 32, 91, 13,
+       164, 255, 2, 80, 155, 74, 50, 92,
+       60, 186, 113, 141, 181, 200, 87, 62,
+    },
+    ['beforenm_decrypt'] = {
+       79, 210, 122, 111, 106, 80, 79, 68,
+       44, 50, 141, 138, 31, 32, 91, 13,
+       164, 255, 2, 80, 155, 74, 50, 92,
+       60, 186, 113, 141, 181, 200, 87, 62,
+    },
+    ['mac'] = {
+       255, 41, 153, 52, 98, 131, 154, 255,
+       204, 241, 138, 243, 188, 51, 93, 28,
+    },
+    ['cipher'] = {
+       212, 254, 121, 98, 23,
+    },
+  },
 }
 
 describe('library crypto_box', function()
@@ -176,12 +221,20 @@ describe('library crypto_box', function()
     assert(type(lib.crypto_box_PUBLICKEYBYTES) == 'number')
     assert(type(lib.crypto_box_SECRETKEYBYTES) == 'number')
     assert(type(lib.crypto_box_BEFORENMBYTES) == 'number')
+    assert(type(lib.crypto_box_SEALBYTES) == 'number')
     assert(type(lib.crypto_box_curve25519xsalsa20poly1305_MACBYTES) == 'number')
     assert(type(lib.crypto_box_curve25519xsalsa20poly1305_NONCEBYTES) == 'number')
     assert(type(lib.crypto_box_curve25519xsalsa20poly1305_SEEDBYTES) == 'number')
     assert(type(lib.crypto_box_curve25519xsalsa20poly1305_PUBLICKEYBYTES) == 'number')
     assert(type(lib.crypto_box_curve25519xsalsa20poly1305_SECRETKEYBYTES) == 'number')
     assert(type(lib.crypto_box_curve25519xsalsa20poly1305_BEFORENMBYTES) == 'number')
+    assert(type(lib.crypto_box_curve25519xchacha20poly1305_MACBYTES) == 'number')
+    assert(type(lib.crypto_box_curve25519xchacha20poly1305_NONCEBYTES) == 'number')
+    assert(type(lib.crypto_box_curve25519xchacha20poly1305_SEEDBYTES) == 'number')
+    assert(type(lib.crypto_box_curve25519xchacha20poly1305_PUBLICKEYBYTES) == 'number')
+    assert(type(lib.crypto_box_curve25519xchacha20poly1305_SECRETKEYBYTES) == 'number')
+    assert(type(lib.crypto_box_curve25519xchacha20poly1305_BEFORENMBYTES) == 'number')
+    assert(type(lib.crypto_box_curve25519xchacha20poly1305_SEALBYTES) == 'number')
   end)
 
   for _,f in ipairs({'crypto_box','crypto_box_curve25519xsalsa20poly1305'}) do
@@ -329,7 +382,7 @@ describe('library crypto_box', function()
   end
 
   for _,f in ipairs({
-    'crypto_box',
+    'crypto_box', 'crypto_box_curve25519xchacha20poly1305',
   }) do
     local crypto_box_keypair = string.format('%s_keypair',f)
     local crypto_box_seed_keypair = string.format('%s_seed_keypair',f)
@@ -345,12 +398,16 @@ describe('library crypto_box', function()
     local crypto_box_detached_afternm = string.format('%s_detached_afternm',f)
     local crypto_box_open_detached_afternm = string.format('%s_open_detached_afternm',f)
 
+    local crypto_box_seal = string.format('%s_seal',f)
+    local crypto_box_seal_open = string.format('%s_seal_open',f)
+
     local MACBYTES = string.format('%s_MACBYTES',f)
     local NONCEBYTES = string.format('%s_NONCEBYTES',f)
     local PUBLICKEYBYTES = string.format('%s_PUBLICKEYBYTES',f)
     local SECRETKEYBYTES = string.format('%s_SECRETKEYBYTES',f)
     local BEFORENMBYTES = string.format('%s_BEFORENMBYTES',f)
     local SEEDBYTES = string.format('%s_SEEDBYTES',f)
+    local SEALBYTES = string.format('%s_SEALBYTES',f)
     local nonce = string.rep('\0',lib[NONCEBYTES])
 
     local sender_pk = tbl_to_str(expected_results[crypto_box_easy].sender_pk)
@@ -552,6 +609,38 @@ describe('library crypto_box', function()
         local tag = string.rep('\0',lib[MACBYTES])
         assert(lib[crypto_box_open_detached_afternm](cipher,tag,nonce,beforenm_decrypt) == nil)
       end)
+    end)
+
+    describe('function ' .. crypto_box_seal, function()
+      it('should throw errors on invalid calls', function()
+        -- invalid: no arguments
+        assert(pcall(lib[crypto_box_seal]) == false)
+
+        -- invalid: message but no key
+        assert(pcall(lib[crypto_box_seal],'') == false)
+        -- invalid: message but key length is invalid
+        assert(pcall(lib[crypto_box_seal],'', '') == false)
+
+        -- invalid: no arguments
+        assert(pcall(lib[crypto_box_seal_open]) == false)
+
+        -- invalid: sealed message is not at least SEALBYTES long
+        assert(pcall(lib[crypto_box_seal_open],'') == false)
+
+        -- invalid: public key is not at least PUBLICKEYBYTES long
+        assert(pcall(lib[crypto_box_seal_open],string.rep('\0', lib[SEALBYTES]), '') == false)
+
+        -- invalid: secretkey is not at least PUBLICKEYBYTES long
+        assert(pcall(lib[crypto_box_seal_open],string.rep('\0', lib[SEALBYTES]), string.rep('\0', lib[PUBLICKEYBYTES]), '') == false)
+      end)
+
+      it('should seal and unseal messages', function()
+        local sealed_message = lib[crypto_box_seal](message,receiver_pk)
+        assert(string.len(sealed_message) == (string.len(message) + lib[SEALBYTES]))
+        local unsealed_message = lib[crypto_box_seal_open](sealed_message, receiver_pk, receiver_sk)
+        assert(unsealed_message == message)
+      end)
+
     end)
   end
 end)

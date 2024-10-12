@@ -9,10 +9,8 @@ return function(sodium_lib, constants)
 
   -- returns crypto_box functions
   local function ls_crypto_box(basename)
-    local crypto_box_keypair = string_format('%s_keypair',basename)
     local crypto_box = string_format('%s',basename)
     local crypto_box_open = string_format('%s_open',basename)
-    local crypto_box_beforenm = string_format('%s_beforenm',basename)
     local crypto_box_afternm = string_format('%s_afternm',basename)
     local crypto_box_open_afternm = string_format('%s_open_afternm',basename)
 
@@ -25,21 +23,6 @@ return function(sodium_lib, constants)
     local ZEROBYTES = constants[string_format('%s_ZEROBYTES',basename)]
 
     return {
-      [crypto_box_keypair] = function()
-        local pk = char_array(PUBLICKEYBYTES)
-        local sk = char_array(SECRETKEYBYTES)
-        if tonumber(sodium_lib[crypto_box_keypair](pk,sk)) == -1 then
-          return nil, string_format('%s error',crypto_box_keypair)
-        end
-
-        local pk_str = ffi_string(pk,PUBLICKEYBYTES)
-        local sk_str = ffi_string(sk,SECRETKEYBYTES)
-
-        sodium_lib.sodium_memzero(pk,PUBLICKEYBYTES)
-        sodium_lib.sodium_memzero(sk,SECRETKEYBYTES)
-        return pk_str, sk_str
-      end,
-
       [crypto_box] = function(m, nonce, pk, sk)
         if not sk then
           return error('requires 4 arguments')
@@ -131,35 +114,6 @@ return function(sodium_lib, constants)
 
       end,
 
-      [crypto_box_beforenm] = function(pk,sk)
-        local k
-
-        if not sk then
-          return error('requires 2 arguments')
-        end
-
-        if string_len(pk) ~= PUBLICKEYBYTES then
-          return error(string_format(
-            'wrong public key length, expected: %d', PUBLICKEYBYTES))
-        end
-
-        if string_len(sk) ~= SECRETKEYBYTES then
-          return error(string_format(
-            'wrong secret key length, expected: %d', SECRETKEYBYTES))
-        end
-
-        k = char_array(BEFORENMBYTES)
-
-        if tonumber(sodium_lib[crypto_box_beforenm](k,pk,sk)) == -1  then
-          return nil, string_format('%s error',crypto_box_beforenm)
-        end
-
-        local k_str = ffi_string(k,BEFORENMBYTES)
-        sodium_lib.sodium_memzero(k,BEFORENMBYTES)
-        return k_str
-
-      end,
-
       [crypto_box_afternm] = function(m, nonce, k)
         if not k then
           return error('requires 3 arguments')
@@ -242,14 +196,33 @@ return function(sodium_lib, constants)
     }
   end
 
-  local function ls_crypto_box_seed_keypair(basename)
+  -- functions shared across all crypto_box implementations
+  local function ls_crypto_box_shared(basename)
+    local crypto_box_beforenm = string_format('%s_beforenm',basename)
+    local crypto_box_keypair = string_format('%s_keypair',basename)
     local crypto_box_seed_keypair = string_format('%s_seed_keypair',basename)
 
+    local BEFORENMBYTES = constants[string_format('%s_BEFORENMBYTES',basename)]
     local PUBLICKEYBYTES = constants[string_format('%s_PUBLICKEYBYTES',basename)]
     local SECRETKEYBYTES = constants[string_format('%s_SECRETKEYBYTES',basename)]
     local SEEDBYTES = constants[string_format('%s_SEEDBYTES',basename)]
 
     return {
+      [crypto_box_keypair] = function()
+        local pk = char_array(PUBLICKEYBYTES)
+        local sk = char_array(SECRETKEYBYTES)
+        if tonumber(sodium_lib[crypto_box_keypair](pk,sk)) == -1 then
+          return nil, string_format('%s error',crypto_box_keypair)
+        end
+
+        local pk_str = ffi_string(pk,PUBLICKEYBYTES)
+        local sk_str = ffi_string(sk,SECRETKEYBYTES)
+
+        sodium_lib.sodium_memzero(pk,PUBLICKEYBYTES)
+        sodium_lib.sodium_memzero(sk,SECRETKEYBYTES)
+        return pk_str, sk_str
+      end,
+
       [crypto_box_seed_keypair] = function(seed)
         if not seed then
           return error('requires 1 argument')
@@ -270,6 +243,36 @@ return function(sodium_lib, constants)
         sodium_lib.sodium_memzero(sk,SECRETKEYBYTES)
         return pk_str, sk_str
       end,
+
+      [crypto_box_beforenm] = function(pk,sk)
+        local k
+
+        if not sk then
+          return error('requires 2 arguments')
+        end
+
+        if string_len(pk) ~= PUBLICKEYBYTES then
+          return error(string_format(
+            'wrong public key length, expected: %d', PUBLICKEYBYTES))
+        end
+
+        if string_len(sk) ~= SECRETKEYBYTES then
+          return error(string_format(
+            'wrong secret key length, expected: %d', SECRETKEYBYTES))
+        end
+
+        k = char_array(BEFORENMBYTES)
+
+        if tonumber(sodium_lib[crypto_box_beforenm](k,pk,sk)) == -1  then
+          return nil, string_format('%s error',crypto_box_beforenm)
+        end
+
+        local k_str = ffi_string(k,BEFORENMBYTES)
+        sodium_lib.sodium_memzero(k,BEFORENMBYTES)
+        return k_str
+
+      end,
+
     }
   end
 
@@ -286,12 +289,15 @@ return function(sodium_lib, constants)
     local crypto_box_detached_afternm = string_format('%s_detached_afternm',basename)
     local crypto_box_open_detached_afternm = string_format('%s_open_detached_afternm',basename)
 
+    local crypto_box_seal = string_format('%s_seal',basename)
+    local crypto_box_seal_open = string_format('%s_seal_open',basename)
 
     local PUBLICKEYBYTES = constants[string_format('%s_PUBLICKEYBYTES',basename)]
     local SECRETKEYBYTES = constants[string_format('%s_SECRETKEYBYTES',basename)]
     local MACBYTES = constants[string_format('%s_MACBYTES',basename)]
     local NONCEBYTES = constants[string_format('%s_NONCEBYTES',basename)]
     local BEFORENMBYTES = constants[string_format('%s_BEFORENMBYTES',basename)]
+    local SEALBYTES = constants[string_format('%s_SEALBYTES',basename)]
 
     return {
       [crypto_box_easy] = function(m,n,pk,sk)
@@ -597,6 +603,66 @@ return function(sodium_lib, constants)
         return m_str
 
       end,
+
+      [crypto_box_seal] = function(m,pk)
+        local c
+        if not pk then
+          return error('requires 2 arguments')
+        end
+
+        local mlen = string_len(m)
+        local clen = mlen + SEALBYTES
+
+        if string_len(pk) ~= PUBLICKEYBYTES then
+          return error(string_format(
+            'wrong public key length, expected: %d', PUBLICKEYBYTES))
+        end
+
+        c = char_array(clen)
+
+        if tonumber(sodium_lib[crypto_box_seal](c,m,mlen,pk)) == -1 then
+          return nil, string_format('%s error',crypto_box_seal)
+        end
+
+        local c_str = ffi_string(c,clen)
+        sodium_lib.sodium_memzero(c,clen)
+        return c_str
+      end,
+
+      [crypto_box_seal_open] = function(c,pk,sk)
+        local m
+        if not sk then
+          return error('requires 3 arguments')
+        end
+
+        local clen = string_len(c)
+        local mlen = clen - SEALBYTES
+
+        if clen < SEALBYTES then
+          return error(string_format(
+            'wrong sealed message length, expexted at least: %d', SEALBYTES))
+        end
+
+        if string_len(pk) ~= PUBLICKEYBYTES then
+          return error(string_format(
+            'wrong public key length, expected: %d', PUBLICKEYBYTES))
+        end
+
+        if string_len(sk) ~= SECRETKEYBYTES then
+          return error(string_format(
+            'wrong public key length, expected: %d', PUBLICKEYBYTES))
+        end
+
+        m = char_array(mlen)
+
+        if tonumber(sodium_lib[crypto_box_seal_open](m,c,clen,pk,sk)) == -1 then
+          return nil, string_format('%s error',crypto_box_seal_open)
+        end
+
+        local m_str = ffi_string(m,mlen)
+        sodium_lib.sodium_memzero(m,mlen)
+        return m_str
+      end,
     }
   end
 
@@ -607,6 +673,18 @@ return function(sodium_lib, constants)
   end
 
   local M = {}
+
+  -- handle crypto_box common functions
+  for _,basename in ipairs({
+    'crypto_box',
+    'crypto_box_curve25519xsalsa20poly1305',
+    'crypto_box_curve25519xchacha20poly1305',
+  }) do
+    local m = ls_crypto_box_shared(basename)
+    for k,v in pairs(m) do
+      M[k] = v
+    end
+  end
 
   -- handle crypto_box functions
   for _,basename in ipairs({
@@ -619,20 +697,10 @@ return function(sodium_lib, constants)
     end
   end
 
-  -- handle crypto_box_seed_keypair functions
-  for _,basename in ipairs({
-    'crypto_box',
-    'crypto_box_curve25519xsalsa20poly1305',
-  }) do
-    local m = ls_crypto_box_seed_keypair(basename)
-    for k,v in pairs(m) do
-      M[k] = v
-    end
-  end
-
   -- handle crypto_box_easy/detached functions
   for _,basename in ipairs({
     'crypto_box',
+    'crypto_box_curve25519xchacha20poly1305',
   }) do
     local m = ls_crypto_box_easy(basename)
     for k,v in pairs(m) do

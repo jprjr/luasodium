@@ -117,6 +117,19 @@ typedef int (*ls_crypto_box_open_detached_afternm_ptr)(
   const unsigned char *,
   const unsigned char *);
 
+typedef int (*ls_crypto_box_seal_ptr)(
+  unsigned char *,
+  const unsigned char *,
+  unsigned long long,
+  const unsigned char *);
+
+typedef int (*ls_crypto_box_seal_open_ptr)(
+  unsigned char *,
+  const unsigned char *,
+  unsigned long long,
+  const unsigned char *,
+  const unsigned char *);
+
 static int
 ls_crypto_box_keypair(lua_State *L) {
     unsigned char *pk = NULL;
@@ -1274,6 +1287,124 @@ ls_crypto_box_open_detached_afternm(lua_State *L) {
     return 1;
 }
 
+static int
+ls_crypto_box_seal(lua_State *L) {
+    unsigned char *c = NULL;
+    const unsigned char *m   = NULL;
+    const unsigned char *pk  = NULL;
+    size_t mlen = 0;
+    size_t pklen = 0;
+
+    const char *fname = NULL;
+    ls_crypto_box_seal_ptr f = NULL;
+
+    size_t SEALBYTES = 0;
+    size_t PUBLICKEYBYTES = 0;
+
+    if(lua_isnoneornil(L,2)) {
+        lua_pushliteral(L,"requires 2 arguments");
+        return lua_error(L);
+    }
+
+    fname = lua_tostring(L,lua_upvalueindex(1));
+    f = (ls_crypto_box_seal_ptr) lua_touserdata(L,lua_upvalueindex(2));
+    SEALBYTES = lua_tointeger(L,lua_upvalueindex(3));
+    PUBLICKEYBYTES = lua_tointeger(L,lua_upvalueindex(4));
+
+    m  = (const unsigned char *)lua_tolstring(L,1,&mlen);
+    pk = (const unsigned char *)lua_tolstring(L,2,&pklen);
+
+    if(pklen != PUBLICKEYBYTES) {
+        return luaL_error(L,"wrong public key length, expected: %d",PUBLICKEYBYTES);
+    }
+
+    c = lua_newuserdata(L,mlen + SEALBYTES);
+
+    /* LCOV_EXCL_START */
+    if(c == NULL) {
+        lua_pushliteral(L,"out of memory");
+        return lua_error(L);
+    }
+    /* LCOV_EXCL_STOP */
+
+    /* LCOV_EXCL_START */
+    if(f(c,m,mlen,pk) == -1) {
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
+    }
+    /* LCOV_EXCL_STOP */
+
+    lua_pushlstring(L,(const char *)c,mlen + SEALBYTES);
+    return 1;
+}
+
+static int
+ls_crypto_box_seal_open(lua_State *L) {
+    unsigned char *m = NULL;
+    const unsigned char *c   = NULL;
+    const unsigned char *pk  = NULL;
+    const unsigned char *sk  = NULL;
+    size_t clen = 0;
+    size_t pklen = 0;
+    size_t sklen = 0;
+
+    const char *fname = NULL;
+    ls_crypto_box_seal_open_ptr f = NULL;
+
+    size_t SEALBYTES = 0;
+    size_t PUBLICKEYBYTES = 0;
+    size_t SECRETKEYBYTES = 0;
+
+    if(lua_isnoneornil(L,3)) {
+        lua_pushliteral(L,"requires 3 arguments");
+        return lua_error(L);
+    }
+
+    fname = lua_tostring(L,lua_upvalueindex(1));
+    f = (ls_crypto_box_seal_open_ptr) lua_touserdata(L,lua_upvalueindex(2));
+    SEALBYTES      = lua_tointeger(L,lua_upvalueindex(3));
+    PUBLICKEYBYTES = lua_tointeger(L,lua_upvalueindex(4));
+    SECRETKEYBYTES = lua_tointeger(L,lua_upvalueindex(5));
+
+    c  = (const unsigned char *)lua_tolstring(L,1,&clen);
+    pk = (const unsigned char *)lua_tolstring(L,2,&pklen);
+    sk = (const unsigned char *)lua_tolstring(L,3,&sklen);
+
+    if(clen < SEALBYTES) {
+        return luaL_error(L,"wrong sealed message length, expected at least: %d",
+          SEALBYTES);
+    }
+
+    if(pklen != PUBLICKEYBYTES) {
+        return luaL_error(L,"wrong public key length, expected: %d",PUBLICKEYBYTES);
+    }
+
+    if(sklen != SECRETKEYBYTES) {
+        return luaL_error(L,"wrong secret key length, expected: %d",SECRETKEYBYTES);
+    }
+
+    m = lua_newuserdata(L,clen - SEALBYTES);
+
+    /* LCOV_EXCL_START */
+    if(m == NULL) {
+        lua_pushliteral(L,"out of memory");
+        return lua_error(L);
+    }
+    /* LCOV_EXCL_STOP */
+
+    /* LCOV_EXCL_START */
+    if(f(m,c,clen,pk,sk) == -1) {
+        lua_pushnil(L);
+        lua_pushfstring(L,"%s error",fname);
+        return 2;
+    }
+    /* LCOV_EXCL_STOP */
+
+    lua_pushlstring(L,(const char *)m,clen - SEALBYTES);
+    return 1;
+}
+
 #define LS_PUSH_CRYPTO_BOX_KEYPAIR(x) \
   lua_pushliteral(L, #x "_keypair" ); \
   lua_pushlightuserdata(L, x ## _keypair); \
@@ -1422,6 +1553,23 @@ ls_crypto_box_open_detached_afternm(lua_State *L) {
   lua_pushcclosure(L, ls_crypto_box_open_detached_afternm , 5); \
   lua_setfield(L,-2, #x "_open_detached_afternm" );
 
+#define LS_PUSH_CRYPTO_BOX_SEAL(x) \
+  lua_pushliteral(L, #x "_seal" ); \
+  lua_pushlightuserdata(L, x ## _seal ); \
+  lua_pushinteger(L, x ## _SEALBYTES); \
+  lua_pushinteger(L, x ## _PUBLICKEYBYTES); \
+  lua_pushcclosure(L, ls_crypto_box_seal , 4); \
+  lua_setfield(L,-2, #x "_seal" );
+
+#define LS_PUSH_CRYPTO_BOX_SEAL_OPEN(x) \
+  lua_pushliteral(L, #x "_seal_open" ); \
+  lua_pushlightuserdata(L, x ## _seal_open ); \
+  lua_pushinteger(L, x ## _SEALBYTES); \
+  lua_pushinteger(L, x ## _PUBLICKEYBYTES); \
+  lua_pushinteger(L, x ## _SECRETKEYBYTES); \
+  lua_pushcclosure(L, ls_crypto_box_seal_open , 5); \
+  lua_setfield(L,-2, #x "_seal_open" );
+
 LS_PUBLIC
 int luaopen_luasodium_crypto_box_core(lua_State *L) {
     /* LCOV_EXCL_START */
@@ -1431,22 +1579,25 @@ int luaopen_luasodium_crypto_box_core(lua_State *L) {
 
     ls_lua_set_constants(L,ls_crypto_box_constants,lua_gettop(L));
 
-    LS_PUSH_CRYPTO_BOX_KEYPAIR(crypto_box);
     LS_PUSH_CRYPTO_BOX(crypto_box);
     LS_PUSH_CRYPTO_BOX_OPEN(crypto_box);
     LS_PUSH_CRYPTO_BOX_BEFORENM(crypto_box);
     LS_PUSH_CRYPTO_BOX_AFTERNM(crypto_box);
     LS_PUSH_CRYPTO_BOX_OPEN_AFTERNM(crypto_box);
 
-    LS_PUSH_CRYPTO_BOX_KEYPAIR(crypto_box_curve25519xsalsa20poly1305);
     LS_PUSH_CRYPTO_BOX(crypto_box_curve25519xsalsa20poly1305);
     LS_PUSH_CRYPTO_BOX_OPEN(crypto_box_curve25519xsalsa20poly1305);
     LS_PUSH_CRYPTO_BOX_BEFORENM(crypto_box_curve25519xsalsa20poly1305);
     LS_PUSH_CRYPTO_BOX_AFTERNM(crypto_box_curve25519xsalsa20poly1305);
     LS_PUSH_CRYPTO_BOX_OPEN_AFTERNM(crypto_box_curve25519xsalsa20poly1305);
 
+    LS_PUSH_CRYPTO_BOX_KEYPAIR(crypto_box);
+    LS_PUSH_CRYPTO_BOX_KEYPAIR(crypto_box_curve25519xsalsa20poly1305);
+    LS_PUSH_CRYPTO_BOX_KEYPAIR(crypto_box_curve25519xchacha20poly1305);
+
     LS_PUSH_CRYPTO_BOX_SEED_KEYPAIR(crypto_box);
     LS_PUSH_CRYPTO_BOX_SEED_KEYPAIR(crypto_box_curve25519xsalsa20poly1305);
+    LS_PUSH_CRYPTO_BOX_SEED_KEYPAIR(crypto_box_curve25519xchacha20poly1305);
 
     LS_PUSH_CRYPTO_BOX_EASY(crypto_box);
     LS_PUSH_CRYPTO_BOX_OPEN_EASY(crypto_box);
@@ -1457,6 +1608,23 @@ int luaopen_luasodium_crypto_box_core(lua_State *L) {
     LS_PUSH_CRYPTO_BOX_OPEN_EASY_AFTERNM(crypto_box);
     LS_PUSH_CRYPTO_BOX_DETACHED_AFTERNM(crypto_box);
     LS_PUSH_CRYPTO_BOX_OPEN_DETACHED_AFTERNM(crypto_box);
+
+    LS_PUSH_CRYPTO_BOX_SEAL(crypto_box);
+    LS_PUSH_CRYPTO_BOX_SEAL_OPEN(crypto_box);
+
+    LS_PUSH_CRYPTO_BOX_EASY(crypto_box_curve25519xchacha20poly1305);
+    LS_PUSH_CRYPTO_BOX_OPEN_EASY(crypto_box_curve25519xchacha20poly1305);
+    LS_PUSH_CRYPTO_BOX_DETACHED(crypto_box_curve25519xchacha20poly1305);
+    LS_PUSH_CRYPTO_BOX_OPEN_DETACHED(crypto_box_curve25519xchacha20poly1305);
+
+    LS_PUSH_CRYPTO_BOX_BEFORENM(crypto_box_curve25519xchacha20poly1305);
+    LS_PUSH_CRYPTO_BOX_EASY_AFTERNM(crypto_box_curve25519xchacha20poly1305);
+    LS_PUSH_CRYPTO_BOX_OPEN_EASY_AFTERNM(crypto_box_curve25519xchacha20poly1305);
+    LS_PUSH_CRYPTO_BOX_DETACHED_AFTERNM(crypto_box_curve25519xchacha20poly1305);
+    LS_PUSH_CRYPTO_BOX_OPEN_DETACHED_AFTERNM(crypto_box_curve25519xchacha20poly1305);
+
+    LS_PUSH_CRYPTO_BOX_SEAL(crypto_box_curve25519xchacha20poly1305);
+    LS_PUSH_CRYPTO_BOX_SEAL_OPEN(crypto_box_curve25519xchacha20poly1305);
 
     return 1;
 }
