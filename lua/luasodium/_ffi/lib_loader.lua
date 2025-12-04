@@ -23,7 +23,12 @@ local function lib_loader(signatures)
     if ok then
       lib = ffi.C
     else
-      lib = ffi.load('sodium')
+      local is_windows = package.config:sub(1,1) == '\\'
+      if is_windows then
+        lib = ffi.load('libsodium')
+      else
+        lib = ffi.load('sodium')
+      end
     end
   end
 
