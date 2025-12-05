@@ -23,7 +23,13 @@ local function lib_loader(signatures)
     if ok then
       lib = ffi.C
     else
-      lib = ffi.load('sodium')
+      for _,libname in ipairs({'sodium','libsodium'}) do
+        ok, lib = pcall(ffi.load,libname)
+        if ok then break end
+      end
+      if not lib then
+        return error('unable to find sodium library')
+      end
     end
   end
 
