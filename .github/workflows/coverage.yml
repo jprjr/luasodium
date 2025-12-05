@@ -18,12 +18,12 @@ jobs:
       run: sudo pip3 install 'gcovr==5.2'
 
     - name: install luajit
-      uses: leafo/gh-actions-lua@v10.0.0
+      uses: leafo/gh-actions-lua@v12
       with:
         luaVersion: "luajit-openresty"
 
     - name: Install LuaRocks
-      uses: leafo/gh-actions-luarocks@v4.3.0
+      uses: leafo/gh-actions-luarocks@v6
 
     - name: install busted
       run: luarocks install busted
