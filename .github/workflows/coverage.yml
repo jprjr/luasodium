@@ -14,16 +14,16 @@ jobs:
     - name: install libsodium
       run: sudo apt-get install libsodium-dev
 
-    - name: install gcovr 5.2
-      run: sudo pip3 install 'gcovr==5.2'
+    - name: install gcovr 8.4
+      run: sudo pip3 install 'gcovr==8.4'
 
     - name: install luajit
-      uses: leafo/gh-actions-lua@v10.0.0
+      uses: leafo/gh-actions-lua@v12
       with:
         luaVersion: "luajit-openresty"
 
     - name: Install LuaRocks
-      uses: leafo/gh-actions-luarocks@v4.3.0
+      uses: leafo/gh-actions-luarocks@v6
 
     - name: install busted
       run: luarocks install busted
@@ -32,7 +32,7 @@ jobs:
       run: luarocks install luacov
 
     - name: install luacov-reporter-gcovr
-      run: luarocks install luacov-reporter-gcovr
+      run: luarocks install luacov-reporter-gcovr 0.0.5
 
     - name: make
       env:
@@ -40,7 +40,7 @@ jobs:
       run: make coverage LUA=luajit
 
     - name: Codecov
-      uses: codecov/codecov-action@v3.1.1
+      uses: codecov/codecov-action@v5
       with:
         file: coverage/index.xml
 
